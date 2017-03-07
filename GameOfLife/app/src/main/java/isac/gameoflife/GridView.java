@@ -87,7 +87,7 @@ public class GridView extends View {
                 stopY=(int)event.getY();
                // System.out.println(startX+" "+stopX);
                // System.out.println(startY+" "+stopY);
-                if(startX==stopX&&startY==stopY){
+                if(Math.abs(startX-stopX)<=3&&Math.abs(startY-stopY)<=3){
                     int column = (int)(event.getX() / SIZE);
                     int row = (int)(event.getY() / SIZE);
 
