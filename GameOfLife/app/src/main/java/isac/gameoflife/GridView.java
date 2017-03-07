@@ -31,15 +31,15 @@ public class GridView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.drawColor(Color.BLACK);
-        int x=SIZE;
-        int y=SIZE;
+        int x=0;//SIZE;
+        int y=0;//SIZE;
 
-        while(x<width){
+        while(x<=width){
             canvas.drawLine(x,0,x,height,whitePaint);
             x+=SIZE;
         }
 
-        while(y<height){
+        while(y<=height){
             canvas.drawLine(0,y,width,y,whitePaint);
             y+=SIZE;
         }
