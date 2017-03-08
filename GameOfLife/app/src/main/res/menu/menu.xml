@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:title="clean"
+        android:id="@+id/action_clean"
+        android:icon="@drawable/ic_action_clean"
+        app:showAsAction="always"/>
+
+
+    <!-- Settings, should always be in the overflow -->
+    <item android:title="pause"
+        android:id="@+id/action_pause"
+        android:icon="@drawable/ic_action_pause"
+        app:showAsAction="always"/>
+
+
+    <item android:title="start"
+        android:id="@+id/action_start"
+        android:icon="@drawable/ic_action_start"
+        app:showAsAction="always"/>
+
+
+</menu>
