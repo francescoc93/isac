@@ -186,7 +186,7 @@ public class GridView extends View {
                 if(started.get()){
                     //sleep di 1 secondo
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
