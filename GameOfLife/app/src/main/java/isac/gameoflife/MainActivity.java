@@ -5,16 +5,42 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import javax.jmdns.ServiceEvent;
+import javax.jmdns.ServiceListener;
+
 public class MainActivity extends AppCompatActivity {
 
+    private static boolean firstTime=true;
     private GridView gridView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         gridView=new GridView(this);
         setContentView(gridView);
-      //  getActionBar().setDisplayShowTitleEnabled(false);
+
+        if(firstTime) {
+            firstTime=false;
+            new ServiceRegistrationDNS("gameOfLife");//.execute();
+            new ServiceDiscoveryDNS().startDiscovery(new ServiceListener() {
+
+                @Override
+                public void serviceAdded(ServiceEvent event) {
+                    System.out.println("Service added: " + event.getInfo());
+                }
+
+                @Override
+                public void serviceRemoved(ServiceEvent event) {
+                    System.out.println("Service removed: " + event.getInfo());
+                }
+
+                @Override
+                public void serviceResolved(ServiceEvent event) {
+                    System.out.println("Service resolved: " + event.getInfo());
+                }
+            });
+        }
     }
 
     @Override
