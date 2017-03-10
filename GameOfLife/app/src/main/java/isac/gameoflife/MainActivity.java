@@ -4,11 +4,8 @@ import android.content.Context;
 import android.net.wifi.WifiManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.Surface;
-import android.view.WindowManager;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -21,36 +18,25 @@ public class MainActivity extends AppCompatActivity {
 
     private static boolean firstTime=true;
     private GridView gridView;
-    private boolean portrait = true;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-            gridView=new GridView(this);
-            setContentView(gridView);
-         Display display = ((WindowManager) getSystemService(WINDOW_SERVICE))
-                .getDefaultDisplay();
-        int orientation = display.getRotation();
+        gridView=new GridView(this);
+        setContentView(gridView);
 
-        if (orientation == Surface.ROTATION_90
-                || orientation == Surface.ROTATION_270) {
-            ///Landscape
-            this.portrait = false;
-        }
-
-        
-            if(firstTime) {
+        if(firstTime) {
             firstTime=false;
 
-            WifiManager wifi = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
+            //WifiManager wifi = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
             // get the device ip address
             try {
 
                // final InetAddress deviceIpAddress = null;//InetAddress.getByAddress(BigInteger.valueOf(wifi.getConnectionInfo().getIpAddress()).toByteArray());
-                WifiManager.MulticastLock multicastLock = wifi.createMulticastLock(getClass().getName());
+              /*  WifiManager.MulticastLock multicastLock = wifi.createMulticastLock(getClass().getName());
                 multicastLock.setReferenceCounted(true);
-                multicastLock.acquire();
+                multicastLock.acquire();*/
 
 
 //System.out.println("INDIRIZZO: "+deviceIpAddress.getHostAddress());
@@ -72,16 +58,13 @@ public class MainActivity extends AppCompatActivity {
                         System.out.println("Service resolved: " + event.getInfo());
                     }
                 }).execute();
+
             } catch (/*UnknownHost*/Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
-
-    public boolean isPortrait(){
-        return this.portrait;
-    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu,menu);

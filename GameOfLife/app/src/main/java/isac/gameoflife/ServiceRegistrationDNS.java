@@ -42,8 +42,10 @@ public class ServiceRegistrationDNS extends AsyncTask<Void,Void,Void> {
             }
             System.out.println(ia.getHostAddress());
             JmDNS jmdns = JmDNS.create(/*address*/ia/*InetAddress.getLocalHost()*/);
-            ServiceInfo serviceInfo = ServiceInfo.create("_http._tcp.local.", name, 1234, "ciaoooooo");
+            ServiceInfo serviceInfo = ServiceInfo.create("_http._tcp.local.", name, 8080, "");
             jmdns.registerService(serviceInfo);
+
+           // Thread.sleep(40000);
         } catch (IOException e) {
             e.printStackTrace();
         }
