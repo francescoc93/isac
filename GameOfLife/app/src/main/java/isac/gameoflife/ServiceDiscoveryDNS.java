@@ -20,16 +20,16 @@ public class ServiceDiscoveryDNS extends AsyncTask<Void,Void,Void>{
     private JmDNS jmdns;
     private ServiceListener listener;
    // private InetAddress address;
-    //private Object lock;
+    private Object lock;
 
     public  ServiceDiscoveryDNS(/*InetAddress address,*/ServiceListener listener){
         //this.address=address;
         this.listener=listener;
-       // lock=new Object();
+        lock=new Object();
     }
 
     public void close(){
-        //synchronized (lock) {
+        synchronized (lock) {
             if (jmdns != null) {
                 try {
                     jmdns.close();
@@ -37,14 +37,14 @@ public class ServiceDiscoveryDNS extends AsyncTask<Void,Void,Void>{
                     e.printStackTrace();
                 }
             }
-      //  }
+        }
     }
 
     @Override
     protected Void doInBackground(Void... params) {
 
         try {
-       //     synchronized (lock) {
+            synchronized (lock) {
             System.out.println("CIAOO");
             Enumeration en = NetworkInterface.getNetworkInterfaces();
             InetAddress ia=null;
@@ -61,8 +61,9 @@ public class ServiceDiscoveryDNS extends AsyncTask<Void,Void,Void>{
             System.out.println("INDIRIZZO: "+InetAddress.getLocalHost().getHostAddress());
                 jmdns = JmDNS.create(/*address*/ia/*InetAddress.getLocalHost()*/);
                 jmdns.addServiceListener("_http._tcp.local.", listener);
+       //     Thread.sleep(40000);
             System.out.println("CIAOO");
-        //    }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
