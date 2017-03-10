@@ -6,11 +6,15 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.support.v4.view.MotionEventCompat;
+import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static android.content.Context.WINDOW_SERVICE;
 
 /**
  * Created by Francesco on 07/03/2017.
@@ -22,6 +26,9 @@ public class GridView extends View {
     private int width,height,row,column,startX,startY,stopX,stopY;;
     private Paint whitePaint = new Paint();
     private boolean[][] cellChecked;
+    private long timeStamp;
+    private String orientation;
+
     //se uso i lock, si blocca il thread UI, meglio utilizzare AtomicBoolean che permette
     //di effettuare operazioni thread-safe sui booleani
     private AtomicBoolean started=new AtomicBoolean(false),clear=new AtomicBoolean(false);
@@ -114,7 +121,7 @@ public class GridView extends View {
                 System.out.println("Fine: "+event.getX()+" "+event.getY());
                 stopX=(int)event.getX();
                 stopY=(int)event.getY();
-
+                timeStamp = System.currentTimeMillis();
                 //se la differenza delle coordinate di inizio e fine del movimento è minore di 3, allora
                 //l'utente vuole "attivare" una cella della griglia. altrimenti, potrebbe essere uno swipe
                 //per lo swipe controllare che il movimento sia lungo solo uno dei due assi e non entrambi
@@ -126,6 +133,23 @@ public class GridView extends View {
                     cellChecked[column][row] = !cellChecked[column][row];
                     //chiamo il metodo invalidate così forzo la chiamata del metodo onDraw
                     invalidate();
+                } else { //controllo se c'è lo swipe
+                    if (Math.abs(startX - stopX) >=4 && Math.abs(startY - stopY) <= 50){//se mi sono mosso sulle X
+                        if((stopX - startX) > 0){
+                            System.out.println("Destra su X");
+                        } else if ((stopX - startX)<0){
+                            System.out.println("Sinistra su X");
+                        }
+                    } else if (Math.abs(startX - stopX) <=50 && Math.abs(startY - stopY) >= 4){//mi sono mosso sulle Y
+                        if((stopY - startY) > 0){
+                            System.out.println("Basso su Y");
+                        } else if ((stopY - startY)<0){
+                            System.out.println("Alto su Y");
+                        }
+                    } else {
+                        System.out.println("Mossa in diagonale");
+                    }
+
                 }
 
                 return true;

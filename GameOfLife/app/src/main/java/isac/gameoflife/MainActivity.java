@@ -4,8 +4,11 @@ import android.content.Context;
 import android.net.wifi.WifiManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Surface;
+import android.view.WindowManager;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -18,15 +21,26 @@ public class MainActivity extends AppCompatActivity {
 
     private static boolean firstTime=true;
     private GridView gridView;
+    private boolean portrait = true;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        gridView=new GridView(this);
-        setContentView(gridView);
+            gridView=new GridView(this);
+            setContentView(gridView);
+         Display display = ((WindowManager) getSystemService(WINDOW_SERVICE))
+                .getDefaultDisplay();
+        int orientation = display.getRotation();
 
-        if(firstTime) {
+        if (orientation == Surface.ROTATION_90
+                || orientation == Surface.ROTATION_270) {
+            ///Landscape
+            this.portrait = false;
+        }
+
+        
+            if(firstTime) {
             firstTime=false;
 
             WifiManager wifi = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
@@ -64,6 +78,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    public boolean isPortrait(){
+        return this.portrait;
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu,menu);
