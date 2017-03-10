@@ -30,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
         gridView=new GridView(this);
         setContentView(gridView);
 
+        System.out.println("Game Of Life");
+
         Display display = ((WindowManager) getSystemService(WINDOW_SERVICE))
                 .getDefaultDisplay();
         int orientation = display.getRotation();
