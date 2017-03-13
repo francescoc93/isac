@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class GridView extends View {
 
     private final static int SIZE=50;
+    private RabbitMQ rabbitMQ;
     private int width,height,row,column,startX,startY,stopX,stopY;;
     private Paint whitePaint = new Paint();
     private boolean[][] cellChecked;
@@ -27,8 +28,9 @@ public class GridView extends View {
     private AtomicBoolean started=new AtomicBoolean(false),clear=new AtomicBoolean(false);
     private long timeStamp;
 
-    public GridView(Context context) {
+    public GridView(Context context,RabbitMQ rabbitMQ) {
         super(context);
+        this.rabbitMQ=rabbitMQ;
         //imposto il colore delle celle
         whitePaint.setStyle(Paint.Style.FILL_AND_STROKE);
         whitePaint.setColor(Color.WHITE);
