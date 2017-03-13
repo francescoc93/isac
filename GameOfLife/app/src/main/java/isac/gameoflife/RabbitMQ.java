@@ -173,7 +173,7 @@ public class RabbitMQ{
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
                     throws IOException {
                 try {
-                    listener.handleMessage(consumerTag,envelope,properties,new JSONObject(new String(body)));
+                    listener.handleMessage(consumerTag,envelope,properties,new JSONObject(new String(body,"UTF-8")));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
