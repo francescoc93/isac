@@ -22,7 +22,10 @@ import org.json.JSONObject;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Enumeration;
 
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceListener;
@@ -33,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private GridView gridView;
     private boolean portrait = true;
     private RabbitMQ rabbitMQ;
+    private InetAddress selfAddress;
 
 
     @Override
@@ -61,7 +65,19 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void handleMessage(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, JSONObject json) {
                             System.out.println("Messaggio broadcast ricevuto");
+                            try {
+                                PinchInfo info = new PinchInfo(json.getString("address"),json.getInt("xcoordinate"),json.getInt("ycoordinate"),
+                                        json.getBoolean("portrait"),json.getLong("timestamp"),json.getInt("screenWidth"),json.getInt("screenHeight"));
+                                if (info.getTimestamp() > gridView.getTimeStamp() - 20 && info.getTimestamp() < gridView.getTimeStamp() + 20  ){
+                                    System.out.println("DEVICE PAIRED WITH " + info.getAddress());
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
                         }
+
+
+
                     });
 
                     return null;
@@ -72,6 +88,13 @@ public class MainActivity extends AppCompatActivity {
 
             gridView=new GridView(this,rabbitMQ);
             setContentView(gridView);
+            gridView.setActivity(this);
+
+            try {
+                this.setSelfIpAddress();
+            } catch (SocketException e) {
+                e.printStackTrace();
+            }
         }
 
     }
@@ -95,5 +118,26 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void setSelfIpAddress() throws SocketException {
+        Enumeration en = NetworkInterface.getNetworkInterfaces();
+        InetAddress ia=null;
+        while(en.hasMoreElements()){
+            NetworkInterface ni=(NetworkInterface) en.nextElement();
+            Enumeration ee = ni.getInetAddresses();
+
+            while(ee.hasMoreElements()) {
+                ia= (InetAddress) ee.nextElement();
+                selfAddress = ia;
+                //System.out.println(ia.getHostAddress());
+            }
+        }
+
+
+    }
+
+    public String getSelfIpAdress(){
+        return this.selfAddress.getHostAddress();
     }
 }
