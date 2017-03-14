@@ -19,6 +19,7 @@ import com.rabbitmq.client.Envelope;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.helpers.Util;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -36,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private GridView gridView;
     private boolean portrait = true;
     private RabbitMQ rabbitMQ;
-    private InetAddress selfAddress;
+    private String ipAddress;
 
 
     @Override
@@ -54,12 +55,15 @@ public class MainActivity extends AppCompatActivity {
         }
         if(firstTime) {
             firstTime=false;
+            ipAddress= Utils.getIpAddress();
+            rabbitMQ=new RabbitMQ(Utils.getAddress(),"[user]","[user]");
 
             new AsyncTask<Void,Void,Void>(){
 
                 @Override
                 protected Void doInBackground(Void... params) {
-                    rabbitMQ=new RabbitMQ("192.168.1.102","[user]","[user]");
+
+                    rabbitMQ.connect();
                     rabbitMQ.addPublishExchange("broadcast","fanout");
                     rabbitMQ.addSubscribeQueue("broadcast","fanout", new MessageListener() {
                         @Override
@@ -68,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                             try {
                                 PinchInfo info = new PinchInfo(json.getString("address"),json.getInt("xcoordinate"),json.getInt("ycoordinate"),
                                         json.getBoolean("portrait"),json.getLong("timestamp"),json.getInt("screenWidth"),json.getInt("screenHeight"));
-                                if (info.getTimestamp() > gridView.getTimeStamp() - 20 && info.getTimestamp() < gridView.getTimeStamp() + 20  ){
+                                if (!ipAddress.equals(info.getAddress()) && info.getTimestamp() > gridView.getTimeStamp() - 20 && info.getTimestamp() < gridView.getTimeStamp() + 20  ){
                                     System.out.println("DEVICE PAIRED WITH " + info.getAddress());
                                 }
                             } catch (JSONException e) {
@@ -90,11 +94,6 @@ public class MainActivity extends AppCompatActivity {
             setContentView(gridView);
             gridView.setActivity(this);
 
-            try {
-                this.setSelfIpAddress();
-            } catch (SocketException e) {
-                e.printStackTrace();
-            }
         }
 
     }
@@ -118,26 +117,5 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    private void setSelfIpAddress() throws SocketException {
-        Enumeration en = NetworkInterface.getNetworkInterfaces();
-        InetAddress ia=null;
-        while(en.hasMoreElements()){
-            NetworkInterface ni=(NetworkInterface) en.nextElement();
-            Enumeration ee = ni.getInetAddresses();
-
-            while(ee.hasMoreElements()) {
-                ia= (InetAddress) ee.nextElement();
-                selfAddress = ia;
-                //System.out.println(ia.getHostAddress());
-            }
-        }
-
-
-    }
-
-    public String getSelfIpAdress(){
-        return this.selfAddress.getHostAddress();
     }
 }

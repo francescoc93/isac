@@ -28,12 +28,18 @@ public class RabbitMQ{
     private Connection connection;
     private AtomicBoolean connected=new AtomicBoolean(false);
     private HashMap<String,Channel> exchange,queue;
+    private String address,username,password;
 
     public RabbitMQ(String address,String username,String password){
+        this.address=address;
+        this.username=username;
+        this.password=password;
         connection=null;
         exchange=new HashMap<>();
         queue=new HashMap<>();
+    }
 
+    public void connect(){
         factory = new ConnectionFactory();
         factory.setHost(address);
         factory.setUsername(username);

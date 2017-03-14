@@ -28,6 +28,7 @@ public class GridView extends View {
     private int width,height,row,column,startX,startY,stopX,stopY;;
     private Paint whitePaint = new Paint();
     private boolean[][] cellChecked;
+    private String ipAddress;
     private MainActivity activity;
     //se uso i lock, si blocca il thread UI, meglio utilizzare AtomicBoolean che permette
     //di effettuare operazioni thread-safe sui booleani
@@ -40,6 +41,7 @@ public class GridView extends View {
         //imposto il colore delle celle
         whitePaint.setStyle(Paint.Style.FILL_AND_STROKE);
         whitePaint.setColor(Color.WHITE);
+        ipAddress=Utils.getIpAddress();
     }
 
     public void setActivity(MainActivity activity){
@@ -70,8 +72,13 @@ public class GridView extends View {
     }
 
     public void clear(){
-        clear.set(true);
-        pause();
+        if(!started.get()){
+            cellChecked=new boolean[row][column];
+            postInvalidate();
+        }else {
+            clear.set(true);
+            pause();
+        }
     }
 
     //disegno la griglia e la popolo
@@ -144,10 +151,7 @@ public class GridView extends View {
                     //chiamo il metodo invalidate così forzo la chiamata del metodo onDraw
                     invalidate();
                 } else { //valuto lo switch
-                    Display display = activity.getWindowManager().getDefaultDisplay();
-                    Point size = new Point();
-                    display.getSize(size);
-                    PinchInfo info = new PinchInfo(activity.getSelfIpAdress(),stopX,stopY,activity.isPortrait(),timeStamp, size.x, size.y );
+                    PinchInfo info = new PinchInfo(ipAddress,stopX,stopY,activity.isPortrait(),timeStamp, width, height );
                     if (Math.abs(startX - stopX) >=4 && Math.abs(startY - stopY) <= 50){//se mi sono mosso sulle X
                         if((stopX - startX) > 0){
                             System.out.println("Destra su X");
