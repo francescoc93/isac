@@ -70,33 +70,37 @@ public class Handler implements MessageListener {
                     System.out.println("DEVICE PAIRED WITH " + info.getAddress());
                     Toast.makeText(context, "Schermo collegato", Toast.LENGTH_SHORT).show();
 
-                    //TODO: FINIRE CALCOLO PINCH
+                    //TODO: METTERE IN CONNECTED DEVICE INFO IL NUMERO DI CELLE
+
 
                     String nameSender="", nameReceiver="";
                     String ipAddressDevice = info.getAddress();
 
                     int value_address_device=Integer.parseInt(ipAddressDevice.split(".")[3]);
 
-                    if(value_address>value_address_device){
+                    if(value_address>value_address_device){ //se sono il maggiore tra i due
                         nameSender=ipAddress+ipAddressDevice;
                         nameReceiver=ipAddressDevice+ipAddress;
-                    }else{
+                        rabbitMQ.addQueue(nameSender);
+                        rabbitMQ.addQueue(nameReceiver, new MessageListener() {
+                            @Override
+                            public void handleMessage(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, JSONObject json) {
+
+                            }
+                        });
+                    }else{ //se sono il minore tra i due
                         nameReceiver=ipAddress+ipAddressDevice;
                         nameSender=ipAddressDevice+ipAddress;
+                        rabbitMQ.addQueue(nameReceiver);
+                        rabbitMQ.addQueue(nameSender, new MessageListener() {
+                            @Override
+                            public void handleMessage(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, JSONObject json) {
+
+                            }
+                        });
                     }
-
-
-                    //TODO: INSERIRE VALORI CORRETTI PRIMI 3 PARAMETRI
-                    connectedDevices.put(ipAddressDevice,new ConnectedDeviceInfo(portrait, 0, 0,nameSender, nameReceiver));
-
-                    rabbitMQ.addQueue(nameSender);
-                    rabbitMQ.addQueue(nameReceiver, new MessageListener() {
-                        @Override
-                        public void handleMessage(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, JSONObject json) {
-
-                        }
-                    });
-
+                    connectedDevices.put(ipAddressDevice,new ConnectedDeviceInfo(portrait, info.getXcoordinate(), info.getYcoordinate(),
+                            nameSender, nameReceiver));
 
                 }
             }
@@ -106,7 +110,7 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Send broadcast message to all connected devices with him
+     * Send broadcast message to all the devices connected with him
      * @param message
      */
     public void sendMessaggeToConnectedDevices(final JSONObject message){
