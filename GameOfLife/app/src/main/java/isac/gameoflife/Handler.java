@@ -71,7 +71,7 @@ public class Handler implements MessageListener {
                     Toast.makeText(context, "Schermo collegato", Toast.LENGTH_SHORT).show();
 
                     //TODO: METTERE IN CONNECTED DEVICE INFO IL NUMERO DI CELLE
-
+                    //TODO (2) : HANDLE MESSAGE 
 
                     String nameSender="", nameReceiver="";
                     String ipAddressDevice = info.getAddress();
@@ -99,8 +99,10 @@ public class Handler implements MessageListener {
                             }
                         });
                     }
-                    connectedDevices.put(ipAddressDevice,new ConnectedDeviceInfo(portrait, info.getXcoordinate(), info.getYcoordinate(),
-                            nameSender, nameReceiver));
+
+                    //TODO: calcoli per x e y (pdf)
+                    connectedDevices.put(ipAddressDevice,new ConnectedDeviceInfo(info.isPortrait(),
+                            info.getXcoordinate(), info.getYcoordinate(), nameSender, nameReceiver));
 
                 }
             }
