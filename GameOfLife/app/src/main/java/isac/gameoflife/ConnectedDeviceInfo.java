@@ -6,11 +6,12 @@ package isac.gameoflife;
 
 public class ConnectedDeviceInfo {
 
-    private int orientation,x,y;
+    private boolean portrait;
+    private int x,y;
     private String nameQueueSender,nameQueueReceiver;
 
-    public ConnectedDeviceInfo(int orientation, int x, int y, String nameQueueSender, String nameQueueReceiver){
-        this.orientation=orientation;
+    public ConnectedDeviceInfo(boolean portrait, int x, int y, String nameQueueSender, String nameQueueReceiver){
+        this.portrait = portrait;
         this.x=x;
         this.y=y;
         this.nameQueueReceiver=nameQueueReceiver;
@@ -18,8 +19,8 @@ public class ConnectedDeviceInfo {
     }
 
 
-    public int getOrientation() {
-        return orientation;
+    public boolean isPortrait() {
+        return portrait;
     }
 
     public int getX() {

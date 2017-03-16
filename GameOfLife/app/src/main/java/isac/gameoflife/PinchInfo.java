@@ -54,7 +54,7 @@ public class PinchInfo implements Serializable {
 
     public boolean isPortrait() {
         return portrait;
-    }
+        }
 
     public Long getTimestamp() {
         return timestamp;

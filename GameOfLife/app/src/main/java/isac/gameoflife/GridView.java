@@ -155,6 +155,7 @@ public class GridView extends View {
                     invalidate();
                 } else { //valuto lo switch
                     PinchInfo info = new PinchInfo(ipAddress,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
+                    handler.setPortrait(activity.isPortrait());
                     if (Math.abs(startX - stopX) >=4 && Math.abs(startY - stopY) <= 50){//se mi sono mosso sulle X
                         if((stopX - startX) > 0){
                             System.out.println("Destra su X");

@@ -24,6 +24,7 @@ public class Handler implements MessageListener {
     private RabbitMQ rabbitMQ;
     private HashMap<String,ConnectedDeviceInfo> connectedDevices;
     private int number_device,value_address;
+    private boolean portrait;
 
     public Handler(GridView gridView,Context context){
         ipAddress=Utils.getIpAddress();
@@ -50,6 +51,10 @@ public class Handler implements MessageListener {
         if(rabbitMQ.isConnected()) {
             rabbitMQ.sendMessage("broadcast", message);
         }
+    }
+
+    public void setPortrait(boolean portrait){
+        this.portrait = portrait;
     }
 
     @Override
@@ -82,7 +87,7 @@ public class Handler implements MessageListener {
 
 
                     //TODO: INSERIRE VALORI CORRETTI PRIMI 3 PARAMETRI
-                    connectedDevices.put(ipAddressDevice,new ConnectedDeviceInfo(0, 0, 0,nameSender, nameReceiver));
+                    connectedDevices.put(ipAddressDevice,new ConnectedDeviceInfo(portrait, 0, 0,nameSender, nameReceiver));
 
                     rabbitMQ.addQueue(nameSender);
                     rabbitMQ.addQueue(nameReceiver, new MessageListener() {
