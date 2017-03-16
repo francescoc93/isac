@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class GridView extends View {
 
     private final static int SIZE=50;
-    private RabbitMQ rabbitMQ;
+    private Handler handler;
     private int width,height,row,column,startX,startY,stopX,stopY;;
     private Paint whitePaint = new Paint();
     private boolean[][] cellChecked;
@@ -35,13 +35,16 @@ public class GridView extends View {
     private AtomicBoolean started=new AtomicBoolean(false),clear=new AtomicBoolean(false);
     private Long timeStamp;
 
-    public GridView(Context context,RabbitMQ rabbitMQ) {
+    public GridView(Context context) {
         super(context);
-        this.rabbitMQ=rabbitMQ;
         //imposto il colore delle celle
         whitePaint.setStyle(Paint.Style.FILL_AND_STROKE);
         whitePaint.setColor(Color.WHITE);
         ipAddress=Utils.getIpAddress();
+    }
+
+    public void setHandler(Handler handler){
+        this.handler=handler;
     }
 
     public void setActivity(MainActivity activity){
@@ -151,21 +154,21 @@ public class GridView extends View {
                     //chiamo il metodo invalidate così forzo la chiamata del metodo onDraw
                     invalidate();
                 } else { //valuto lo switch
-                    PinchInfo info = new PinchInfo(ipAddress,stopX,stopY,activity.isPortrait(),timeStamp, width, height );
+                    PinchInfo info = new PinchInfo(ipAddress,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
                     if (Math.abs(startX - stopX) >=4 && Math.abs(startY - stopY) <= 50){//se mi sono mosso sulle X
                         if((stopX - startX) > 0){
                             System.out.println("Destra su X");
                         } else if ((stopX - startX)<0){
                             System.out.println("Sinistra su X");
                         }
-                        this.rabbitMQ.sendMessage("broadcast", info.toJSON());
+                        this.handler.sendBroadcastMessage(info.toJSON());
                     } else if (Math.abs(startX - stopX) <=50 && Math.abs(startY - stopY) >= 4){//mi sono mosso sulle Y
                         if((stopY - startY) > 0){
                             System.out.println("Basso su Y");
                         } else if ((stopY - startY)<0){
                             System.out.println("Alto su Y");
                         }
-                        this.rabbitMQ.sendMessage("broadcast", info.toJSON());
+                        this.handler.sendBroadcastMessage(info.toJSON());
                     } else {
                         System.out.println("Mossa in diagonale");
                     }

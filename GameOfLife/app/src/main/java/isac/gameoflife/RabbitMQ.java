@@ -39,7 +39,7 @@ public class RabbitMQ{
         queue=new HashMap<>();
     }
 
-    public void connect(){
+    public boolean connect(){
         factory = new ConnectionFactory();
         factory.setHost(address);
         factory.setUsername(username);
@@ -49,6 +49,8 @@ public class RabbitMQ{
             connected.set(true);
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();
+        } finally{
+            return connected.get();
         }
     }
 

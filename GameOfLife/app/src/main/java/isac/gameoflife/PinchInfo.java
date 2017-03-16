@@ -12,6 +12,14 @@ import java.net.InetAddress;
 
 public class PinchInfo implements Serializable {
 
+    public final static String ADDRESS="address";
+    public final static String X_COORDINATE="xcoordinate";
+    public final static String Y_COORDINATE="ycoordinate";
+    public final static String TIMESTAMP="timestamp";
+    public final static String PORTRAIT="portrait";
+    public final static String SCREEN_WIDTH="screenWidth";
+    public final static String SCREEN_HEIGHT="screenHeight";
+    public final static String CONNECTED_DEVICE="connectedDevice";
     private String address;
     private Integer xcoordinate;
     private Integer ycoordinate;
@@ -19,8 +27,9 @@ public class PinchInfo implements Serializable {
     private Long timestamp;
     private int screenWidth;
     private int screenHeight;
+    private int connectedDevice;
 
-    public PinchInfo(String address, Integer xcoordinate, Integer ycoordinate, boolean portrait, Long timestamp, int screenWidth, int screenHeight) {
+    public PinchInfo(String address, Integer xcoordinate, Integer ycoordinate, boolean portrait, Long timestamp, int screenWidth, int screenHeight,int connectedDevice) {
         this.address = address;
         this.xcoordinate = xcoordinate;
         this.ycoordinate = ycoordinate;
@@ -28,6 +37,7 @@ public class PinchInfo implements Serializable {
         this.timestamp = timestamp;
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
+        this.connectedDevice=connectedDevice;
     }
 
     public String getAddress() {
@@ -58,21 +68,26 @@ public class PinchInfo implements Serializable {
         return screenHeight;
     }
 
+    public int getConnectedDevice() {
+        return connectedDevice;
+    }
+
     public JSONObject toJSON() {
 
         JSONObject jo = new JSONObject();
         try {
-            jo.put("address", getAddress());
-            jo.put("xcoordinate", getXcoordinate());
-            jo.put("ycoordinate", getYcoordinate());
-            jo.put("timestamp", getTimestamp());
-            jo.put("portrait", isPortrait());
-            jo.put("screenWidth", getScreenWidth());
-            jo.put("screenHeight", getScreenHeight());
+            jo.put(ADDRESS, getAddress());
+            jo.put(X_COORDINATE, getXcoordinate());
+            jo.put(Y_COORDINATE, getYcoordinate());
+            jo.put(TIMESTAMP, getTimestamp());
+            jo.put(PORTRAIT, isPortrait());
+            jo.put(SCREEN_WIDTH, getScreenWidth());
+            jo.put(SCREEN_HEIGHT, getScreenHeight());
+            jo.put(CONNECTED_DEVICE,getConnectedDevice());
+            jo.put("type","pinch");
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
 
         return jo;
     }
