@@ -11,6 +11,7 @@ import android.support.v4.view.MotionEventCompat;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import org.json.JSONObject;
 
@@ -168,10 +169,10 @@ public class GridView extends View {
                     if (Math.abs(startX - stopX) >=4 && Math.abs(startY - stopY) <= 50){//se mi sono mosso sulle X
                         if((stopX - startX) > 0){
                             direction=PinchInfo.Direction.RIGHT;
-                            System.out.println("Destra su X");
+                            Toast.makeText(getContext(), "Asse X destra", Toast.LENGTH_SHORT).show();
                         } else if ((stopX - startX)<0){
                             direction=PinchInfo.Direction.LEFT;
-                            System.out.println("Sinistra su X");
+                            Toast.makeText(getContext(), "Asse X sinistra", Toast.LENGTH_SHORT).show();
                         }
 
                         info= new PinchInfo(ipAddress, direction.RIGHT,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
@@ -179,10 +180,10 @@ public class GridView extends View {
                     } else if (Math.abs(startX - stopX) <=50 && Math.abs(startY - stopY) >= 4){//mi sono mosso sulle Y
                         if((stopY - startY) > 0){
                             direction=PinchInfo.Direction.DOWN;
-                            System.out.println("Basso su Y");
+                            Toast.makeText(getContext(), "Asse Y basso", Toast.LENGTH_SHORT).show();
                         } else if ((stopY - startY)<0){
                             direction=PinchInfo.Direction.UP;
-                            System.out.println("Alto su Y");
+                            Toast.makeText(getContext(), "Asse Y alto", Toast.LENGTH_SHORT).show();
                         }
                         info= new PinchInfo(ipAddress, direction.RIGHT,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
                         this.handler.sendBroadcastMessage(info.toJSON());
