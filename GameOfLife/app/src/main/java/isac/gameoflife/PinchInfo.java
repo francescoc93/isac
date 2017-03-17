@@ -12,7 +12,13 @@ import java.net.InetAddress;
 
 public class PinchInfo implements Serializable {
 
+
+    public enum Direction{
+        UP,DOWN,LEFT,RIGHT
+    }
+
     public final static String ADDRESS="address";
+    public final static String DIRECTION="direction";
     public final static String X_COORDINATE="xcoordinate";
     public final static String Y_COORDINATE="ycoordinate";
     public final static String TIMESTAMP="timestamp";
@@ -20,6 +26,7 @@ public class PinchInfo implements Serializable {
     public final static String SCREEN_WIDTH="screenWidth";
     public final static String SCREEN_HEIGHT="screenHeight";
     public final static String CONNECTED_DEVICE="connectedDevice";
+    private Direction direction;
     private String address;
     private Integer xcoordinate;
     private Integer ycoordinate;
@@ -29,7 +36,7 @@ public class PinchInfo implements Serializable {
     private int screenHeight;
     private int connectedDevice;
 
-    public PinchInfo(String address, Integer xcoordinate, Integer ycoordinate, boolean portrait, Long timestamp, int screenWidth, int screenHeight,int connectedDevice) {
+    public PinchInfo(String address, Direction direction,Integer xcoordinate, Integer ycoordinate, boolean portrait, Long timestamp, int screenWidth, int screenHeight,int connectedDevice) {
         this.address = address;
         this.xcoordinate = xcoordinate;
         this.ycoordinate = ycoordinate;
@@ -38,6 +45,7 @@ public class PinchInfo implements Serializable {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         this.connectedDevice=connectedDevice;
+        this.direction=direction;
     }
 
     public String getAddress() {
@@ -72,11 +80,26 @@ public class PinchInfo implements Serializable {
         return connectedDevice;
     }
 
+    public Direction getDirection(){
+        return direction;
+    }
+
+    public boolean oppositeDirection(Direction direction){
+        switch (direction){
+            case UP:return this.direction==Direction.DOWN;
+            case DOWN:return this.direction==Direction.UP;
+            case LEFT:return this.direction==Direction.RIGHT;
+            case RIGHT:return this.direction==Direction.LEFT;
+            default:return false;
+        }
+    }
+
     public JSONObject toJSON() {
 
         JSONObject jo = new JSONObject();
         try {
             jo.put(ADDRESS, getAddress());
+            jo.put(DIRECTION,getDirection());
             jo.put(X_COORDINATE, getXcoordinate());
             jo.put(Y_COORDINATE, getYcoordinate());
             jo.put(TIMESTAMP, getTimestamp());

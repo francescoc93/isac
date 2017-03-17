@@ -30,6 +30,7 @@ public class GridView extends View {
     private boolean[][] cellChecked;
     private String ipAddress;
     private MainActivity activity;
+    private PinchInfo.Direction direction;
     //se uso i lock, si blocca il thread UI, meglio utilizzare AtomicBoolean che permette
     //di effettuare operazioni thread-safe sui booleani
     private AtomicBoolean started=new AtomicBoolean(false),clear=new AtomicBoolean(false);
@@ -53,6 +54,10 @@ public class GridView extends View {
 
     public Long getTimeStamp(){
         return this.timeStamp;
+    }
+
+    public PinchInfo.Direction getDirection(){
+        return direction;
     }
 
     public boolean isStarted(){
@@ -88,18 +93,21 @@ public class GridView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.drawColor(Color.BLACK);
-        int x=0;
-        int y=0;
+        int count=0;
 
         //disegno delle righe per formare la griglia
-        while(x<=width){
-            canvas.drawLine(x,0,x,height,whitePaint);
-            x+=SIZE;
+        while(count<=row){
+            int coordinate=count*SIZE;
+            canvas.drawLine(coordinate,0,coordinate,column*SIZE,whitePaint);
+            count++;
         }
 
-        while(y<=height){
-            canvas.drawLine(0,y,width,y,whitePaint);
-            y+=SIZE;
+        count=0;
+
+        while(count<=column){
+            int coordinate=count*SIZE;
+            canvas.drawLine(0,coordinate,row*SIZE,coordinate,whitePaint);
+            count++;
         }
 
         //Random rnd = new Random();
@@ -141,7 +149,7 @@ public class GridView extends View {
                 System.out.println("Fine: "+event.getX()+" "+event.getY());
                 stopX=(int)event.getX();
                 stopY=(int)event.getY();
-                timeStamp = System.currentTimeMillis();
+
                 //se la differenza delle coordinate di inizio e fine del movimento è minore di 3, allora
                 //l'utente vuole "attivare" una cella della griglia. altrimenti, potrebbe essere uno swipe
                 //per lo swipe controllare che il movimento sia lungo solo uno dei due assi e non entrambi
@@ -154,21 +162,29 @@ public class GridView extends View {
                     //chiamo il metodo invalidate così forzo la chiamata del metodo onDraw
                     invalidate();
                 } else { //valuto lo switch
-                    PinchInfo info = new PinchInfo(ipAddress,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
+                    timeStamp = System.currentTimeMillis();
+                    PinchInfo info=null;
                     handler.setPortrait(activity.isPortrait());
                     if (Math.abs(startX - stopX) >=4 && Math.abs(startY - stopY) <= 50){//se mi sono mosso sulle X
                         if((stopX - startX) > 0){
+                            direction=PinchInfo.Direction.RIGHT;
                             System.out.println("Destra su X");
                         } else if ((stopX - startX)<0){
+                            direction=PinchInfo.Direction.LEFT;
                             System.out.println("Sinistra su X");
                         }
+
+                        info= new PinchInfo(ipAddress, direction.RIGHT,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
                         this.handler.sendBroadcastMessage(info.toJSON());
                     } else if (Math.abs(startX - stopX) <=50 && Math.abs(startY - stopY) >= 4){//mi sono mosso sulle Y
                         if((stopY - startY) > 0){
+                            direction=PinchInfo.Direction.DOWN;
                             System.out.println("Basso su Y");
                         } else if ((stopY - startY)<0){
+                            direction=PinchInfo.Direction.UP;
                             System.out.println("Alto su Y");
                         }
+                        info= new PinchInfo(ipAddress, direction.RIGHT,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
                         this.handler.sendBroadcastMessage(info.toJSON());
                     } else {
                         System.out.println("Mossa in diagonale");
@@ -193,8 +209,8 @@ public class GridView extends View {
         if(changed) {
             width = getWidth();
             height = getHeight();
-            row = width % SIZE == 0 ? width / SIZE : (width / SIZE) + 1;
-            column = height % SIZE == 0 ? height / SIZE : (height / SIZE) + 1;
+            row = /*width % SIZE == 0 ?*/ width / SIZE ;//: (width / SIZE) + 1;
+            column = /*height % SIZE == 0 ?*/ height / SIZE;// : (height / SIZE) + 1;
             cellChecked = new boolean[row][column];
         }
     }
