@@ -11,6 +11,7 @@ import android.support.v4.view.MotionEventCompat;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.widget.Toast;
 
 import org.json.JSONObject;
@@ -24,9 +25,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GridView extends View {
 
-    private final static int SIZE=50;
+    private final static int SIZE=50,TIME_DOUBLE_TAP=ViewConfiguration.getTapTimeout();
     private Handler handler;
-    private int width,height,row,column,startX,startY,stopX,stopY;;
+    private int width,height,row,column,startX,startY,stopX,stopY,numberOfTaps ;
     private Paint whitePaint = new Paint();
     private boolean[][] cellChecked;
     private String ipAddress;
@@ -35,7 +36,7 @@ public class GridView extends View {
     //se uso i lock, si blocca il thread UI, meglio utilizzare AtomicBoolean che permette
     //di effettuare operazioni thread-safe sui booleani
     private AtomicBoolean started=new AtomicBoolean(false),clear=new AtomicBoolean(false);
-    private Long timeStamp;
+    private Long timeStamp,lastTapTimeMs,touchDownMs ;
 
     public GridView(Context context) {
         super(context);
@@ -43,6 +44,9 @@ public class GridView extends View {
         whitePaint.setStyle(Paint.Style.FILL_AND_STROKE);
         whitePaint.setColor(Color.WHITE);
         ipAddress=Utils.getIpAddress();
+        numberOfTaps=0;
+        lastTapTimeMs=0L;
+        touchDownMs=0L;
     }
 
     public void setHandler(Handler handler){
@@ -138,6 +142,7 @@ public class GridView extends View {
             //l'utente ha il dito appoggiato sullo schermo
             case (MotionEvent.ACTION_DOWN) :
                 System.out.println("Punto di inizio: "+event.getX()+" "+event.getY());
+                touchDownMs = System.currentTimeMillis();
                 startX=(int)event.getX();
                 startY=(int)event.getY();
                 return true;
@@ -151,46 +156,80 @@ public class GridView extends View {
                 stopX=(int)event.getX();
                 stopY=(int)event.getY();
 
-                //se la differenza delle coordinate di inizio e fine del movimento è minore di 3, allora
-                //l'utente vuole "attivare" una cella della griglia. altrimenti, potrebbe essere uno swipe
-                //per lo swipe controllare che il movimento sia lungo solo uno dei due assi e non entrambi
-                // (altrimenti mi sto muovendo in diagonale)
-                if (Math.abs(startX - stopX) <= 3 && Math.abs(startY - stopY) <= 3 && !started.get()) {
-                    int column = (int) (event.getX() / SIZE);
-                    int row = (int) (event.getY() / SIZE);
+                if ((System.currentTimeMillis() - touchDownMs) > TIME_DOUBLE_TAP) {
+                    numberOfTaps = 0;
+                    lastTapTimeMs = 0L;
 
-                    cellChecked[column][row] = !cellChecked[column][row];
-                    //chiamo il metodo invalidate così forzo la chiamata del metodo onDraw
-                    invalidate();
-                } else { //valuto lo switch
-                    timeStamp = System.currentTimeMillis();
-                    PinchInfo info=null;
-                    handler.setPortrait(activity.isPortrait());
-                    if (Math.abs(startX - stopX) >=4 && Math.abs(startY - stopY) <= 50){//se mi sono mosso sulle X
-                        if((stopX - startX) > 0){
-                            direction=PinchInfo.Direction.RIGHT;
-                            Toast.makeText(getContext(), "Asse X destra", Toast.LENGTH_SHORT).show();
-                        } else if ((stopX - startX)<0){
-                            direction=PinchInfo.Direction.LEFT;
-                            Toast.makeText(getContext(), "Asse X sinistra", Toast.LENGTH_SHORT).show();
+                    //se la differenza delle coordinate di inizio e fine del movimento è minore di 3, allora
+                    //l'utente vuole "attivare" una cella della griglia. altrimenti, potrebbe essere uno swipe
+                    //per lo swipe controllare che il movimento sia lungo solo uno dei due assi e non entrambi
+                    // (altrimenti mi sto muovendo in diagonale)
+                    if (Math.abs(startX - stopX) <= 3 && Math.abs(startY - stopY) <= 3 && !started.get()) {
+                        int column = (int) (event.getX() / SIZE);
+                        int row = (int) (event.getY() / SIZE);
+
+                        cellChecked[column][row] = !cellChecked[column][row];
+                        //chiamo il metodo invalidate così forzo la chiamata del metodo onDraw
+                        invalidate();
+                    } else { //valuto lo switch
+                        timeStamp = System.currentTimeMillis();
+                        PinchInfo info=null;
+                        handler.setPortrait(activity.isPortrait());
+                        if (Math.abs(startX - stopX) >=4 && Math.abs(startY - stopY) <= 50){//se mi sono mosso sulle X
+                            if((stopX - startX) > 0){
+                                direction=PinchInfo.Direction.RIGHT;
+                                Toast.makeText(getContext(), "Asse X destra", Toast.LENGTH_SHORT).show();
+                                System.out.println("Destra su X");
+                            } else if ((stopX - startX)<0){
+                                direction=PinchInfo.Direction.LEFT;
+                                Toast.makeText(getContext(), "Asse X sinistra", Toast.LENGTH_SHORT).show();
+                            }
+
+                            info= new PinchInfo(ipAddress, direction.RIGHT,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
+                            this.handler.sendBroadcastMessage(info.toJSON());
+                        } else if (Math.abs(startX - stopX) <=50 && Math.abs(startY - stopY) >= 4){//mi sono mosso sulle Y
+                            if((stopY - startY) > 0){
+                                direction=PinchInfo.Direction.DOWN;
+                                Toast.makeText(getContext(), "Asse Y basso", Toast.LENGTH_SHORT).show();
+                            } else if ((stopY - startY)<0){
+                                direction=PinchInfo.Direction.UP;
+                                Toast.makeText(getContext(), "Asse Y alto", Toast.LENGTH_SHORT).show();
+                            }
+                            info= new PinchInfo(ipAddress, direction.RIGHT,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
+                            this.handler.sendBroadcastMessage(info.toJSON());
+                        } else {
+                            System.out.println("Mossa in diagonale");
                         }
 
-                        info= new PinchInfo(ipAddress, direction.RIGHT,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
-                        this.handler.sendBroadcastMessage(info.toJSON());
-                    } else if (Math.abs(startX - stopX) <=50 && Math.abs(startY - stopY) >= 4){//mi sono mosso sulle Y
-                        if((stopY - startY) > 0){
-                            direction=PinchInfo.Direction.DOWN;
-                            Toast.makeText(getContext(), "Asse Y basso", Toast.LENGTH_SHORT).show();
-                        } else if ((stopY - startY)<0){
-                            direction=PinchInfo.Direction.UP;
-                            Toast.makeText(getContext(), "Asse Y alto", Toast.LENGTH_SHORT).show();
-                        }
-                        info= new PinchInfo(ipAddress, direction.RIGHT,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
-                        this.handler.sendBroadcastMessage(info.toJSON());
-                    } else {
-                        System.out.println("Mossa in diagonale");
                     }
 
+                }
+
+                if (numberOfTaps > 0
+                        && (System.currentTimeMillis() - lastTapTimeMs) < TIME_DOUBLE_TAP) {
+                    numberOfTaps += 1;
+                } else {
+                    numberOfTaps = 1;
+                }
+
+                lastTapTimeMs = System.currentTimeMillis();
+
+                if (numberOfTaps == 3) {
+                    System.out.println("Triplo tap");
+                    if(!started.get()){
+                        cellChecked=new boolean[row][column];
+                        postInvalidate();
+                    }else {
+                        clear.set(true);
+                        started.compareAndSet(true,false);
+                    }
+                } else if (numberOfTaps == 2) {
+                    System.out.println("Doppio tap");
+                    if(started.compareAndSet(false,true)){
+                        new CalculateGeneration().execute();
+                    }else{
+                        started.compareAndSet(true,false);
+                    }
                 }
 
                 return true;
