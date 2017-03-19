@@ -1,25 +1,3 @@
-- configurare l'app per rabbitmq 
-
-https://www.cloudamqp.com/blog/2015-07-29-rabbitmq-on-android.html (fino al paragrafo 3)
-
-- creare il publisher (l'emettitore di messaggi sulla coda). valutare se crearlo all'avvio dell'app una sola volta o ogni volta che viene fatto un pinch
-
-https://www.rabbitmq.com/tutorials/tutorial-four-java.html (guardare solo classe EmitLogDirect per il momento). 
-provare nel metodo setHost mettere l'indirizzo ip del pc su cui runna il server
-
-- rilevare lo swipe e le altre info necessarie da inviare ai device
-
-salvare in locale ad ogni swipe il timestamp, la direzione (destra, sinistra, su o giù. 
-si può calcolare facendo la differenza sull'asse x/y dei punti iniziali e finali dello swipe),le coordinate dove è terminato lo swipe, 
-se lo schermo al momento si trova in portrait/landscape. oltre a questo salvare anche la dimensione (in pixel dello schermo. lunghezza e altezza). 
-per determinare se è stato effettuato uno swipe un metodo potrebbe essere:
-
-1) terminato il movimento assicurarsi che la differenza tra il punto iniziale e quello finale di uno dei due assi sia superiore a un certo valore X
-2) trovato uno dei due assi, assicurarsi che lo spostamento dell'altro asse sia inferiore a un certo valore Y (es:5)
-
-per determinare la direzione:
-
-(Punto iniziale - Punto finale). se la differenza è negativa, la direzione è destra per l'asse X e giù per l'asse Y. 
-viceversa è sinistra per l'asse X e su per l'asse Y
-
-- fare il discovery dei device che stanno runnando l'app con JmDns
+- calcolare pinch (guardare appunti mari)
+- start/pausa/reset broadcast
+- accelerometro disconnessione coppia device
