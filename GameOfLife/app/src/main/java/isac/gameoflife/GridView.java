@@ -25,7 +25,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GridView extends View {
 
-    private final static int SIZE=50,TIME_DOUBLE_TAP=ViewConfiguration.getTapTimeout();
+    private final static int TIME_DOUBLE_TAP=180;
+    private final static int DESIRED_DP_VALUE=50;
+    private final int SIZE;
+    private final float scale;
     private Handler handler;
     private int width,height,row,column,startX,startY,stopX,stopY,numberOfTaps ;
     private Paint whitePaint = new Paint();
@@ -47,6 +50,8 @@ public class GridView extends View {
         numberOfTaps=0;
         lastTapTimeMs=0L;
         touchDownMs=0L;
+        scale = getResources().getDisplayMetrics().density;
+        /*int pixelValue*/SIZE = (int) (DESIRED_DP_VALUE * scale + 0.5f);
     }
 
     public void setHandler(Handler handler){
@@ -185,7 +190,7 @@ public class GridView extends View {
                                 Toast.makeText(getContext(), "Asse X sinistra", Toast.LENGTH_SHORT).show();
                             }
 
-                            info= new PinchInfo(ipAddress, direction.RIGHT,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
+                            info= new PinchInfo(ipAddress, direction,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
                             this.handler.sendBroadcastMessage(info.toJSON());
                         } else if (Math.abs(startX - stopX) <=50 && Math.abs(startY - stopY) >= 4){//mi sono mosso sulle Y
                             if((stopY - startY) > 0){
@@ -195,7 +200,7 @@ public class GridView extends View {
                                 direction=PinchInfo.Direction.UP;
                                 Toast.makeText(getContext(), "Asse Y alto", Toast.LENGTH_SHORT).show();
                             }
-                            info= new PinchInfo(ipAddress, direction.RIGHT,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
+                            info= new PinchInfo(ipAddress, direction,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
                             this.handler.sendBroadcastMessage(info.toJSON());
                         } else {
                             System.out.println("Mossa in diagonale");
@@ -216,13 +221,18 @@ public class GridView extends View {
 
                 if (numberOfTaps == 3) {
                     System.out.println("Triplo tap");
+                    Toast.makeText(getContext(), "Reset", Toast.LENGTH_SHORT).show();
                     clear();
                 } else if (numberOfTaps == 2) {
                     System.out.println("Doppio tap");
 
                     if(isStarted()){
+                        Toast.makeText(getContext(), "Pause", Toast.LENGTH_SHORT).show();
+                        System.out.println("Pausa");
                         pause();
                     }else{
+                        Toast.makeText(getContext(), "Start", Toast.LENGTH_SHORT).show();
+                        System.out.println("Inizio");
                         start();
                     }
                 }

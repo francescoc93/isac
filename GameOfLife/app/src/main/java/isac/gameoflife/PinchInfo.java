@@ -13,7 +13,7 @@ import java.net.InetAddress;
 public class PinchInfo implements Serializable {
 
 
-    public enum Direction{
+    public enum Direction implements Serializable{
         UP,DOWN,LEFT,RIGHT
     }
 

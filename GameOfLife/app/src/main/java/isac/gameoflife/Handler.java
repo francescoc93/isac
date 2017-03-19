@@ -63,7 +63,7 @@ public class Handler implements MessageListener {
         try {
 
             if(json.getString("type").equals("pinch")) {
-                PinchInfo info = new PinchInfo(json.getString(PinchInfo.ADDRESS), (PinchInfo.Direction)json.get(PinchInfo.DIRECTION),json.getInt(PinchInfo.X_COORDINATE),
+                PinchInfo info = new PinchInfo(json.getString(PinchInfo.ADDRESS),/* (PinchInfo.Direction)json.get(PinchInfo.DIRECTION)*/PinchInfo.Direction.valueOf(json.getString(PinchInfo.DIRECTION)),json.getInt(PinchInfo.X_COORDINATE),
                         json.getInt(PinchInfo.Y_COORDINATE), json.getBoolean(PinchInfo.PORTRAIT), json.getLong(PinchInfo.TIMESTAMP),
                         json.getInt(PinchInfo.SCREEN_WIDTH), json.getInt(PinchInfo.SCREEN_HEIGHT), json.getInt(PinchInfo.CONNECTED_DEVICE));
                 if (!ipAddress.equals(info.getAddress()) && info.getTimestamp() > gridView.getTimeStamp() - 20 &&
