@@ -85,7 +85,7 @@ public class GridView extends View {
     }
 
     public void clear(){
-        if(!started.get()){
+        if(!isStarted()){
             cellChecked=new boolean[row][column];
             postInvalidate();
         }else {
@@ -216,19 +216,14 @@ public class GridView extends View {
 
                 if (numberOfTaps == 3) {
                     System.out.println("Triplo tap");
-                    if(!started.get()){
-                        cellChecked=new boolean[row][column];
-                        postInvalidate();
-                    }else {
-                        clear.set(true);
-                        started.compareAndSet(true,false);
-                    }
+                    clear();
                 } else if (numberOfTaps == 2) {
                     System.out.println("Doppio tap");
-                    if(started.compareAndSet(false,true)){
-                        new CalculateGeneration().execute();
+
+                    if(isStarted()){
+                        pause();
                     }else{
-                        started.compareAndSet(true,false);
+                        start();
                     }
                 }
 
