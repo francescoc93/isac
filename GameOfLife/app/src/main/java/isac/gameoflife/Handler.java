@@ -32,9 +32,7 @@ public class Handler implements MessageListener {
 
     public Handler(GridView gridView,Context context){
 
-        WifiManager wm = (WifiManager) context.getSystemService(WIFI_SERVICE);
-        ipAddress = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
-       // ipAddress=Utils.getIpAddress();
+        ipAddress=Utils.getIpAddress();
         System.out.println("Indirizzo IP " + ipAddress);
         value_address=Integer.parseInt(ipAddress.split("\\.")[3]);
         this.gridView=gridView;
