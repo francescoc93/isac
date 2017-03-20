@@ -1,6 +1,8 @@
 package isac.gameoflife;
 
 import android.content.Context;
+import android.net.wifi.WifiManager;
+import android.text.format.Formatter;
 import android.widget.Toast;
 
 import com.rabbitmq.client.AMQP;
@@ -11,6 +13,8 @@ import org.json.JSONObject;
 
 import java.util.Collection;
 import java.util.HashMap;
+
+import static android.content.Context.WIFI_SERVICE;
 
 /**
  * Created by Francesco on 16/03/2017.
@@ -27,7 +31,11 @@ public class Handler implements MessageListener {
     private boolean portrait;
 
     public Handler(GridView gridView,Context context){
-        ipAddress=Utils.getIpAddress();
+
+        WifiManager wm = (WifiManager) context.getSystemService(WIFI_SERVICE);
+        ipAddress = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
+       // ipAddress=Utils.getIpAddress();
+        System.out.println("Indirizzo IP " + ipAddress);
         value_address=Integer.parseInt(ipAddress.split("\\.")[3]);
         this.gridView=gridView;
         this.context=context;
