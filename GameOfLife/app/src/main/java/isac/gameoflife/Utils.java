@@ -1,5 +1,8 @@
 package isac.gameoflife;
 
+import android.app.Activity;
+import android.content.Context;
+import android.net.wifi.WifiManager;
 import android.os.Environment;
 
 import java.io.BufferedReader;
@@ -8,9 +11,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -22,6 +27,7 @@ import java.util.List;
 public class Utils {
 
     private static String ipAddress=null;
+    private static Context context=null;
 
     private Utils(){
     }
@@ -69,51 +75,30 @@ public class Utils {
         return ret;
     }
 
+    public static void setContext(Context ctx){
+        context=ctx;
+    }
+
     public static String getIpAddress() {
         if (ipAddress == null) {
-            try {
-                List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
-                for (NetworkInterface intf : interfaces) {
-                    List<InetAddress> addrs = Collections.list(intf.getInetAddresses());
-                    for (InetAddress addr : addrs) {
-                        if (!addr.isLoopbackAddress()) {
-                            String sAddr = addr.getHostAddress();
-                            //boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr);
-                            boolean isIPv4 = sAddr.indexOf(':') < 0;
-                            ipAddress = sAddr;
-                           /* if (useIPv4) {
-                                if (isIPv4)
-                                    return sAddr;
-                            } else {
-                                if (!isIPv4) {
-                                    int delim = sAddr.indexOf('%'); // drop ip6 zone suffix
-                                    return delim<0 ? sAddr.toUpperCase() : sAddr.substring(0, delim).toUpperCase();
-                                }
-                            }*/
-                        }
+
+            if(context!=null) {
+                WifiManager wm = (WifiManager) context.getSystemService(Activity.WIFI_SERVICE);
+                try {
+                    byte[] tmp = BigInteger.valueOf(wm.getConnectionInfo().getIpAddress()).toByteArray();
+                    byte[] byteIpAddress = new byte[tmp.length];
+
+                    for (int i = tmp.length - 1; i >= 0; i--) {
+                        byteIpAddress[tmp.length - i - 1] = tmp[i];
                     }
+
+                    ipAddress = InetAddress.getByAddress(byteIpAddress).getHostAddress();
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception ex) {
+            }else{
+                return "127.0.0.1";
             }
-            /*try {
-                Enumeration en = NetworkInterface.getNetworkInterfaces();
-                InetAddress ia=null;
-                while(en.hasMoreElements()){
-                    NetworkInterface ni=(NetworkInterface) en.nextElement();
-                    Enumeration ee = ni.getInetAddresses();
-
-                    while(ee.hasMoreElements()) {
-                        ia= (InetAddress) ee.nextElement();
-                    }
-                }
-
-                ipAddress=ia.getHostAddress();
-            } catch (SocketException e) {
-                e.printStackTrace();
-            }
-
-        }*/
-
 
         }
         System.out.println(ipAddress);

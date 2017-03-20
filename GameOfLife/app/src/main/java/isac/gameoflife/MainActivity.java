@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
         if(firstTime) {
             firstTime=false;
-
+            Utils.setContext(this);
             handler=new Handler(gridView,this);
 
             new AsyncTask<Void,Void,Void>(){
