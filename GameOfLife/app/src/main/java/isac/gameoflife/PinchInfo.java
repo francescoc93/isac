@@ -25,7 +25,6 @@ public class PinchInfo implements Serializable {
     public final static String PORTRAIT="portrait";
     public final static String SCREEN_WIDTH="screenWidth";
     public final static String SCREEN_HEIGHT="screenHeight";
-    public final static String CONNECTED_DEVICE="connectedDevice";
     private Direction direction;
     private String address;
     private Integer xcoordinate;
@@ -34,9 +33,8 @@ public class PinchInfo implements Serializable {
     private Long timestamp;
     private int screenWidth;
     private int screenHeight;
-    private int connectedDevice;
 
-    public PinchInfo(String address, Direction direction,Integer xcoordinate, Integer ycoordinate, boolean portrait, Long timestamp, int screenWidth, int screenHeight,int connectedDevice) {
+    public PinchInfo(String address, Direction direction,Integer xcoordinate, Integer ycoordinate, boolean portrait, Long timestamp, int screenWidth, int screenHeight) {
         this.address = address;
         this.xcoordinate = xcoordinate;
         this.ycoordinate = ycoordinate;
@@ -44,7 +42,6 @@ public class PinchInfo implements Serializable {
         this.timestamp = timestamp;
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
-        this.connectedDevice=connectedDevice;
         this.direction=direction;
     }
 
@@ -76,10 +73,6 @@ public class PinchInfo implements Serializable {
         return screenHeight;
     }
 
-    public int getConnectedDevice() {
-        return connectedDevice;
-    }
-
     public Direction getDirection(){
         return direction;
     }
@@ -106,7 +99,6 @@ public class PinchInfo implements Serializable {
             jo.put(PORTRAIT, isPortrait());
             jo.put(SCREEN_WIDTH, getScreenWidth());
             jo.put(SCREEN_HEIGHT, getScreenHeight());
-            jo.put(CONNECTED_DEVICE,getConnectedDevice());
             jo.put("type","pinch");
         } catch (JSONException e) {
             e.printStackTrace();

@@ -1,5 +1,10 @@
 package isac.gameoflife;
 
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -51,6 +56,38 @@ public class MainActivity extends AppCompatActivity {
                 }
 
             }.execute();
+
+            SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
+            sensorManager.registerListener(new SensorEventListener() {
+
+                private float x=Float.MAX_VALUE,y=Float.MAX_VALUE,z=Float.MAX_VALUE;
+
+                @Override
+                public void onSensorChanged(SensorEvent event) {
+
+
+                    if(x==Float.MAX_VALUE) {
+                        x = event.values[0];
+                        y = event.values[1];
+                        z = event.values[2];
+                    }else if(event.values[0]<(x-0.5)|| event.values[0]>(x+0.5)||event.values[1]<(y-0.5)|| event.values[1]>(y+0.5)||
+                            event.values[2]<(z-0.5)|| event.values[2]>(z+0.5)){
+                        System.out.println("Schermo scollegato");
+                        handler.closeDeviceCommunication();
+                        x = event.values[0];
+                        y = event.values[1];
+                        z = event.values[2];
+                    }
+
+                }
+
+                @Override
+                public void onAccuracyChanged(Sensor sensor, int accuracy) {
+                }
+
+            }, sensor, SensorManager.SENSOR_DELAY_FASTEST);
         }
 
         setContentView(gridView);

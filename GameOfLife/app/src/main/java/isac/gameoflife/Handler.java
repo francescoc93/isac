@@ -2,6 +2,7 @@ package isac.gameoflife;
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
+import android.support.v4.util.Pair;
 import android.text.format.Formatter;
 import android.widget.Toast;
 
@@ -27,8 +28,9 @@ public class Handler implements MessageListener {
     private String ipAddress;
     private RabbitMQ rabbitMQ;
     private HashMap<String,ConnectedDeviceInfo> connectedDevices;
-    private int number_device,value_address;
+    private int value_address;
     private boolean portrait;
+    private Object lock;
 
     public Handler(GridView gridView,Context context){
 
@@ -37,9 +39,9 @@ public class Handler implements MessageListener {
         value_address=Integer.parseInt(ipAddress.split("\\.")[3]);
         this.gridView=gridView;
         this.context=context;
-        this.rabbitMQ=new RabbitMQ(Utils.getAddress(),"[user]","[user]");;
-        number_device=0;
+        this.rabbitMQ=new RabbitMQ(Utils.getAddress(),"[user]","[user]");
         connectedDevices=new HashMap<>();
+        lock=new Object();
     }
 
     public boolean connectToServer(){
@@ -65,51 +67,118 @@ public class Handler implements MessageListener {
 
     @Override
     public void handleMessage(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, JSONObject json) {
-        System.out.println("Messaggio broadcast ricevuto");
+        System.out.println("Messaggio ricevuto");
         try {
 
-            if(json.getString("type").equals("pinch")) {
-                PinchInfo info = new PinchInfo(json.getString(PinchInfo.ADDRESS),/* (PinchInfo.Direction)json.get(PinchInfo.DIRECTION)*/PinchInfo.Direction.valueOf(json.getString(PinchInfo.DIRECTION)),json.getInt(PinchInfo.X_COORDINATE),
+            if(json.getString("type").equals("pinch")) { //messaggio broadcast
+                PinchInfo info = new PinchInfo(json.getString(PinchInfo.ADDRESS),PinchInfo.Direction.valueOf(json.getString(PinchInfo.DIRECTION)),json.getInt(PinchInfo.X_COORDINATE),
                         json.getInt(PinchInfo.Y_COORDINATE), json.getBoolean(PinchInfo.PORTRAIT), json.getLong(PinchInfo.TIMESTAMP),
-                        json.getInt(PinchInfo.SCREEN_WIDTH), json.getInt(PinchInfo.SCREEN_HEIGHT), json.getInt(PinchInfo.CONNECTED_DEVICE));
-                if (!ipAddress.equals(info.getAddress()) && info.getTimestamp() > gridView.getTimeStamp() - 20 &&
-                        info.getTimestamp() < gridView.getTimeStamp() + 20 && info.oppositeDirection(gridView.getDirection())) {
-                    System.out.println("DEVICE PAIRED WITH " + info.getAddress());
-                    Toast.makeText(context, "Schermo collegato", Toast.LENGTH_SHORT).show();
+                        json.getInt(PinchInfo.SCREEN_WIDTH), json.getInt(PinchInfo.SCREEN_HEIGHT));
 
-                    //TODO: METTERE IN CONNECTED DEVICE INFO IL NUMERO DI CELLE
-                    //TODO (2) : HANDLE MESSAGE 
+                Pair<Long,PinchInfo.Direction> infoSwipe=gridView.getInfoSwipe();
 
-                    String nameSender="", nameReceiver="";
-                    String ipAddressDevice = info.getAddress();
+                if(infoSwipe!=null) {
+                    if (!ipAddress.equals(info.getAddress()) && (info.getTimestamp() > (infoSwipe.first - 20)) &&
+                            (info.getTimestamp() < (infoSwipe.first + 20)) && info.oppositeDirection(infoSwipe.second)) {
+                        System.out.println("DEVICE PAIRED WITH " + info.getAddress());
+                        Toast.makeText(context, "Schermo collegato", Toast.LENGTH_SHORT).show();
 
-                    int value_address_device=Integer.parseInt(ipAddressDevice.split(".")[3]);
+                        //TODO: METTERE IN CONNECTED DEVICE INFO IL NUMERO DI CELLE
+                        //TODO (2) : HANDLE MESSAGE
 
-                    if(value_address>value_address_device){ //se sono il maggiore tra i due
-                        nameSender=ipAddress+ipAddressDevice;
-                        nameReceiver=ipAddressDevice+ipAddress;
-                        rabbitMQ.addQueue(nameSender);
-                        rabbitMQ.addQueue(nameReceiver, new MessageListener() {
-                            @Override
-                            public void handleMessage(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, JSONObject json) {
+                        String nameSender = "", nameReceiver = "";
+                        String ipAddressDevice = info.getAddress();
 
+                        int value_address_device = Integer.parseInt(ipAddressDevice.split(".")[3]);
+
+                        if (value_address > value_address_device) { //se sono il maggiore tra i due
+                            nameSender = ipAddress + ipAddressDevice;
+                            nameReceiver = ipAddressDevice + ipAddress;
+                            rabbitMQ.addQueue(nameSender);
+                            rabbitMQ.addQueue(nameReceiver, this);
+
+                            //TODO: calcoli per x e y (pdf)
+                            synchronized (lock) {
+                                connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(info.isPortrait(),
+                                        info.getXcoordinate(), info.getYcoordinate(), nameSender, nameReceiver));
                             }
-                        });
-                    }else{ //se sono il minore tra i due
-                        nameReceiver=ipAddress+ipAddressDevice;
-                        nameSender=ipAddressDevice+ipAddress;
-                        rabbitMQ.addQueue(nameReceiver);
-                        rabbitMQ.addQueue(nameSender, new MessageListener() {
-                            @Override
-                            public void handleMessage(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, JSONObject json) {
 
+                        } else { //se sono il minore tra i due
+                            nameReceiver = ipAddress + ipAddressDevice;
+                            nameSender = ipAddressDevice + ipAddress;
+                            rabbitMQ.addQueue(nameReceiver);
+                            rabbitMQ.addQueue(nameSender, this);
+
+                            //TODO: calcoli per x e y (pdf)
+                            synchronized (lock) {
+                                connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(info.isPortrait(),
+                                        info.getXcoordinate(), info.getYcoordinate(), nameReceiver, nameSender));
                             }
-                        });
+
+                        }
+                    }
+                }
+            }else if(json.getString("type").equals("close")){ //messaggio al singolo device
+
+                ConnectedDeviceInfo deviceInfo=null;
+
+                synchronized (lock) {
+                    if (connectedDevices.containsKey(PinchInfo.ADDRESS)) {
+                        deviceInfo = connectedDevices.remove(json.getString(PinchInfo.ADDRESS));
+                   }
+                }
+
+                if(deviceInfo!=null && rabbitMQ.isConnected()){
+                    closeCommunication(deviceInfo.getNameQueueSender());
+                    closeCommunication(deviceInfo.getNameQueueReceiver());
+                }
+            }else if(json.getString("type").equals("start")){ //messaggio broadcast
+
+                if(!ipAddress.equals(json.getString(PinchInfo.ADDRESS))) {
+
+                    boolean flag = false;
+
+                    synchronized (lock) {
+                        if (connectedDevices.size() != 0) {
+                            flag = true;
+                        }
                     }
 
-                    //TODO: calcoli per x e y (pdf)
-                    connectedDevices.put(ipAddressDevice,new ConnectedDeviceInfo(info.isPortrait(),
-                            info.getXcoordinate(), info.getYcoordinate(), nameSender, nameReceiver));
+                    if (flag) {
+                        gridView.start();
+                    }
+                }
+
+            }else if(json.getString("type").equals("pause")){ //messaggio broadcast
+
+                if(!ipAddress.equals(json.getString(PinchInfo.ADDRESS))) {
+                    boolean flag = false;
+
+                    synchronized (lock) {
+                        if (connectedDevices.size() != 0) {
+                            flag = true;
+                        }
+                    }
+
+                    if (flag) {
+                        gridView.pause();
+                    }
+                }
+
+            }else if(json.getString("type").equals("reset")){ //messaggio broadcast
+
+                if(!ipAddress.equals(json.getString(PinchInfo.ADDRESS))) {
+                    boolean flag = false;
+
+                    synchronized (lock) {
+                        if (connectedDevices.size() != 0) {
+                            flag = true;
+                        }
+                    }
+
+                    if (flag) {
+                        gridView.clear();
+                    }
 
                 }
             }
@@ -118,22 +187,42 @@ public class Handler implements MessageListener {
         }
     }
 
-    /**
-     * Send broadcast message to all the devices connected with him
-     * @param message
-     */
-    public void sendMessaggeToConnectedDevices(final JSONObject message){
+    public void closeDeviceCommunication() {
+        if(rabbitMQ.isConnected()){
 
-        if(rabbitMQ.isConnected()) {
-            Collection<ConnectedDeviceInfo> devices = connectedDevices.values();
+            synchronized (lock) {
+                Collection<ConnectedDeviceInfo> devices = connectedDevices.values();
 
-            for (ConnectedDeviceInfo device : devices) {
-                rabbitMQ.sendMessage(device.getNameQueueSender(), message);
+                JSONObject message = new JSONObject();
+
+                try {
+                    message.put("type", "close");
+                    message.put(PinchInfo.ADDRESS, ipAddress);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                for (ConnectedDeviceInfo device : devices) {
+                    rabbitMQ.sendMessage(device.getNameQueueSender(), message);
+                    closeCommunication(device.getNameQueueSender());
+                    closeCommunication(device.getNameQueueReceiver());
+                }
+
+                if (connectedDevices.size() != 0) {
+                    connectedDevices.clear();
+                }
             }
+        }
+
+    }
+
+    public int getConnectedDevice(){
+        synchronized (lock){
+            return connectedDevices.size();
         }
     }
 
-    public int getNumberConnectedDevice(){
-        return number_device;
+    private void closeCommunication(String name){
+        rabbitMQ.close(name);
     }
 }

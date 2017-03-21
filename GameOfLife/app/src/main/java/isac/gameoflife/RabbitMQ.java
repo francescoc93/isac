@@ -54,7 +54,7 @@ public class RabbitMQ{
         }
     }
 
-    public boolean addQueue(String name){
+    public synchronized boolean addQueue(String name){
         if(!queue.containsKey(name) && !exchange.containsKey(name)){
             try {
                 Channel tmp=createChannel();
@@ -72,7 +72,7 @@ public class RabbitMQ{
         return false;
     }
 
-    public boolean addQueue(String name, final MessageListener listener){
+    public synchronized boolean addQueue(String name, final MessageListener listener){
         if(addQueue(name)) {
             addListener(listener, queue.get(name), name);
             return true;
@@ -81,7 +81,7 @@ public class RabbitMQ{
         return false;
     }
 
-    public boolean addPublishExchange(String name,String mode){
+    public synchronized boolean addPublishExchange(String name,String mode){
         if(!exchange.containsKey(name) && !queue.containsKey(name)){
             try {
                 Channel tmp=createChannel();
@@ -99,7 +99,7 @@ public class RabbitMQ{
         return false;
     }
 
-    public boolean addSubscribeQueue(String name,String mode,MessageListener listener){
+    public synchronized boolean addSubscribeQueue(String name,String mode,MessageListener listener){
         if(addPublishExchange(name,mode)) {
             try {
                 Channel tmp = exchange.get(name);
@@ -116,7 +116,7 @@ public class RabbitMQ{
         return false;
     }
 
-    public void sendMessage(String name,JSONObject message){
+    public synchronized void sendMessage(String name,JSONObject message){
         try {
             if (queue.containsKey(name)) {
                 queue.get(name).basicPublish("", name, null, message.toString().getBytes());
@@ -128,7 +128,7 @@ public class RabbitMQ{
         }
     }
 
-    public void closeConnection() {
+    public synchronized void closeConnection() {
         Set<String> setQueue = queue.keySet();
         Set<String> setExchange = exchange.keySet();
 
@@ -148,7 +148,7 @@ public class RabbitMQ{
         }
     }
 
-    public void close(String name){
+    public synchronized void close(String name){
         try {
             if (queue.containsKey(name)) {
                 queue.remove(name).close();

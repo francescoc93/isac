@@ -1,22 +1,19 @@
 package isac.gameoflife;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Point;
 import android.os.AsyncTask;
+import android.support.v4.util.Pair;
 import android.support.v4.view.MotionEventCompat;
-import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.widget.Toast;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -28,18 +25,19 @@ public class GridView extends View {
     private final static int TIME_DOUBLE_TAP=180;
     private final static int DESIRED_DP_VALUE=50;
     private final int SIZE;
-    private final float scale;
     private Handler handler;
     private int width,height,row,column,startX,startY,stopX,stopY,numberOfTaps ;
     private Paint whitePaint = new Paint();
     private boolean[][] cellChecked;
     private String ipAddress;
     private MainActivity activity;
-    private PinchInfo.Direction direction;
+    //private PinchInfo.Direction direction;
     //se uso i lock, si blocca il thread UI, meglio utilizzare AtomicBoolean che permette
     //di effettuare operazioni thread-safe sui booleani
     private AtomicBoolean started=new AtomicBoolean(false),clear=new AtomicBoolean(false);
-    private Long timeStamp,lastTapTimeMs,touchDownMs ;
+    private Long /*timeStamp,*/lastTapTimeMs,touchDownMs ;
+    private Pair<Long,PinchInfo.Direction> infoSwipe;
+    private Object lock;
 
     public GridView(Context context) {
         super(context);
@@ -50,8 +48,9 @@ public class GridView extends View {
         numberOfTaps=0;
         lastTapTimeMs=0L;
         touchDownMs=0L;
-        scale = getResources().getDisplayMetrics().density;
-        /*int pixelValue*/SIZE = (int) (DESIRED_DP_VALUE * scale + 0.5f);
+        float scale = getResources().getDisplayMetrics().density;
+        SIZE = (int) (DESIRED_DP_VALUE * scale + 0.5f);
+        lock=new Object();
     }
 
     public void setHandler(Handler handler){
@@ -62,19 +61,29 @@ public class GridView extends View {
        this.activity = activity;
     }
 
-    public Long getTimeStamp(){
+   /* public Long getTimeStamp(){
         return this.timeStamp;
     }
 
     public PinchInfo.Direction getDirection(){
         return direction;
+    }*/
+
+    public Pair<Long,PinchInfo.Direction> getInfoSwipe(){
+        synchronized (lock){
+            if(infoSwipe!=null) {
+                return new Pair<>(infoSwipe.first, infoSwipe.second);
+            }
+
+            return null;
+        }
     }
 
     public boolean isStarted(){
         return started.get();
     }
 
-    public void start(){
+    public synchronized void start(){
         //se il gioco non è stato già avviato, lo avvio eseguendo
         //un async task (necessario in quanto il thread UI non si deve bloccare)
         //se l'espressione booleana è false (primo parametro), imposto a true la variabile e proseguo
@@ -84,12 +93,12 @@ public class GridView extends View {
     }
 
     //metto in pausa il gioco
-    public void pause(){
+    public synchronized void pause(){
         //se il gioco è in esecuzione, setto a false la variabile
         started.compareAndSet(true,false);
     }
 
-    public void clear(){
+    public synchronized void clear(){
         if(!isStarted()){
             cellChecked=new boolean[row][column];
             postInvalidate();
@@ -146,18 +155,15 @@ public class GridView extends View {
         switch(action) {
             //l'utente ha il dito appoggiato sullo schermo
             case (MotionEvent.ACTION_DOWN) :
-                System.out.println("Punto di inizio: "+event.getX()+" "+event.getY());
                 touchDownMs = System.currentTimeMillis();
                 startX=(int)event.getX();
                 startY=(int)event.getY();
                 return true;
             //l'utente sta muovendo il dito
             case (MotionEvent.ACTION_MOVE) :
-                System.out.println("In movimento: "+event.getX()+" "+event.getY());
                 return true;
             //l'utente ha rilasciato il dito
             case (MotionEvent.ACTION_UP) :
-                System.out.println("Fine: "+event.getX()+" "+event.getY());
                 stopX=(int)event.getX();
                 stopY=(int)event.getY();
 
@@ -169,18 +175,25 @@ public class GridView extends View {
                     //l'utente vuole "attivare" una cella della griglia. altrimenti, potrebbe essere uno swipe
                     //per lo swipe controllare che il movimento sia lungo solo uno dei due assi e non entrambi
                     // (altrimenti mi sto muovendo in diagonale)
-                    if (Math.abs(startX - stopX) <= 3 && Math.abs(startY - stopY) <= 3 && !started.get()) {
+                    if (Math.abs(startX - stopX) < 10 && Math.abs(startY - stopY) < 10 && !started.get()) {
                         int column = (int) (event.getX() / SIZE);
                         int row = (int) (event.getY() / SIZE);
 
-                        cellChecked[column][row] = !cellChecked[column][row];
-                        //chiamo il metodo invalidate così forzo la chiamata del metodo onDraw
-                        invalidate();
+
+                        if(column<this.row && row<this.column) {
+                            cellChecked[column][row] = !cellChecked[column][row];
+                            //chiamo il metodo invalidate così forzo la chiamata del metodo onDraw
+                            invalidate();
+                        }
+
                     } else { //valuto lo switch
-                        timeStamp = System.currentTimeMillis();
-                        PinchInfo info=null;
+                        long timeStamp = System.currentTimeMillis();
+                        PinchInfo.Direction direction=null;
+                        final PinchInfo info;
+
                         handler.setPortrait(activity.isPortrait());
-                        if (Math.abs(startX - stopX) >=4 && Math.abs(startY - stopY) <= 50){//se mi sono mosso sulle X
+
+                        if (Math.abs(startX - stopX) >=10 && Math.abs(startY - stopY) <= 50){//se mi sono mosso sulle X
                             if((stopX - startX) > 0){
                                 direction=PinchInfo.Direction.RIGHT;
                                 Toast.makeText(getContext(), "Asse X destra", Toast.LENGTH_SHORT).show();
@@ -190,9 +203,9 @@ public class GridView extends View {
                                 Toast.makeText(getContext(), "Asse X sinistra", Toast.LENGTH_SHORT).show();
                             }
 
-                            info= new PinchInfo(ipAddress, direction,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
+                            info= new PinchInfo(ipAddress, direction,stopX,stopY,activity.isPortrait(),timeStamp, width, height);
                             this.handler.sendBroadcastMessage(info.toJSON());
-                        } else if (Math.abs(startX - stopX) <=50 && Math.abs(startY - stopY) >= 4){//mi sono mosso sulle Y
+                        } else if (Math.abs(startX - stopX) <=50 && Math.abs(startY - stopY) >= 10){//mi sono mosso sulle Y
                             if((stopY - startY) > 0){
                                 direction=PinchInfo.Direction.DOWN;
                                 Toast.makeText(getContext(), "Asse Y basso", Toast.LENGTH_SHORT).show();
@@ -200,8 +213,29 @@ public class GridView extends View {
                                 direction=PinchInfo.Direction.UP;
                                 Toast.makeText(getContext(), "Asse Y alto", Toast.LENGTH_SHORT).show();
                             }
-                            info= new PinchInfo(ipAddress, direction,stopX,stopY,activity.isPortrait(),timeStamp, width, height,handler.getNumberConnectedDevice());
-                            this.handler.sendBroadcastMessage(info.toJSON());
+                            synchronized (lock){
+                                infoSwipe=new Pair<>(timeStamp,direction);
+                            }
+                            info= new PinchInfo(ipAddress, direction,stopX,stopY,activity.isPortrait(),timeStamp, width, height);
+
+                            new AsyncTask<Void,Void,Void>(){
+
+                                @Override
+                                protected Void doInBackground(Void... params) {
+
+                                    try {
+                                        Thread.sleep(20);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+
+                                    handler.sendBroadcastMessage(info.toJSON());
+
+                                    return null;
+                                }
+                            }.execute();
+
+
                         } else {
                             System.out.println("Mossa in diagonale");
                         }
@@ -222,19 +256,66 @@ public class GridView extends View {
                 if (numberOfTaps == 3) {
                     System.out.println("Triplo tap");
                     Toast.makeText(getContext(), "Reset", Toast.LENGTH_SHORT).show();
+
                     clear();
+
+                    if(handler.getConnectedDevice()!=0) {
+
+                        JSONObject message = new JSONObject();
+                        try {
+                            message.put("type", "reset");
+                            message.put(PinchInfo.ADDRESS,ipAddress);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        handler.sendBroadcastMessage(message);
+                    }
+
                 } else if (numberOfTaps == 2) {
                     System.out.println("Doppio tap");
+
+
 
                     if(isStarted()){
                         Toast.makeText(getContext(), "Pause", Toast.LENGTH_SHORT).show();
                         System.out.println("Pausa");
+
                         pause();
+
+                        if(handler.getConnectedDevice()!=0){
+
+                            JSONObject message=new JSONObject();
+                            try {
+                                message.put("type","pause");
+                                message.put(PinchInfo.ADDRESS,ipAddress);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+
+                            handler.sendBroadcastMessage(message);
+                        }
                     }else{
                         Toast.makeText(getContext(), "Start", Toast.LENGTH_SHORT).show();
                         System.out.println("Inizio");
+
                         start();
+
+                        if(handler.getConnectedDevice()!=0){
+
+                            JSONObject message=new JSONObject();
+                            try {
+                                message.put("type","start");
+                                message.put(PinchInfo.ADDRESS,ipAddress);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+
+                            handler.sendBroadcastMessage(message);
+                        }
                     }
+
+
                 }
 
                 return true;
@@ -258,6 +339,7 @@ public class GridView extends View {
             column = /*height % SIZE == 0 ?*/ height / SIZE;// : (height / SIZE) + 1;
             cellChecked = new boolean[row][column];
         }
+
     }
 
     //async task che si occupa del calcolo delle generazioni di cellule
