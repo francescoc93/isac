@@ -191,25 +191,31 @@ public class Handler implements MessageListener {
         if(rabbitMQ.isConnected()){
 
             synchronized (lock) {
-                Collection<ConnectedDeviceInfo> devices = connectedDevices.values();
-
-                JSONObject message = new JSONObject();
-
-                try {
-                    message.put("type", "close");
-                    message.put(PinchInfo.ADDRESS, ipAddress);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-                for (ConnectedDeviceInfo device : devices) {
-                    rabbitMQ.sendMessage(device.getNameQueueSender(), message);
-                    closeCommunication(device.getNameQueueSender());
-                    closeCommunication(device.getNameQueueReceiver());
-                }
-
                 if (connectedDevices.size() != 0) {
+                    Collection<ConnectedDeviceInfo> devices = connectedDevices.values();
+
+
+
+                    JSONObject message = new JSONObject();
+
+                    try {
+                        message.put("type", "close");
+                        message.put(PinchInfo.ADDRESS, ipAddress);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    for (ConnectedDeviceInfo device : devices) {
+                        rabbitMQ.sendMessage(device.getNameQueueSender(), message);
+                        closeCommunication(device.getNameQueueSender());
+                        closeCommunication(device.getNameQueueReceiver());
+                    }
+
                     connectedDevices.clear();
+
+                /*if (connectedDevices.size() != 0) {
+                    connectedDevices.clear();
+                }*/
                 }
             }
         }

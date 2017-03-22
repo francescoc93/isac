@@ -19,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
     private static boolean firstTime=true;
     private static Handler handler;
     private GridView gridView;
-    private boolean portrait = true;
+    private boolean portrait = true,onTable=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,13 +62,46 @@ public class MainActivity extends AppCompatActivity {
 
             sensorManager.registerListener(new SensorEventListener() {
 
-                private float x=Float.MAX_VALUE,y=Float.MAX_VALUE,z=Float.MAX_VALUE;
+                private float oldX=Float.MAX_VALUE-0.5f,oldY=Float.MAX_VALUE-0.5f,oldZ=Float.MAX_VALUE-0.5f;
 
                 @Override
                 public void onSensorChanged(SensorEvent event) {
 
+                    float x = event.values[0];
+                    float y = event.values[1];
+                    float z = event.values[2];
 
-                    if(x==Float.MAX_VALUE) {
+                    double g=Math.sqrt(x * x + y * y + z * z);
+
+                    x/=g;
+                    y/=g;
+                    z/=g;
+
+                    //int inclination = (int) Math.round(Math.toDegrees(Math.acos(z)));
+
+                    if(/*(inclination<25 || inclination>155)&&*/x>=(oldX-0.25)&&x<=(oldX+0.25)
+                            &&y>=(oldY-0.25)&&y<=(oldY+0.25) && z>=(oldZ-0.25)&&z<=(oldZ+0.25)){
+                        if(!onTable) {
+                            onTable = true;
+                            System.out.println("sono sul tavolo Z: " + z + " X: " + x + " Y: " + y);
+                        }
+                    }else{
+                        if(onTable) {
+                            onTable = false;
+                            System.out.println("non sono sul tavolo Z: " + z + " X: " + x + " Y: " + y);
+
+                            if(handler.getConnectedDevice()!=0){
+                                handler.closeDeviceCommunication();
+                            }
+                        }
+                    }
+
+
+                    oldX=x;
+                    oldY=y;
+                    oldZ=z;
+
+                   /* if(x==Float.MAX_VALUE) {
                         x = event.values[0];
                         y = event.values[1];
                         z = event.values[2];
@@ -79,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
                         x = event.values[0];
                         y = event.values[1];
                         z = event.values[2];
-                    }
+                    }*/
 
                 }
 
