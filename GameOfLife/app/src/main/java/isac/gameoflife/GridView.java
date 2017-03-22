@@ -26,7 +26,24 @@ public class GridView extends View {
     private final static int DESIRED_DP_VALUE=50;
     private final int SIZE;
     private Handler handler;
-    private int width,height,row,column,startX,startY,stopX,stopY,numberOfTaps ;
+    private int width;
+    private int height;
+    private int row;
+    private int column;
+    private int startX;
+    private int startY;
+
+    public int getStopX() {
+        return stopX;
+    }
+
+    public int getStopY() {
+        return stopY;
+    }
+
+    private int stopX;
+    private int stopY;
+    private int numberOfTaps ;
     private Paint whitePaint = new Paint();
     private boolean[][] cellChecked;
     private String ipAddress;

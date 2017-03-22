@@ -100,7 +100,8 @@ public class Handler implements MessageListener {
                             //TODO: calcoli per x e y (pdf)
                             synchronized (lock) {
                                 connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(info.isPortrait(),
-                                        info.getXcoordinate(), info.getYcoordinate(), nameSender, nameReceiver));
+                                        info.getXcoordinate(), info.getYcoordinate(),info.getScreenWidth(),info.getScreenHeight(),
+                                        this.gridView.getStopX(),this.gridView.getStopY(), nameSender, nameReceiver));
                             }
 
                         } else { //se sono il minore tra i due
@@ -112,7 +113,8 @@ public class Handler implements MessageListener {
                             //TODO: calcoli per x e y (pdf)
                             synchronized (lock) {
                                 connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(info.isPortrait(),
-                                        info.getXcoordinate(), info.getYcoordinate(), nameReceiver, nameSender));
+                                        info.getXcoordinate(), info.getYcoordinate(),info.getScreenWidth(),info.getScreenHeight(),
+                                        this.gridView.getStopX(),this.gridView.getStopY(),nameReceiver, nameSender));
                             }
 
                         }
