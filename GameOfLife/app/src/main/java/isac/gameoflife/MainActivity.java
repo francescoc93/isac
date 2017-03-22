@@ -21,10 +21,6 @@ public class MainActivity extends AppCompatActivity {
     private static Handler handler;
     private GridView gridView;
     private boolean portrait = true,onTable=false;
-    private float[] mGravity;
-    private float mAccel;
-    private float mAccelCurrent;
-    private float mAccelLast;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,10 +58,6 @@ public class MainActivity extends AppCompatActivity {
 
             }.execute();
 
-            mAccel = 0.00f;
-            mAccelCurrent = SensorManager.GRAVITY_EARTH;
-            mAccelLast = SensorManager.GRAVITY_EARTH;
-
             SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
@@ -75,10 +67,6 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onSensorChanged(SensorEvent event) {
-
-
-
-
                     float x = event.values[0];
                     float y = event.values[1];
                     float z = event.values[2];
