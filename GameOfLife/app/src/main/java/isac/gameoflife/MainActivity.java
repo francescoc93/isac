@@ -8,6 +8,7 @@ import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.FloatMath;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,6 +21,10 @@ public class MainActivity extends AppCompatActivity {
     private static Handler handler;
     private GridView gridView;
     private boolean portrait = true,onTable=false;
+    private float[] mGravity;
+    private float mAccel;
+    private float mAccelCurrent;
+    private float mAccelLast;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +62,10 @@ public class MainActivity extends AppCompatActivity {
 
             }.execute();
 
+            mAccel = 0.00f;
+            mAccelCurrent = SensorManager.GRAVITY_EARTH;
+            mAccelLast = SensorManager.GRAVITY_EARTH;
+
             SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
@@ -66,6 +75,9 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onSensorChanged(SensorEvent event) {
+
+
+
 
                     float x = event.values[0];
                     float y = event.values[1];
@@ -77,18 +89,18 @@ public class MainActivity extends AppCompatActivity {
                     y/=g;
                     z/=g;
 
-                    //int inclination = (int) Math.round(Math.toDegrees(Math.acos(z)));
+                    int inclination = (int) Math.round(Math.toDegrees(Math.acos(z)));
 
-                    if(/*(inclination<25 || inclination>155)&&*/x>=(oldX-0.25)&&x<=(oldX+0.25)
-                            &&y>=(oldY-0.25)&&y<=(oldY+0.25) && z>=(oldZ-0.25)&&z<=(oldZ+0.25)){
+                    if((inclination<=15/* || inclination>165*/)&&x>=(oldX-0.5)&&x<=(oldX+0.5)
+                            &&y>=(oldY-0.5)&&y<=(oldY+0.5)){
                         if(!onTable) {
                             onTable = true;
-                            System.out.println("sono sul tavolo Z: " + z + " X: " + x + " Y: " + y);
+                            System.out.println("sono sul tavolo Z: " + z + " X: " + x + " Y: " + y+" Inclination: "+inclination);
                         }
                     }else{
                         if(onTable) {
                             onTable = false;
-                            System.out.println("non sono sul tavolo Z: " + z + " X: " + x + " Y: " + y);
+                            System.out.println("non sono sul tavolo Z: " + z + " X: " + x + " Y: " + y+" Inclination: "+inclination);
 
                             if(handler.getConnectedDevice()!=0){
                                 handler.closeDeviceCommunication();
@@ -101,18 +113,6 @@ public class MainActivity extends AppCompatActivity {
                     oldY=y;
                     oldZ=z;
 
-                   /* if(x==Float.MAX_VALUE) {
-                        x = event.values[0];
-                        y = event.values[1];
-                        z = event.values[2];
-                    }else if(event.values[0]<(x-0.5)|| event.values[0]>(x+0.5)||event.values[1]<(y-0.5)|| event.values[1]>(y+0.5)||
-                            event.values[2]<(z-0.5)|| event.values[2]>(z+0.5)){
-                        System.out.println("Schermo scollegato");
-                        handler.closeDeviceCommunication();
-                        x = event.values[0];
-                        y = event.values[1];
-                        z = event.values[2];
-                    }*/
 
                 }
 
