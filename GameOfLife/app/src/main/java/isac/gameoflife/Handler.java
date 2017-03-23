@@ -15,6 +15,8 @@ import org.json.JSONObject;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static android.content.Context.WIFI_SERVICE;
 
@@ -31,7 +33,7 @@ public class Handler implements MessageListener {
     private HashMap<String,ConnectedDeviceInfo> connectedDevices;
     private int value_address;
     private boolean portrait;
-    private Object lock;
+    private ReentrantLock lock;
 
     public Handler(GridView gridView,final MainActivity activity){
 
@@ -42,7 +44,7 @@ public class Handler implements MessageListener {
         this.activity=activity;
         this.rabbitMQ=new RabbitMQ(Utils.getAddress(),"[user]","[user]");
         connectedDevices=new HashMap<>();
-        lock=new Object();
+        lock=new ReentrantLock();
 
         activity.runOnUiThread(new Runnable() {
             public void run() {
@@ -130,11 +132,13 @@ public class Handler implements MessageListener {
                             rabbitMQ.addQueue(nameReceiver, this);
 
                             //TODO: calcoli per x e y (pdf)
-                            synchronized (lock) {
-                                connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(info.isPortrait(),
-                                        info.getXcoordinate(), info.getYcoordinate(),info.getScreenWidth(),info.getScreenHeight(),
-                                        this.gridView.getStopX(),this.gridView.getStopY(), nameSender, nameReceiver));
-                            }
+                            lock.lock();
+
+                            connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(info.isPortrait(),
+                                    info.getXcoordinate(), info.getYcoordinate(),info.getScreenWidth(),info.getScreenHeight(),
+                                    this.gridView.getStopX(),this.gridView.getStopY(), nameSender, nameReceiver));
+
+                            lock.unlock();
 
                         } else { //se sono il minore tra i due
                             nameReceiver = ipAddress + ipAddressDevice;
@@ -143,11 +147,15 @@ public class Handler implements MessageListener {
                             rabbitMQ.addQueue(nameSender, this);
 
                             //TODO: calcoli per x e y (pdf)
-                            synchronized (lock) {
-                                connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(info.isPortrait(),
-                                        info.getXcoordinate(), info.getYcoordinate(),info.getScreenWidth(),info.getScreenHeight(),
-                                        this.gridView.getStopX(),this.gridView.getStopY(),nameReceiver, nameSender));
-                            }
+                            lock.lock();
+
+                            connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(info.isPortrait(),
+                                    info.getXcoordinate(), info.getYcoordinate(),info.getScreenWidth(),info.getScreenHeight(),
+                                    this.gridView.getStopX(),this.gridView.getStopY(),nameReceiver, nameSender));
+
+
+                            lock.unlock();
+
 
                         }
                     }
@@ -156,11 +164,13 @@ public class Handler implements MessageListener {
 
                 ConnectedDeviceInfo deviceInfo=null;
 
-                synchronized (lock) {
-                    if (connectedDevices.containsKey(PinchInfo.ADDRESS)) {
-                        deviceInfo = connectedDevices.remove(json.getString(PinchInfo.ADDRESS));
-                   }
+                lock.lock();
+
+                if (connectedDevices.containsKey(PinchInfo.ADDRESS)) {
+                    deviceInfo = connectedDevices.remove(json.getString(PinchInfo.ADDRESS));
                 }
+
+                lock.unlock();
 
                 if(deviceInfo!=null && rabbitMQ.isConnected()){
                     closeCommunication(deviceInfo.getNameQueueSender());
@@ -172,12 +182,14 @@ public class Handler implements MessageListener {
                     System.out.println("Da un altro device");
                     boolean flag = false;
 
-                    synchronized (lock) {
-                        if (connectedDevices.size() != 0) {
-                            System.out.println("Sono connesso con qualcuno");
-                            flag = true;
-                        }
+                    lock.lock();
+
+                    if (connectedDevices.size() != 0) {
+                        System.out.println("Sono connesso con qualcuno");
+                        flag = true;
                     }
+
+                    lock.unlock();
 
                     if (flag) {
                         System.out.println("START");
@@ -190,11 +202,13 @@ public class Handler implements MessageListener {
                 if(!ipAddress.equals(json.getString(PinchInfo.ADDRESS))) {
                     boolean flag = false;
 
-                    synchronized (lock) {
-                        if (connectedDevices.size() != 0) {
-                            flag = true;
-                        }
+                    lock.lock();
+
+                    if (connectedDevices.size() != 0) {
+                        flag = true;
                     }
+
+                    lock.unlock();
 
                     if (flag) {
                         gridView.pause();
@@ -206,11 +220,13 @@ public class Handler implements MessageListener {
                 if(!ipAddress.equals(json.getString(PinchInfo.ADDRESS))) {
                     boolean flag = false;
 
-                    synchronized (lock) {
-                        if (connectedDevices.size() != 0) {
-                            flag = true;
-                        }
+                    lock.lock();
+
+                    if (connectedDevices.size() != 0) {
+                        flag = true;
                     }
+
+                    lock.unlock();
 
                     if (flag) {
                         gridView.clear();
@@ -224,44 +240,52 @@ public class Handler implements MessageListener {
     }
 
     public void closeDeviceCommunication() {
-        if(rabbitMQ.isConnected()){
+        if(rabbitMQ.isConnected()) {
 
-            synchronized (lock) {
-                if (connectedDevices.size() != 0) {
-                    Collection<ConnectedDeviceInfo> devices = connectedDevices.values();
+            lock.lock();
+
+            if (connectedDevices.size() != 0) {
+                Collection<ConnectedDeviceInfo> devices = connectedDevices.values();
 
 
+                JSONObject message = new JSONObject();
 
-                    JSONObject message = new JSONObject();
+                try {
+                    message.put("type", "close");
+                    message.put(PinchInfo.ADDRESS, ipAddress);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
 
-                    try {
-                        message.put("type", "close");
-                        message.put(PinchInfo.ADDRESS, ipAddress);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
+                for (ConnectedDeviceInfo device : devices) {
+                    rabbitMQ.sendMessage(device.getNameQueueSender(), message);
+                    closeCommunication(device.getNameQueueSender());
+                    closeCommunication(device.getNameQueueReceiver());
+                }
 
-                    for (ConnectedDeviceInfo device : devices) {
-                        rabbitMQ.sendMessage(device.getNameQueueSender(), message);
-                        closeCommunication(device.getNameQueueSender());
-                        closeCommunication(device.getNameQueueReceiver());
-                    }
-
-                    connectedDevices.clear();
+                connectedDevices.clear();
 
                 /*if (connectedDevices.size() != 0) {
                     connectedDevices.clear();
                 }*/
-                }
             }
+
+            lock.unlock();
         }
+
+
 
     }
 
     public int getConnectedDevice(){
-        synchronized (lock){
-            return connectedDevices.size();
-        }
+
+        lock.lock();
+
+        int tmp=connectedDevices.size();
+
+        lock.unlock();
+
+        return tmp;
     }
 
     private void closeCommunication(String name){

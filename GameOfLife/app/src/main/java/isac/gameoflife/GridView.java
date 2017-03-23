@@ -14,7 +14,10 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by Francesco on 07/03/2017.
@@ -46,7 +49,7 @@ public class GridView extends View {
     private AtomicBoolean started=new AtomicBoolean(false),clear=new AtomicBoolean(false);
     private Long /*timeStamp,*/lastTapTimeMs,touchDownMs ;
     private Pair<Long,PinchInfo.Direction> infoSwipe;
-    private Object lock;
+    private ReentrantLock lockInfoSwipe,lockAction;
 
     public GridView(Context context) {
         super(context);
@@ -59,7 +62,8 @@ public class GridView extends View {
         touchDownMs=0L;
         float scale = getResources().getDisplayMetrics().density;
         SIZE = (int) (DESIRED_DP_VALUE * scale + 0.5f);
-        lock=new Object();
+        lockInfoSwipe=new ReentrantLock();
+        lockAction=new ReentrantLock();
     }
 
     public void setHandler(Handler handler){
@@ -88,11 +92,20 @@ public class GridView extends View {
 
     public Pair<Long,PinchInfo.Direction> getInfoSwipe(){
         //synchronized (lock){
-            if(infoSwipe!=null) {
-                return new Pair<>(infoSwipe.first, infoSwipe.second);
-            }
+        lockInfoSwipe.lock();
 
-            return null;
+        Pair<Long,PinchInfo.Direction> tmp;
+
+        if(infoSwipe!=null) {
+                tmp=new Pair<>(infoSwipe.first, infoSwipe.second);
+        }else{
+            tmp=null;
+        }
+
+
+        lockInfoSwipe.unlock();
+
+        return tmp;
         //}
     }
 
@@ -100,22 +113,50 @@ public class GridView extends View {
         return started.get();
     }
 
-    public synchronized void start(){
+    public void start(){
         //se il gioco non è stato già avviato, lo avvio eseguendo
         //un async task (necessario in quanto il thread UI non si deve bloccare)
         //se l'espressione booleana è false (primo parametro), imposto a true la variabile e proseguo
+
+        lockAction.lock();
+
         if(started.compareAndSet(false,true)){
-            new CalculateGeneration().execute();
+            /*new Executor(){
+
+                @Override
+                public void execute(final Runnable command) {
+                    new Thread(){
+                       @Override
+                        public void run(){
+                           command.run();
+                       }
+                    }.start();
+
+                }
+            }.execute(new CalculateGeneration());*/
+
+            new CalculateGeneration().start();
+            //new CalculateGeneration().execute();
         }
+
+        lockAction.unlock();
     }
 
     //metto in pausa il gioco
-    public synchronized void pause(){
+    public void pause(){
         //se il gioco è in esecuzione, setto a false la variabile
+
+        lockAction.lock();
+
         started.compareAndSet(true,false);
+
+        lockAction.unlock();
     }
 
-    public synchronized void clear(){
+    public void clear(){
+
+        lockAction.lock();
+
         if(!isStarted()){
             cellChecked=new boolean[row][column];
             postInvalidate();
@@ -123,6 +164,9 @@ public class GridView extends View {
             clear.set(true);
             pause();
         }
+
+        lockAction.unlock();
+
     }
 
     //disegno la griglia e la popolo
@@ -222,7 +266,12 @@ public class GridView extends View {
 
 
                           //  synchronized (lock){
-                                infoSwipe=new Pair<>(timeStamp,direction);
+
+                            lockInfoSwipe.lock();
+
+                            infoSwipe=new Pair<>(timeStamp,direction);
+
+                            lockInfoSwipe.unlock();
                          //   }
 
                             info= new PinchInfo(ipAddress, direction,stopX,stopY,activity.isPortrait(),timeStamp, width, height);
@@ -267,7 +316,12 @@ public class GridView extends View {
                             }
 
                          //   synchronized (lock){
-                                infoSwipe=new Pair<>(timeStamp,direction);
+                            lockInfoSwipe.lock();
+
+                            infoSwipe=new Pair<>(timeStamp,direction);
+
+                            lockInfoSwipe.unlock();
+
                          //   }
                             info= new PinchInfo(ipAddress, direction,stopX,stopY,activity.isPortrait(),timeStamp, width, height);
 
@@ -408,8 +462,9 @@ public class GridView extends View {
     }
 
     //async task che si occupa del calcolo delle generazioni di cellule
-    private class CalculateGeneration extends AsyncTask<Void, Void, Void> {
-        protected Void doInBackground(Void...params) {
+    private class CalculateGeneration /*extends AsyncTask<Void, Void, Void>*/extends Thread {
+
+        /*protected Void doInBackground(Void...params) {
             boolean goOn=true;
 
             while(goOn){
@@ -452,7 +507,7 @@ public class GridView extends View {
                 }
             }
             return null;
-        }
+        }*/
 
         private int neighboursAlive(int i,int j){
             //calcolo il numero di vicini vivi
@@ -509,7 +564,60 @@ public class GridView extends View {
             return neighbours;
         }
 
-        protected void onPostExecute(Void param) {
+     /*  protected void onPostExecute(Void param) {
+            //una volta terminato il task, controllo
+            //se l'utente ha richiesto un reset della griglia
+            if(clear.compareAndSet(true,false)){
+                cellChecked=new boolean[row][column];
+                postInvalidate();
+            }
+        }
+*/
+
+        @Override
+        public void run() {
+            boolean goOn=true;
+
+            while(goOn){
+                boolean [][] tmp=new boolean[row][column];
+                for(int i=0;i<row;i++){
+                    for(int j=0;j<column;j++){
+                        int neighbours=neighboursAlive(i,j);
+
+                        //se attualmente la cellula è viva
+                        if(cellChecked[i][j]) {
+                            //e ha 2 o 3 vicini, continua a vivere
+                            if (neighbours==2 || neighbours==3) {
+                                tmp[i][j] = true;
+                            }
+                        }else{
+                            //se la cellula è morta e ha esattamente 3 vicini
+                            //nella generazione successiva prende vita
+                            if(neighbours==3){
+                                tmp[i][j]=true;
+                            }
+                        }
+                    }
+                }
+
+                cellChecked=tmp;
+                //forzo la chiamata del metodo onDraw
+                postInvalidate();
+
+                //se l'utente non ha messo in pausa il gioco
+                if(started.get()){
+                    //sleep di 1 secondo
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }else{
+                    //altrimenti fermo il calcolo delle generazione successiva
+                    goOn=false;
+                }
+            }
+
             //una volta terminato il task, controllo
             //se l'utente ha richiesto un reset della griglia
             if(clear.compareAndSet(true,false)){
