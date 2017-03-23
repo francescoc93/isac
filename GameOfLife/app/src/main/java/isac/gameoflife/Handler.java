@@ -33,7 +33,7 @@ public class Handler implements MessageListener {
     private boolean portrait;
     private Object lock;
 
-    public Handler(GridView gridView,MainActivity activity){
+    public Handler(GridView gridView,final MainActivity activity){
 
         ipAddress=Utils.getIpAddress();
         System.out.println("Indirizzo IP " + ipAddress);
@@ -43,6 +43,12 @@ public class Handler implements MessageListener {
         this.rabbitMQ=new RabbitMQ(Utils.getAddress(),"[user]","[user]");
         connectedDevices=new HashMap<>();
         lock=new Object();
+
+        activity.runOnUiThread(new Runnable() {
+            public void run() {
+                Toast.makeText(activity, ipAddress, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     public boolean connectToServer(){
@@ -56,10 +62,13 @@ public class Handler implements MessageListener {
         }
     }
 
-    public void sendBroadcastMessage(JSONObject message){
+    public boolean sendBroadcastMessage(JSONObject message){
         if(rabbitMQ.isConnected()) {
             rabbitMQ.sendMessage("broadcast", message);
+            return true;
         }
+
+        return false;
     }
 
     public void setPortrait(boolean portrait){
@@ -81,6 +90,14 @@ public class Handler implements MessageListener {
                 if(infoSwipe!=null) {
 
                     if(!ipAddress.equals(info.getAddress())){
+                        activity.runOnUiThread(new Runnable(){
+
+                            @Override
+                            public void run() {
+                                Toast.makeText(activity, "Diverso da null", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
                         System.out.println("Info altro device: Timestamp: "+info.getTimestamp()+" Direction: "+info.getDirection().toString()+" IpAddress: "+info.getAddress());
                         System.out.println("Info mio device: Timestamp: "+infoSwipe.first+" Direction: "+infoSwipe.second.toString()+" IpAddress: "+ipAddress);
                     }

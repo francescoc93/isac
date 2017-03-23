@@ -43,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
 
             handler=new Handler(gridView,this);
 
+            Toast.makeText(getApplicationContext(), Utils.getAddress(), Toast.LENGTH_SHORT).show();
+
             new AsyncTask<Void,Void,Void>(){
 
                 @Override

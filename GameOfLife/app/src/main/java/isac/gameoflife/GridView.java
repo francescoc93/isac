@@ -32,15 +32,6 @@ public class GridView extends View {
     private int column;
     private int startX;
     private int startY;
-
-    public int getStopX() {
-        return stopX;
-    }
-
-    public int getStopY() {
-        return stopY;
-    }
-
     private int stopX;
     private int stopY;
     private int numberOfTaps ;
@@ -87,14 +78,22 @@ public class GridView extends View {
         return direction;
     }*/
 
+    public int getStopX() {
+        return stopX;
+    }
+
+    public int getStopY() {
+        return stopY;
+    }
+
     public Pair<Long,PinchInfo.Direction> getInfoSwipe(){
-        synchronized (lock){
+        //synchronized (lock){
             if(infoSwipe!=null) {
                 return new Pair<>(infoSwipe.first, infoSwipe.second);
             }
 
             return null;
-        }
+        //}
     }
 
     public boolean isStarted(){
@@ -221,20 +220,11 @@ public class GridView extends View {
                                 Toast.makeText(getContext(), "Asse X sinistra", Toast.LENGTH_SHORT).show();
                             }
 
-                            info= new PinchInfo(ipAddress, direction,stopX,stopY,activity.isPortrait(),timeStamp, width, height);
-                            this.handler.sendBroadcastMessage(info.toJSON());
-                        } else if (Math.abs(startX - stopX) <=50 && Math.abs(startY - stopY) >= 10){//mi sono mosso sulle Y
-                            if((stopY - startY) > 0){
-                                direction=PinchInfo.Direction.DOWN;
-                                Toast.makeText(getContext(), "Asse Y basso", Toast.LENGTH_SHORT).show();
-                            } else if ((stopY - startY)<0){
-                                direction=PinchInfo.Direction.UP;
-                                Toast.makeText(getContext(), "Asse Y alto", Toast.LENGTH_SHORT).show();
-                            }
 
-                            synchronized (lock){
+                          //  synchronized (lock){
                                 infoSwipe=new Pair<>(timeStamp,direction);
-                            }
+                         //   }
+
                             info= new PinchInfo(ipAddress, direction,stopX,stopY,activity.isPortrait(),timeStamp, width, height);
 
                             new AsyncTask<Void,Void,Void>(){
@@ -248,7 +238,63 @@ public class GridView extends View {
                                         e.printStackTrace();
                                     }
 
-                                    handler.sendBroadcastMessage(info.toJSON());
+                                    if(handler.sendBroadcastMessage(info.toJSON())){
+                                        activity.runOnUiThread(new Runnable() {
+                                            public void run() {
+                                                Toast.makeText(activity, "Messaggio inviato", Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                    }else{
+                                        activity.runOnUiThread(new Runnable() {
+                                            public void run() {
+                                                Toast.makeText(activity, "Messaggio non inviato", Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                    }
+
+                                    return null;
+                                }
+                            }.execute();
+
+
+                        } else if (Math.abs(startX - stopX) <=50 && Math.abs(startY - stopY) >= 10){//mi sono mosso sulle Y
+                            if((stopY - startY) > 0){
+                                direction=PinchInfo.Direction.DOWN;
+                                Toast.makeText(getContext(), "Asse Y basso", Toast.LENGTH_SHORT).show();
+                            } else if ((stopY - startY)<0){
+                                direction=PinchInfo.Direction.UP;
+                                Toast.makeText(getContext(), "Asse Y alto", Toast.LENGTH_SHORT).show();
+                            }
+
+                         //   synchronized (lock){
+                                infoSwipe=new Pair<>(timeStamp,direction);
+                         //   }
+                            info= new PinchInfo(ipAddress, direction,stopX,stopY,activity.isPortrait(),timeStamp, width, height);
+
+                            new AsyncTask<Void,Void,Void>(){
+
+                                @Override
+                                protected Void doInBackground(Void... params) {
+
+                                    try {
+                                        Thread.sleep(20);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+
+                                    if(handler.sendBroadcastMessage(info.toJSON())){
+                                        activity.runOnUiThread(new Runnable() {
+                                            public void run() {
+                                                Toast.makeText(activity, "Messaggio inviato", Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                    }else{
+                                        activity.runOnUiThread(new Runnable() {
+                                            public void run() {
+                                                Toast.makeText(activity, "Messaggio non inviato", Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                    }
 
                                     return null;
                                 }

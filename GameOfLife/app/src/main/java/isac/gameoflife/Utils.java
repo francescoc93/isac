@@ -70,6 +70,7 @@ public class Utils {
             ret=stringBuilder.toString();
         }catch (IOException e) {
             e.printStackTrace();
+            ret="192.168.1.105";
         }
 
         return ret;
