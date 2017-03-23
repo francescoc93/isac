@@ -14,6 +14,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Surface;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,11 +35,12 @@ public class MainActivity extends AppCompatActivity {
             this.portrait = false;
         }
 
+        Utils.setContext(this);
         gridView=new GridView(this);
 
         if(firstTime) {
             firstTime=false;
-            Utils.setContext(this);
+
             handler=new Handler(gridView,this);
 
             new AsyncTask<Void,Void,Void>(){
@@ -91,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
                             System.out.println("non sono sul tavolo Z: " + z + " X: " + x + " Y: " + y+" Inclination: "+inclination);
 
                             if(handler.getConnectedDevice()!=0){
+                                Toast.makeText(getApplicationContext(), "Schermo scollegato", Toast.LENGTH_SHORT).show();
                                 handler.closeDeviceCommunication();
                             }
                         }

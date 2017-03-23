@@ -44,6 +44,7 @@ public class GridView extends View {
     private int stopX;
     private int stopY;
     private int numberOfTaps ;
+
     private Paint whitePaint = new Paint();
     private boolean[][] cellChecked;
     private String ipAddress;
@@ -230,6 +231,7 @@ public class GridView extends View {
                                 direction=PinchInfo.Direction.UP;
                                 Toast.makeText(getContext(), "Asse Y alto", Toast.LENGTH_SHORT).show();
                             }
+
                             synchronized (lock){
                                 infoSwipe=new Pair<>(timeStamp,direction);
                             }

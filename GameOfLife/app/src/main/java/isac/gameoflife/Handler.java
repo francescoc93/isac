@@ -2,6 +2,7 @@ package isac.gameoflife;
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.support.v4.util.Pair;
 import android.text.format.Formatter;
 import android.widget.Toast;
@@ -24,7 +25,7 @@ import static android.content.Context.WIFI_SERVICE;
 public class Handler implements MessageListener {
 
     private GridView gridView;
-    private Context context;
+    private MainActivity activity;
     private String ipAddress;
     private RabbitMQ rabbitMQ;
     private HashMap<String,ConnectedDeviceInfo> connectedDevices;
@@ -32,13 +33,13 @@ public class Handler implements MessageListener {
     private boolean portrait;
     private Object lock;
 
-    public Handler(GridView gridView,Context context){
+    public Handler(GridView gridView,MainActivity activity){
 
         ipAddress=Utils.getIpAddress();
         System.out.println("Indirizzo IP " + ipAddress);
         value_address=Integer.parseInt(ipAddress.split("\\.")[3]);
         this.gridView=gridView;
-        this.context=context;
+        this.activity=activity;
         this.rabbitMQ=new RabbitMQ(Utils.getAddress(),"[user]","[user]");
         connectedDevices=new HashMap<>();
         lock=new Object();
@@ -78,10 +79,24 @@ public class Handler implements MessageListener {
                 Pair<Long,PinchInfo.Direction> infoSwipe=gridView.getInfoSwipe();
 
                 if(infoSwipe!=null) {
-                    if (!ipAddress.equals(info.getAddress()) && (info.getTimestamp() > (infoSwipe.first - 20)) &&
-                            (info.getTimestamp() < (infoSwipe.first + 20)) && info.oppositeDirection(infoSwipe.second)) {
+
+                    if(!ipAddress.equals(info.getAddress())){
+                        System.out.println("Info altro device: Timestamp: "+info.getTimestamp()+" Direction: "+info.getDirection().toString()+" IpAddress: "+info.getAddress());
+                        System.out.println("Info mio device: Timestamp: "+infoSwipe.first+" Direction: "+infoSwipe.second.toString()+" IpAddress: "+ipAddress);
+                    }
+
+                    if (!ipAddress.equals(info.getAddress()) && (info.getTimestamp() > (infoSwipe.first - /*20*/5000)) &&
+                            (info.getTimestamp() < (infoSwipe.first + /*20*/5000)) && info.oppositeDirection(infoSwipe.second)&&
+                            !connectedDevices.containsKey(info.getAddress())) {
                         System.out.println("DEVICE PAIRED WITH " + info.getAddress());
-                        Toast.makeText(context, "Schermo collegato", Toast.LENGTH_SHORT).show();
+
+                        activity.runOnUiThread(new Runnable() {
+                            public void run() {
+                                Toast.makeText(activity, "Schermo collegato", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+                       // Toast.makeText(context, "Schermo collegato", Toast.LENGTH_SHORT).show();
 
                         //TODO: METTERE IN CONNECTED DEVICE INFO IL NUMERO DI CELLE
                         //TODO (2) : HANDLE MESSAGE
@@ -89,7 +104,7 @@ public class Handler implements MessageListener {
                         String nameSender = "", nameReceiver = "";
                         String ipAddressDevice = info.getAddress();
 
-                        int value_address_device = Integer.parseInt(ipAddressDevice.split(".")[3]);
+                        int value_address_device = Integer.parseInt(ipAddressDevice.split("\\.")[3]);
 
                         if (value_address > value_address_device) { //se sono il maggiore tra i due
                             nameSender = ipAddress + ipAddressDevice;
@@ -135,18 +150,20 @@ public class Handler implements MessageListener {
                     closeCommunication(deviceInfo.getNameQueueReceiver());
                 }
             }else if(json.getString("type").equals("start")){ //messaggio broadcast
-
+                System.out.println("Messaggio di start ricevuto");
                 if(!ipAddress.equals(json.getString(PinchInfo.ADDRESS))) {
-
+                    System.out.println("Da un altro device");
                     boolean flag = false;
 
                     synchronized (lock) {
                         if (connectedDevices.size() != 0) {
+                            System.out.println("Sono connesso con qualcuno");
                             flag = true;
                         }
                     }
 
                     if (flag) {
+                        System.out.println("START");
                         gridView.start();
                     }
                 }

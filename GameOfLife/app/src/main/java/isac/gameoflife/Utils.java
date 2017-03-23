@@ -81,7 +81,6 @@ public class Utils {
 
     public static String getIpAddress() {
         if (ipAddress == null) {
-
             if(context!=null) {
                 WifiManager wm = (WifiManager) context.getSystemService(Activity.WIFI_SERVICE);
                 try {
@@ -94,11 +93,13 @@ public class Utils {
 
                     ipAddress = InetAddress.getByAddress(byteIpAddress).getHostAddress();
                 } catch (UnknownHostException e) {
+                    ipAddress="192.168.43.1";
                     e.printStackTrace();
                 }
             }else{
                 return "127.0.0.1";
             }
+
 
         }
         System.out.println(ipAddress);
