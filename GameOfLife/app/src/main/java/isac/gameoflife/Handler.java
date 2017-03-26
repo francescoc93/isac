@@ -89,9 +89,10 @@ public class Handler implements MessageListener {
 
                 Pair<Long,PinchInfo.Direction> infoSwipe=gridView.getInfoSwipe();
 
-                if(infoSwipe!=null) {
+                if(infoSwipe!=null && !ipAddress.equals(info.getAddress())) {
 
-                    if(!ipAddress.equals(info.getAddress())){
+                    //togliere questo if
+                    /*if(!ipAddress.equals(info.getAddress())){
                         activity.runOnUiThread(new Runnable(){
 
                             @Override
@@ -102,62 +103,76 @@ public class Handler implements MessageListener {
 
                         System.out.println("Info altro device: Timestamp: "+info.getTimestamp()+" Direction: "+info.getDirection().toString()+" IpAddress: "+info.getAddress());
                         System.out.println("Info mio device: Timestamp: "+infoSwipe.first+" Direction: "+infoSwipe.second.toString()+" IpAddress: "+ipAddress);
-                    }
+                    }*/
 
-                    if (!ipAddress.equals(info.getAddress()) && (info.getTimestamp() > (infoSwipe.first - /*20*/5000)) &&
-                            (info.getTimestamp() < (infoSwipe.first + /*20*/5000)) && info.oppositeDirection(infoSwipe.second)&&
-                            !connectedDevices.containsKey(info.getAddress())) {
-                        System.out.println("DEVICE PAIRED WITH " + info.getAddress());
+                    lock.lock();
 
-                        activity.runOnUiThread(new Runnable() {
-                            public void run() {
-                                Toast.makeText(activity, "Schermo collegato", Toast.LENGTH_SHORT).show();
+                    if(!connectedDevices.containsKey(info.getAddress())) {
+
+                        lock.unlock();
+
+                        if ((info.getTimestamp() > (infoSwipe.first - /*20*/5000)) &&
+                                (info.getTimestamp() < (infoSwipe.first + /*20*/5000)) && info.oppositeDirection(infoSwipe.second)) {
+                            System.out.println("DEVICE PAIRED WITH " + info.getAddress());
+
+                            activity.runOnUiThread(new Runnable() {
+                                public void run() {
+                                    Toast.makeText(activity, "Schermo collegato", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
+                            // Toast.makeText(context, "Schermo collegato", Toast.LENGTH_SHORT).show();
+
+                            //TODO: METTERE IN CONNECTED DEVICE INFO IL NUMERO DI CELLE
+                            //TODO (2) : HANDLE MESSAGE
+
+                            String nameSender = "", nameReceiver = "";
+                            String ipAddressDevice = info.getAddress();
+
+                            int value_address_device = Integer.parseInt(ipAddressDevice.split("\\.")[3]);
+
+                            if (value_address > value_address_device) { //se sono il maggiore tra i due
+                                nameSender = ipAddress + ipAddressDevice;
+                                nameReceiver = ipAddressDevice + ipAddress;
+                                rabbitMQ.addQueue(nameSender);
+                                rabbitMQ.addQueue(nameReceiver, this);
+
+                                //TODO: calcoli per x e y (pdf)
+                                lock.lock();
+
+                                System.out.println("Nome coda per inviare: " + nameSender);
+                                System.out.println("Nome coda su cui ricevo: " + nameReceiver);
+
+                                connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(info.isPortrait(),
+                                        info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),
+                                        this.gridView.getStopX(), this.gridView.getStopY(), nameSender, nameReceiver));
+
+                                lock.unlock();
+
+                            } else { //se sono il minore tra i due
+                                nameReceiver = ipAddress + ipAddressDevice;
+                                nameSender = ipAddressDevice + ipAddress;
+                                rabbitMQ.addQueue(nameReceiver);
+                                rabbitMQ.addQueue(nameSender, this);
+
+                                //TODO: calcoli per x e y (pdf)
+                                lock.lock();
+
+                                System.out.println("Nome coda per inviare: " + nameReceiver);
+                                System.out.println("Nome coda su cui ricevo: " + nameSender);
+
+                                connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(info.isPortrait(),
+                                        info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),
+                                        this.gridView.getStopX(), this.gridView.getStopY(), nameReceiver, nameSender));
+
+
+                                lock.unlock();
+
+
                             }
-                        });
-
-                       // Toast.makeText(context, "Schermo collegato", Toast.LENGTH_SHORT).show();
-
-                        //TODO: METTERE IN CONNECTED DEVICE INFO IL NUMERO DI CELLE
-                        //TODO (2) : HANDLE MESSAGE
-
-                        String nameSender = "", nameReceiver = "";
-                        String ipAddressDevice = info.getAddress();
-
-                        int value_address_device = Integer.parseInt(ipAddressDevice.split("\\.")[3]);
-
-                        if (value_address > value_address_device) { //se sono il maggiore tra i due
-                            nameSender = ipAddress + ipAddressDevice;
-                            nameReceiver = ipAddressDevice + ipAddress;
-                            rabbitMQ.addQueue(nameSender);
-                            rabbitMQ.addQueue(nameReceiver, this);
-
-                            //TODO: calcoli per x e y (pdf)
-                            lock.lock();
-
-                            connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(info.isPortrait(),
-                                    info.getXcoordinate(), info.getYcoordinate(),info.getScreenWidth(),info.getScreenHeight(),
-                                    this.gridView.getStopX(),this.gridView.getStopY(), nameSender, nameReceiver));
-
-                            lock.unlock();
-
-                        } else { //se sono il minore tra i due
-                            nameReceiver = ipAddress + ipAddressDevice;
-                            nameSender = ipAddressDevice + ipAddress;
-                            rabbitMQ.addQueue(nameReceiver);
-                            rabbitMQ.addQueue(nameSender, this);
-
-                            //TODO: calcoli per x e y (pdf)
-                            lock.lock();
-
-                            connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(info.isPortrait(),
-                                    info.getXcoordinate(), info.getYcoordinate(),info.getScreenWidth(),info.getScreenHeight(),
-                                    this.gridView.getStopX(),this.gridView.getStopY(),nameReceiver, nameSender));
-
-
-                            lock.unlock();
-
-
                         }
+                    }else{
+                        lock.unlock();
                     }
                 }
             }else if(json.getString("type").equals("close")){ //messaggio al singolo device
@@ -166,8 +181,16 @@ public class Handler implements MessageListener {
 
                 lock.lock();
 
-                if (connectedDevices.containsKey(PinchInfo.ADDRESS)) {
+                if (connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))) {
                     deviceInfo = connectedDevices.remove(json.getString(PinchInfo.ADDRESS));
+
+                    if(connectedDevices.size()==0){
+                        activity.runOnUiThread(new Runnable() {
+                            public void run() {
+                                Toast.makeText(activity, "Schermo scollegato", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
                 }
 
                 lock.unlock();
@@ -261,6 +284,9 @@ public class Handler implements MessageListener {
                     rabbitMQ.sendMessage(device.getNameQueueSender(), message);
                     closeCommunication(device.getNameQueueSender());
                     closeCommunication(device.getNameQueueReceiver());
+
+                    System.out.println("Nome coda su cui invio che chiudo: "+device.getNameQueueSender());
+                    System.out.println("Nome coda su cui ricevo che chiudo: "+device.getNameQueueReceiver());
                 }
 
                 connectedDevices.clear();

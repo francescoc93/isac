@@ -276,7 +276,9 @@ public class GridView extends View {
 
                             info= new PinchInfo(ipAddress, direction,stopX,stopY,activity.isPortrait(),timeStamp, width, height);
 
-                            new AsyncTask<Void,Void,Void>(){
+                            handler.sendBroadcastMessage(info.toJSON());
+
+                           /* new AsyncTask<Void,Void,Void>(){
 
                                 @Override
                                 protected Void doInBackground(Void... params) {
@@ -303,7 +305,7 @@ public class GridView extends View {
 
                                     return null;
                                 }
-                            }.execute();
+                            }.execute();*/
 
 
                         } else if (Math.abs(startX - stopX) <=50 && Math.abs(startY - stopY) >= 10){//mi sono mosso sulle Y
@@ -324,8 +326,9 @@ public class GridView extends View {
 
                          //   }
                             info= new PinchInfo(ipAddress, direction,stopX,stopY,activity.isPortrait(),timeStamp, width, height);
+                            handler.sendBroadcastMessage(info.toJSON());
 
-                            new AsyncTask<Void,Void,Void>(){
+                    /*        new AsyncTask<Void,Void,Void>(){
 
                                 @Override
                                 protected Void doInBackground(Void... params) {
@@ -352,7 +355,7 @@ public class GridView extends View {
 
                                     return null;
                                 }
-                            }.execute();
+                            }.execute();*/
 
 
                         } else {
