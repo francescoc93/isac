@@ -1,18 +1,22 @@
 package isac.gameoflife;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by Francesco on 16/03/2017.
  */
 
 public class ConnectedDeviceInfo {
 
-    private boolean portrait;
+    private boolean portrait,reverseList;
     private int x,y;
     private String nameQueueSender,nameQueueReceiver;
     private int orientation; //gradi di rotazione
     private int myWidth, myHeight, width, height,myXCoord,myYCoord,xCoord,yCoord;//x e y mie e sue, height e width mie e sue
     private PinchInfo.Direction myDir,dir;
     private int l1, l2, cellSize, indexFirstCell, indexLastCell;
+    private List<Boolean> cellsToSend;
 
     public ConnectedDeviceInfo(int cellSize,boolean portrait, int x, int y,int uno,int due,int tre,int quattro, String nameQueueSender, String nameQueueReceiver){
         this.portrait = portrait;
@@ -21,6 +25,8 @@ public class ConnectedDeviceInfo {
         this.nameQueueReceiver=nameQueueReceiver;
         this.nameQueueSender=nameQueueSender;
         this.cellSize = cellSize;
+        this.cellsToSend = new ArrayList<>(); //TEMPORARY
+        this.reverseList = false;
     }
 
 
@@ -96,25 +102,28 @@ public class ConnectedDeviceInfo {
             indexFirstCell =(int) Math.ceil((double)(myYCoord - l1)/(double)this.cellSize);
             indexLastCell = (myYCoord + l2)/this.cellSize;
             if(orientation == 0){
-
+                this.reverseList = false;
             } else if (orientation == 90){
-
+                this.reverseList = true;
             } else if (orientation == 180){
-
+                this.reverseList = true;
             } else if (orientation == 270){
-
+                this.reverseList = false;
             }
         } else if (myDir.equals(PinchInfo.Direction.UP) || myDir.equals(PinchInfo.Direction.DOWN)){
             indexFirstCell =(int) Math.ceil((double)(myXCoord - l1)/(double)this.cellSize);
             indexLastCell = (myXCoord + l2)/this.cellSize;
             if(orientation == 0){
+                this.reverseList = false;
 
             } else if (orientation == 90){
+                this.reverseList = false;
 
             } else if (orientation == 180){
+                this.reverseList = true;
 
             } else if (orientation == 270){
-
+                this.reverseList = true;
             }
         }
     }
