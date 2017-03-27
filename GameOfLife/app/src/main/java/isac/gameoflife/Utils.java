@@ -46,11 +46,11 @@ public class Utils {
             try {
                 file.createNewFile();
                 FileOutputStream outputStream = new FileOutputStream(file/*, Context.MODE_PRIVATE*/);
-                outputStream.write(("192.168.1.105").getBytes());
+                outputStream.write(("192.168.1.9").getBytes());
                 outputStream.flush();
                 outputStream.close();
 
-                return "192.168.1.105";
+                return "192.168.1.9";
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -70,7 +70,7 @@ public class Utils {
             ret=stringBuilder.toString();
         }catch (IOException e) {
             e.printStackTrace();
-            ret="192.168.1.105";
+            ret="192.168.1.9";
         }
 
         return ret;

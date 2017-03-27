@@ -82,6 +82,10 @@ public class GridView extends View {
         return direction;
     }*/
 
+    public int getCellSize(){
+       return this.SIZE;
+    }
+    
     public int getStopX() {
         return stopX;
     }

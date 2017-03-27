@@ -34,6 +34,7 @@ public class Handler implements MessageListener {
     private int value_address;
     private boolean portrait;
     private ReentrantLock lock;
+    private int cellSize;
 
     public Handler(GridView gridView,final MainActivity activity){
 
@@ -41,6 +42,7 @@ public class Handler implements MessageListener {
         System.out.println("Indirizzo IP " + ipAddress);
         value_address=Integer.parseInt(ipAddress.split("\\.")[3]);
         this.gridView=gridView;
+        this.cellSize = gridView.getCellSize();
         this.activity=activity;
         this.rabbitMQ=new RabbitMQ(Utils.getAddress(),"[user]","[user]");
         connectedDevices=new HashMap<>();
@@ -143,7 +145,7 @@ public class Handler implements MessageListener {
                                 System.out.println("Nome coda per inviare: " + nameSender);
                                 System.out.println("Nome coda su cui ricevo: " + nameReceiver);
 
-                                connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(info.isPortrait(),
+                                connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(this.cellSize,info.isPortrait(),
                                         info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),
                                         this.gridView.getStopX(), this.gridView.getStopY(), nameSender, nameReceiver));
 
@@ -161,7 +163,7 @@ public class Handler implements MessageListener {
                                 System.out.println("Nome coda per inviare: " + nameReceiver);
                                 System.out.println("Nome coda su cui ricevo: " + nameSender);
 
-                                connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(info.isPortrait(),
+                                connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(this.cellSize,info.isPortrait(),
                                         info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),
                                         this.gridView.getStopX(), this.gridView.getStopY(), nameReceiver, nameSender));
 
