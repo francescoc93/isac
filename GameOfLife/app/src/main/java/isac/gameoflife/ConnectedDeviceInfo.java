@@ -10,27 +10,22 @@ import java.util.List;
 public class ConnectedDeviceInfo {
 
     private boolean reverseList;
-    private int x,y;
     private boolean portrait;
-    private int swipeX, swipeY,maxX,maxY;
-    private int mySwipeX,mySwipeY;
     private String nameQueueSender,nameQueueReceiver;
     private int orientation; //gradi di rotazione
-    private int myWidth, myHeight, width, height,myXCoord,myYCoord,xCoord,yCoord;//x e y mie e sue, height e width mie e sue
-    private PinchInfo.Direction myDir,dir;
+    private int myWidth, myHeight, width, height,myXCoord,myYCoord,xCoord,yCoord;//TODO: SET MYWIDTH E MYHEIGHT
+    private PinchInfo.Direction myDir,dir; //TODO: SET MYDIR
     private int l1, l2, cellSize, indexFirstCell, indexLastCell;
     private List<Boolean> cellsToSend;
 
-    public ConnectedDeviceInfo(int cellSize,boolean portrait, int x, int y,int maxX,int maxY,int mySwipeX,int mySwipeY, String nameQueueSender, String nameQueueReceiver){
+    public ConnectedDeviceInfo(int cellSize,boolean portrait, int xCoord, int yCoord,int width,int height,int myXCoord,int myYCoord, String nameQueueSender, String nameQueueReceiver){
         this.portrait = portrait;
-        this.x=x;
-        this.y=y;
-        this.swipeX =x;
-        this.swipeY =y;
-        this.maxX = maxX;
-        this.maxY = maxY;
-        this.mySwipeX = mySwipeX;
-        this.mySwipeY = mySwipeY;
+        this.xCoord=xCoord;
+        this.yCoord=yCoord;
+        this.myYCoord = myYCoord;
+        this.myXCoord = myXCoord;
+        this.width = width;
+        this.height = height;
         this.nameQueueReceiver=nameQueueReceiver;
         this.nameQueueSender=nameQueueSender;
         this.cellSize = cellSize;
@@ -41,14 +36,6 @@ public class ConnectedDeviceInfo {
 
     public boolean isPortrait() {
         return portrait;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
     }
 
     public String getNameQueueSender() {
@@ -64,58 +51,58 @@ public class ConnectedDeviceInfo {
      * The orientation is calculated considering yourself(the device) as in the middle of the origin
      * with its center (0,0). We have then 16 cases, 4 for each border(4).
      */
-    public void setRelativeOrientation(int myMaxX, int myMaxY){
+    public void setRelativeOrientation(){
 
         //my X max
-        if(mySwipeX > myMaxX - 20 && mySwipeX <= myMaxX){
+        if(myXCoord > myWidth - 20 && myXCoord <= myWidth){
 
-            if(this.swipeX >= 0 && this.swipeX < 20){
+            if(this.xCoord >= 0 && this.xCoord < 20){
                 this.orientation = 0;
-            } else if(this.swipeX <= this.maxX && this.swipeX > this.maxX - 20){
+            } else if(this.xCoord <= this.width && this.xCoord > this.width - 20){
                 this.orientation = 180;
-            } else if(this.swipeY >= 0 && this.swipeY < 20){
+            } else if(this.yCoord >= 0 && this.height < 20){
                 this.orientation = 90;
-            } else if(this.swipeY <= this.maxY && this.swipeY > this.maxY - 20){
+            } else if(this.yCoord <= this.height && this.yCoord > this.height - 20){
                 this.orientation = 270;
             }
 
-        } else if(mySwipeX >= 0 && mySwipeX < 20){ //my x min
+        } else if(myXCoord >= 0 && myXCoord < 20){ //my x min
 
-            if(this.swipeX >= 0 && this.swipeX < 20){
+            if(this.xCoord >= 0 && this.xCoord < 20){
                 this.orientation = 270;
-            } else if(this.swipeX <= this.maxX && this.swipeX > this.maxX - 20){
+            } else if(this.xCoord <= this.width && this.xCoord > this.width - 20){
                 this.orientation = 0;
-            } else if(this.swipeY >= 0 && this.swipeY < 20){
+            } else if(this.yCoord >= 0 && this.yCoord < 20){
                 this.orientation = 180;
-            } else if(this.swipeY <= this.maxY && this.swipeY > this.maxY - 20){
+            } else if(this.yCoord <= this.height && this.yCoord > this.height - 20){
                 this.orientation = 90;
-            }
-
-
-
-        } else if (mySwipeY > myMaxY - 20 && mySwipeY <= myMaxY){ //my y max
-
-            if(this.swipeX >= 0 && this.swipeX < 20){
-                this.orientation = 270;
-            } else if(this.swipeX <= this.maxX && this.swipeX > this.maxX - 20){
-                this.orientation = 90;
-            } else if(this.swipeY >= 0 && this.swipeY < 20){
-                this.orientation = 0;
-            } else if(this.swipeY <= this.maxY && this.swipeY > this.maxY - 20){
-                this.orientation = 180;
             }
 
 
 
-        } else if(mySwipeY >= 0 && mySwipeY < 20){ //my y min
+        } else if (myYCoord > myHeight - 20 && myYCoord <= myHeight){ //my y max
 
-            if(this.swipeX >= 0 && this.swipeX < 20){
-                this.orientation = 90;
-            } else if(this.swipeX <= this.maxX && this.swipeX > this.maxX - 20){
+            if(this.xCoord >= 0 && this.xCoord < 20){
                 this.orientation = 270;
-            } else if(this.swipeY >= 0 && this.swipeY < 20){
+            } else if(this.xCoord <= this.width && this.xCoord > this.width - 20){
+                this.orientation = 90;
+            } else if(this.yCoord >= 0 && this.yCoord < 20){
+                this.orientation = 0;
+            } else if(this.yCoord <= this.height && this.yCoord > this.height - 20){
                 this.orientation = 180;
-            } else if(this.swipeY <= this.maxY && this.swipeY > this.maxY - 20){
+            }
+
+
+
+        } else if(myYCoord >= 0 && myYCoord < 20){ //my y min
+
+            if(this.xCoord >= 0 && this.xCoord < 20){
+                this.orientation = 90;
+            } else if(this.xCoord <= this.width && this.xCoord > this.width - 20){
+                this.orientation = 270;
+            } else if(this.yCoord >= 0 && this.yCoord < 20){
+                this.orientation = 180;
+            } else if(this.yCoord <= this.height && this.yCoord > this.height - 20){
                 this.orientation = 0;
             }
 

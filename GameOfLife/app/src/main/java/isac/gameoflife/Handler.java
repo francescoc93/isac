@@ -84,6 +84,7 @@ public class Handler implements MessageListener {
         System.out.println("Messaggio ricevuto");
         try {
 
+            //info è dell'altro device, infoSwipe sono i miei
             if(json.getString("type").equals("pinch")) { //messaggio broadcast
                 PinchInfo info = new PinchInfo(json.getString(PinchInfo.ADDRESS),PinchInfo.Direction.valueOf(json.getString(PinchInfo.DIRECTION)),json.getInt(PinchInfo.X_COORDINATE),
                         json.getInt(PinchInfo.Y_COORDINATE), json.getBoolean(PinchInfo.PORTRAIT), json.getLong(PinchInfo.TIMESTAMP),
