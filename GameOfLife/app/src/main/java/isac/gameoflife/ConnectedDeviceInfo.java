@@ -9,8 +9,11 @@ import java.util.List;
 
 public class ConnectedDeviceInfo {
 
-    private boolean portrait,reverseList;
+    private boolean reverseList;
     private int x,y;
+    private boolean portrait;
+    private int swipeX, swipeY,maxX,maxY;
+    private int mySwipeX,mySwipeY;
     private String nameQueueSender,nameQueueReceiver;
     private int orientation; //gradi di rotazione
     private int myWidth, myHeight, width, height,myXCoord,myYCoord,xCoord,yCoord;//x e y mie e sue, height e width mie e sue
@@ -18,10 +21,16 @@ public class ConnectedDeviceInfo {
     private int l1, l2, cellSize, indexFirstCell, indexLastCell;
     private List<Boolean> cellsToSend;
 
-    public ConnectedDeviceInfo(int cellSize,boolean portrait, int x, int y,int uno,int due,int tre,int quattro, String nameQueueSender, String nameQueueReceiver){
+    public ConnectedDeviceInfo(int cellSize,boolean portrait, int x, int y,int maxX,int maxY,int mySwipeX,int mySwipeY, String nameQueueSender, String nameQueueReceiver){
         this.portrait = portrait;
         this.x=x;
         this.y=y;
+        this.swipeX =x;
+        this.swipeY =y;
+        this.maxX = maxX;
+        this.maxY = maxY;
+        this.mySwipeX = mySwipeX;
+        this.mySwipeY = mySwipeY;
         this.nameQueueReceiver=nameQueueReceiver;
         this.nameQueueSender=nameQueueSender;
         this.cellSize = cellSize;
@@ -51,6 +60,71 @@ public class ConnectedDeviceInfo {
     }
 
 
+    /**
+     * The orientation is calculated considering yourself(the device) as in the middle of the origin
+     * with its center (0,0). We have then 16 cases, 4 for each border(4).
+     */
+    public void setRelativeOrientation(int myMaxX, int myMaxY){
+
+        //my X max
+        if(mySwipeX > myMaxX - 20 && mySwipeX <= myMaxX){
+
+            if(this.swipeX >= 0 && this.swipeX < 20){
+                this.orientation = 0;
+            } else if(this.swipeX <= this.maxX && this.swipeX > this.maxX - 20){
+                this.orientation = 180;
+            } else if(this.swipeY >= 0 && this.swipeY < 20){
+                this.orientation = 90;
+            } else if(this.swipeY <= this.maxY && this.swipeY > this.maxY - 20){
+                this.orientation = 270;
+            }
+
+        } else if(mySwipeX >= 0 && mySwipeX < 20){ //my x min
+
+            if(this.swipeX >= 0 && this.swipeX < 20){
+                this.orientation = 270;
+            } else if(this.swipeX <= this.maxX && this.swipeX > this.maxX - 20){
+                this.orientation = 0;
+            } else if(this.swipeY >= 0 && this.swipeY < 20){
+                this.orientation = 180;
+            } else if(this.swipeY <= this.maxY && this.swipeY > this.maxY - 20){
+                this.orientation = 90;
+            }
+
+
+
+        } else if (mySwipeY > myMaxY - 20 && mySwipeY <= myMaxY){ //my y max
+
+            if(this.swipeX >= 0 && this.swipeX < 20){
+                this.orientation = 270;
+            } else if(this.swipeX <= this.maxX && this.swipeX > this.maxX - 20){
+                this.orientation = 90;
+            } else if(this.swipeY >= 0 && this.swipeY < 20){
+                this.orientation = 0;
+            } else if(this.swipeY <= this.maxY && this.swipeY > this.maxY - 20){
+                this.orientation = 180;
+            }
+
+
+
+        } else if(mySwipeY >= 0 && mySwipeY < 20){ //my y min
+
+            if(this.swipeX >= 0 && this.swipeX < 20){
+                this.orientation = 90;
+            } else if(this.swipeX <= this.maxX && this.swipeX > this.maxX - 20){
+                this.orientation = 270;
+            } else if(this.swipeY >= 0 && this.swipeY < 20){
+                this.orientation = 180;
+            } else if(this.swipeY <= this.maxY && this.swipeY > this.maxY - 20){
+                this.orientation = 0;
+            }
+
+
+
+        }
+
+
+    }
     //NB: I CASI SI RIFERISCONO SEMPRE ALLA POSIZIONE DELL'ALTRO DEVICE
     //SI DA' PER SCONTATO CHE I 16 CASI SONO GIA' STATI CALCOLATI - TODO: INSERIRE CODICE
     //TODO: PORZIONE DI SCHERMO DA RICEVERE E INVIARE
