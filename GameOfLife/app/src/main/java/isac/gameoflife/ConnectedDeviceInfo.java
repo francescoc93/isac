@@ -15,10 +15,11 @@ public class ConnectedDeviceInfo {
     private int orientation; //gradi di rotazione
     private int myWidth, myHeight, width, height,myXCoord,myYCoord,xCoord,yCoord;//TODO: SET MYWIDTH E MYHEIGHT
     private PinchInfo.Direction myDir,dir; //TODO: SET MYDIR
-    private int l1, l2, cellSize, indexFirstCell, indexLastCell;
+    private float cellSize;
+    private int l1, l2, indexFirstCell, indexLastCell;
     private List<Boolean> cellsToSend;
 
-    public ConnectedDeviceInfo(int cellSize,boolean portrait, int xCoord, int yCoord,int width,int height,int myXCoord,int myYCoord, String nameQueueSender, String nameQueueReceiver){
+    public ConnectedDeviceInfo(float cellSize,boolean portrait, int xCoord, int yCoord,int width,int height,int myXCoord,int myYCoord, String nameQueueSender, String nameQueueReceiver){
         this.portrait = portrait;
         this.xCoord=xCoord;
         this.yCoord=yCoord;
@@ -161,7 +162,7 @@ public class ConnectedDeviceInfo {
     private void evaluateCells(){
         if(myDir.equals(PinchInfo.Direction.RIGHT) || myDir.equals(PinchInfo.Direction.LEFT)){
             indexFirstCell =(int) Math.ceil((double)(myYCoord - l1)/(double)this.cellSize);
-            indexLastCell = (myYCoord + l2)/this.cellSize;
+            indexLastCell = (int)((myYCoord + l2)/this.cellSize);
             if(orientation == 0){
                 this.reverseList = false;
             } else if (orientation == 90){
@@ -173,7 +174,7 @@ public class ConnectedDeviceInfo {
             }
         } else if (myDir.equals(PinchInfo.Direction.UP) || myDir.equals(PinchInfo.Direction.DOWN)){
             indexFirstCell =(int) Math.ceil((double)(myXCoord - l1)/(double)this.cellSize);
-            indexLastCell = (myXCoord + l2)/this.cellSize;
+            indexLastCell = (int) ((myXCoord + l2)/this.cellSize);
             if(orientation == 0){
                 this.reverseList = false;
 

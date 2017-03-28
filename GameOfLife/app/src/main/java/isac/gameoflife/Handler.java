@@ -34,7 +34,7 @@ public class Handler implements MessageListener {
     private int value_address;
     private boolean portrait;
     private ReentrantLock lock;
-    private int cellSize;
+    private float cellSize;
 
     public Handler(GridView gridView,final MainActivity activity){
 
@@ -90,23 +90,12 @@ public class Handler implements MessageListener {
                         json.getInt(PinchInfo.Y_COORDINATE), json.getBoolean(PinchInfo.PORTRAIT), json.getLong(PinchInfo.TIMESTAMP),
                         json.getInt(PinchInfo.SCREEN_WIDTH), json.getInt(PinchInfo.SCREEN_HEIGHT));
 
-                Pair<Long,PinchInfo.Direction> infoSwipe=gridView.getInfoSwipe();
+                Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> infoSwipe=gridView.getInfoSwipe();
+                Pair<Long,PinchInfo.Direction> timeStampDirection=infoSwipe.first;
+                Pair<Integer,Integer> coordinate=infoSwipe.second;
 
                 if(infoSwipe!=null && !ipAddress.equals(info.getAddress())) {
 
-                    //togliere questo if
-                    /*if(!ipAddress.equals(info.getAddress())){
-                        activity.runOnUiThread(new Runnable(){
-
-                            @Override
-                            public void run() {
-                                Toast.makeText(activity, "Diverso da null", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-
-                        System.out.println("Info altro device: Timestamp: "+info.getTimestamp()+" Direction: "+info.getDirection().toString()+" IpAddress: "+info.getAddress());
-                        System.out.println("Info mio device: Timestamp: "+infoSwipe.first+" Direction: "+infoSwipe.second.toString()+" IpAddress: "+ipAddress);
-                    }*/
 
                     lock.lock();
 
@@ -114,8 +103,8 @@ public class Handler implements MessageListener {
 
                         lock.unlock();
 
-                        if ((info.getTimestamp() > (infoSwipe.first - /*20*/5000)) &&
-                                (info.getTimestamp() < (infoSwipe.first + /*20*/5000)) && info.oppositeDirection(infoSwipe.second)) {
+                        if ((info.getTimestamp() > (timeStampDirection.first - /*20*/5000)) &&
+                                (info.getTimestamp() < (timeStampDirection.first + /*20*/5000)) && info.oppositeDirection(timeStampDirection.second)) {
                             System.out.println("DEVICE PAIRED WITH " + info.getAddress());
 
                             activity.runOnUiThread(new Runnable() {
@@ -134,6 +123,7 @@ public class Handler implements MessageListener {
 
                             int value_address_device = Integer.parseInt(ipAddressDevice.split("\\.")[3]);
 
+
                             if (value_address > value_address_device) { //se sono il maggiore tra i due
                                 nameSender = ipAddress + ipAddressDevice;
                                 nameReceiver = ipAddressDevice + ipAddress;
@@ -146,9 +136,11 @@ public class Handler implements MessageListener {
                                 System.out.println("Nome coda per inviare: " + nameSender);
                                 System.out.println("Nome coda su cui ricevo: " + nameReceiver);
 
+
+
                                 connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(this.cellSize,info.isPortrait(),
                                         info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),
-                                        this.gridView.getStopX(), this.gridView.getStopY(), nameSender, nameReceiver));
+                                        coordinate.first, coordinate.second, nameSender, nameReceiver));
 
                                 lock.unlock();
 
@@ -166,7 +158,7 @@ public class Handler implements MessageListener {
 
                                 connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(this.cellSize,info.isPortrait(),
                                         info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),
-                                        this.gridView.getStopX(), this.gridView.getStopY(), nameReceiver, nameSender));
+                                        coordinate.first, coordinate.second, nameReceiver, nameSender));
 
 
                                 lock.unlock();

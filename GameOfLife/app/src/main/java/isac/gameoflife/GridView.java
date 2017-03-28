@@ -31,7 +31,7 @@ public class GridView extends View {
 
     private final static int TIME_DOUBLE_TAP=180;
     private final static int DESIRED_DP_VALUE=50;
-    private final int SIZE;
+    private final float SIZE;
     private Handler handler;
     private int width;
     private int height;
@@ -39,8 +39,8 @@ public class GridView extends View {
     private int column;
     private int startX;
     private int startY;
-    private int stopX;
-    private int stopY;
+   /* private int stopX;
+    private int stopY;*/
     private int numberOfTaps ;
 
     private Paint whitePaint = new Paint();
@@ -53,7 +53,8 @@ public class GridView extends View {
     //di effettuare operazioni thread-safe sui booleani
     private AtomicBoolean started=new AtomicBoolean(false),clear=new AtomicBoolean(false);
     private Long lastTapTimeMs,touchDownMs ;
-    private Pair<Long,PinchInfo.Direction> infoSwipe;
+    //il primo pair sono il timestamp e la direzione, il secondo le coordinate x e y
+    private Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> infoSwipe;
     private ReentrantLock lockInfoSwipe,lockAction;
 
     public GridView(final Context context) {
@@ -69,10 +70,9 @@ public class GridView extends View {
         touchDownMs=0L;
         onTable=false;
         float scale = getResources().getDisplayMetrics().density;
-        SIZE = (int) (DESIRED_DP_VALUE * scale + 0.5f);
+        SIZE =  DESIRED_DP_VALUE * scale + 0.5f;
         lockInfoSwipe=new ReentrantLock();
         lockAction=new ReentrantLock();
-
         handler=new Handler(this,activity);
 
         Toast.makeText(context, Utils.getAddress(), Toast.LENGTH_SHORT).show();
@@ -156,25 +156,26 @@ public class GridView extends View {
        this.activity = activity;
     }*/
 
-    public int getCellSize(){
+    public float getCellSize(){
        return this.SIZE;
     }
     
-    public int getStopX() {
+   /* public int getStopX() {
         return stopX;
     }
 
     public int getStopY() {
         return stopY;
-    }
+    }*/
 
-    public Pair<Long,PinchInfo.Direction> getInfoSwipe(){
+
+    public /*Pair<Long,PinchInfo.Direction>*/Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> getInfoSwipe(){
         lockInfoSwipe.lock();
 
-        Pair<Long,PinchInfo.Direction> tmp;
+        /*Pair<Long,PinchInfo.Direction>*/Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> tmp;
 
         if(infoSwipe!=null) {
-                tmp=new Pair<>(infoSwipe.first, infoSwipe.second);
+            tmp=new Pair<>(new Pair<>(infoSwipe.first.first,infoSwipe.first.second), new Pair<>(infoSwipe.second.first,infoSwipe.second.second));
         }else{
             tmp=null;
         }
@@ -232,9 +233,10 @@ public class GridView extends View {
         canvas.drawColor(Color.BLACK);
         int count=0;
 
+
         //disegno delle righe per formare la griglia
         while(count<=row){
-            int coordinate=count*SIZE;
+            float coordinate=count*SIZE;
             canvas.drawLine(coordinate,0,coordinate,column*SIZE,whitePaint);
             count++;
         }
@@ -242,7 +244,7 @@ public class GridView extends View {
         count=0;
 
         while(count<=column){
-            int coordinate=count*SIZE;
+            float coordinate=count*SIZE;
             canvas.drawLine(0,coordinate,row*SIZE,coordinate,whitePaint);
             count++;
         }
@@ -275,8 +277,9 @@ public class GridView extends View {
                 return true;
             //l'utente ha rilasciato il dito
             case (MotionEvent.ACTION_UP) :
-                stopX=(int)event.getX();
-                stopY=(int)event.getY();
+                int stopX=(int)event.getX();
+                int stopY=(int)event.getY();
+
 
                 if ((System.currentTimeMillis() - touchDownMs) > TIME_DOUBLE_TAP) {
                     numberOfTaps = 0;
@@ -315,7 +318,7 @@ public class GridView extends View {
                                 Toast.makeText(getContext(), "Asse X sinistra", Toast.LENGTH_SHORT).show();
                             }
 
-                            sendBroadcastMessage(timeStamp,direction);
+                            sendBroadcastMessage(timeStamp,direction,stopX,stopY);
 
                         } else if (Math.abs(startX - stopX) <=50 && Math.abs(startY - stopY) >= 10){//mi sono mosso sulle Y
                             if((stopY - startY) > 0){
@@ -326,7 +329,7 @@ public class GridView extends View {
                                 Toast.makeText(getContext(), "Asse Y alto", Toast.LENGTH_SHORT).show();
                             }
 
-                            sendBroadcastMessage(timeStamp,direction);
+                            sendBroadcastMessage(timeStamp,direction,stopX,stopY);
                         } else {
                             System.out.println("Mossa in diagonale");
                         }
@@ -426,21 +429,21 @@ public class GridView extends View {
         if(changed) {
             width = getWidth();
             height = getHeight();
-            row = /*width % SIZE == 0 ?*/ width / SIZE ;//: (width / SIZE) + 1;
-            column = /*height % SIZE == 0 ?*/ height / SIZE;// : (height / SIZE) + 1;
+            row = /*width % SIZE == 0 ?*/(int) (width /SIZE) ;//: (width / SIZE) + 1;
+            column = /*height % SIZE == 0 ?*/ (int)(height /SIZE);// : (height / SIZE) + 1;
             cellChecked = new boolean[row+2][column+2];
         }
 
     }
 
-    private void sendBroadcastMessage(Long timeStamp,PinchInfo.Direction direction){
+    private void sendBroadcastMessage(Long timeStamp,PinchInfo.Direction direction,int x,int y){
         lockInfoSwipe.lock();
 
-        infoSwipe=new Pair<>(timeStamp,direction);
+        infoSwipe=new Pair<>(new Pair<>(timeStamp,direction),new Pair<>(x,y));
 
         lockInfoSwipe.unlock();
 
-        handler.sendBroadcastMessage(new PinchInfo(ipAddress, direction,stopX,stopY,activity.isPortrait(),timeStamp, width, height).toJSON());
+        handler.sendBroadcastMessage(new PinchInfo(ipAddress, direction,x,y,activity.isPortrait(),timeStamp, width, height).toJSON());
     }
 
     //async task che si occupa del calcolo delle generazioni di cellule
