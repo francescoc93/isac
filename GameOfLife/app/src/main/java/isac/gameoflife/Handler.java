@@ -35,9 +35,12 @@ public class Handler implements MessageListener {
     private boolean portrait;
     private ReentrantLock lock;
     private float cellSize;
+    private int myWidth,myHeight;
 
-    public Handler(GridView gridView,final MainActivity activity){
+    public Handler(GridView gridView,final MainActivity activity, int myWidth,int myHeight){
 
+        this.myHeight = myHeight;
+        this.myWidth = myWidth;
         ipAddress=Utils.getIpAddress();
         System.out.println("Indirizzo IP " + ipAddress);
         value_address=Integer.parseInt(ipAddress.split("\\.")[3]);
@@ -139,8 +142,9 @@ public class Handler implements MessageListener {
 
 
                                 connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(this.cellSize,info.isPortrait(),
-                                        info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),
-                                        coordinate.first, coordinate.second, nameSender, nameReceiver));
+                                        info.getDirection(),timeStampDirection.second,
+                                        info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),this.myWidth,
+                                        this.myHeight, coordinate.first, coordinate.second, nameSender, nameReceiver));
 
                                 lock.unlock();
 
@@ -157,8 +161,9 @@ public class Handler implements MessageListener {
                                 System.out.println("Nome coda su cui ricevo: " + nameSender);
 
                                 connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(this.cellSize,info.isPortrait(),
-                                        info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),
-                                        coordinate.first, coordinate.second, nameReceiver, nameSender));
+                                        info.getDirection(),timeStampDirection.second,
+                                        info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(), this.myWidth,
+                                        this.myHeight,coordinate.first, coordinate.second, nameReceiver, nameSender));
 
 
                                 lock.unlock();

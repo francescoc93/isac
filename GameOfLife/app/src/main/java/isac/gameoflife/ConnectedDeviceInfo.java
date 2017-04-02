@@ -1,5 +1,7 @@
 package isac.gameoflife;
 
+import android.app.Application;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,13 +15,15 @@ public class ConnectedDeviceInfo {
     private boolean portrait;
     private String nameQueueSender,nameQueueReceiver;
     private int orientation; //gradi di rotazione
-    private int myWidth, myHeight, width, height,myXCoord,myYCoord,xCoord,yCoord;//TODO: SET MYWIDTH E MYHEIGHT
-    private PinchInfo.Direction myDir,dir; //TODO: SET MYDIR
+    private int myWidth, myHeight, width, height,myXCoord,myYCoord,xCoord,yCoord;
+    private PinchInfo.Direction myDir,dir;
     private float cellSize;
     private int l1, l2, indexFirstCell, indexLastCell;
     private List<Boolean> cellsToSend;
 
-    public ConnectedDeviceInfo(float cellSize,boolean portrait, int xCoord, int yCoord,int width,int height,int myXCoord,int myYCoord, String nameQueueSender, String nameQueueReceiver){
+    public ConnectedDeviceInfo(float cellSize, boolean portrait, PinchInfo.Direction dir, PinchInfo.Direction myDir,
+                               int xCoord, int yCoord, int width, int height, int myWidth, int myHeight,
+                               int myXCoord, int myYCoord, String nameQueueSender, String nameQueueReceiver){
         this.portrait = portrait;
         this.xCoord=xCoord;
         this.yCoord=yCoord;
@@ -32,6 +36,10 @@ public class ConnectedDeviceInfo {
         this.cellSize = cellSize;
         this.cellsToSend = new ArrayList<>(); //TEMPORARY
         this.reverseList = false;
+        this.myWidth = myWidth;
+        this.myHeight = myHeight;
+        this.myDir = myDir;
+        this.dir = dir;
     }
 
 
@@ -54,7 +62,7 @@ public class ConnectedDeviceInfo {
      */
     public void setRelativeOrientation(){
 
-        //my X max
+        //RIGHT
         if(myXCoord > myWidth - 20 && myXCoord <= myWidth){
 
             if(this.xCoord >= 0 && this.xCoord < 20){
@@ -67,7 +75,7 @@ public class ConnectedDeviceInfo {
                 this.orientation = 270;
             }
 
-        } else if(myXCoord >= 0 && myXCoord < 20){ //my x min
+        } else if(myXCoord >= 0 && myXCoord < 20){ //LEFT
 
             if(this.xCoord >= 0 && this.xCoord < 20){
                 this.orientation = 270;
@@ -79,9 +87,7 @@ public class ConnectedDeviceInfo {
                 this.orientation = 90;
             }
 
-
-
-        } else if (myYCoord > myHeight - 20 && myYCoord <= myHeight){ //my y max
+        } else if (myYCoord > myHeight - 20 && myYCoord <= myHeight){ //TOP
 
             if(this.xCoord >= 0 && this.xCoord < 20){
                 this.orientation = 270;
@@ -93,9 +99,7 @@ public class ConnectedDeviceInfo {
                 this.orientation = 180;
             }
 
-
-
-        } else if(myYCoord >= 0 && myYCoord < 20){ //my y min
+        } else if(myYCoord >= 0 && myYCoord < 20){ //BOTTOM
 
             if(this.xCoord >= 0 && this.xCoord < 20){
                 this.orientation = 90;
@@ -106,15 +110,12 @@ public class ConnectedDeviceInfo {
             } else if(this.yCoord <= this.height && this.yCoord > this.height - 20){
                 this.orientation = 0;
             }
-
-
 
         }
 
 
     }
     //NB: I CASI SI RIFERISCONO SEMPRE ALLA POSIZIONE DELL'ALTRO DEVICE
-    //SI DA' PER SCONTATO CHE I 16 CASI SONO GIA' STATI CALCOLATI - TODO: INSERIRE CODICE
     //TODO: PORZIONE DI SCHERMO DA RICEVERE E INVIARE
 
     //calcolo lunghezze ---> punto inizio (altezza inizio)/grandezza celle = indice cella iniziale da inviare

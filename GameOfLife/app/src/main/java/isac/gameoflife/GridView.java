@@ -73,7 +73,7 @@ public class GridView extends View {
         SIZE =  DESIRED_DP_VALUE * scale + 0.5f;
         lockInfoSwipe=new ReentrantLock();
         lockAction=new ReentrantLock();
-        handler=new Handler(this,activity);
+        handler=new Handler(this,activity,getWidth(),getHeight());
 
         Toast.makeText(context, Utils.getAddress(), Toast.LENGTH_SHORT).show();
 
