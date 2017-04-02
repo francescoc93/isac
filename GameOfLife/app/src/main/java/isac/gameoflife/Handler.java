@@ -116,10 +116,6 @@ public class Handler implements MessageListener {
                                 }
                             });
 
-                            // Toast.makeText(context, "Schermo collegato", Toast.LENGTH_SHORT).show();
-
-                            //TODO: METTERE IN CONNECTED DEVICE INFO IL NUMERO DI CELLE
-                            //TODO (2) : HANDLE MESSAGE
 
                             String nameSender = "", nameReceiver = "";
                             String ipAddressDevice = info.getAddress();
@@ -133,7 +129,7 @@ public class Handler implements MessageListener {
                                 rabbitMQ.addQueue(nameSender);
                                 rabbitMQ.addQueue(nameReceiver, this);
 
-                                //TODO: calcoli per x e y (pdf)
+
                                 lock.lock();
 
                                 System.out.println("Nome coda per inviare: " + nameSender);

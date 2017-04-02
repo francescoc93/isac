@@ -159,7 +159,8 @@ public class ConnectedDeviceInfo {
 
     }
 
-    //THIRD: calculate the cells to send and the ones we expect to receive. The number of these two groups of cells is of course the same.
+    //THIRD: calculate the cells to be sent.
+    //reverseList is used to know how to manage the array of cells received.
     private void evaluateCells(){
         if(myDir.equals(PinchInfo.Direction.RIGHT) || myDir.equals(PinchInfo.Direction.LEFT)){
             indexFirstCell =(int) Math.ceil((double)(myYCoord - l1)/(double)this.cellSize);
@@ -178,17 +179,27 @@ public class ConnectedDeviceInfo {
             indexLastCell = (int) ((myXCoord + l2)/this.cellSize);
             if(orientation == 0){
                 this.reverseList = false;
-
             } else if (orientation == 90){
                 this.reverseList = false;
-
             } else if (orientation == 180){
                 this.reverseList = true;
-
             } else if (orientation == 270){
                 this.reverseList = true;
             }
         }
     }
+
+    public boolean isReversed(){
+        return this.reverseList;
+    }
+
+    public int getIndexFirstCell(){
+        return this.indexFirstCell;
+    }
+
+    public int getIndexLastCell(){
+        return this.indexLastCell;
+    }
+
 
 }

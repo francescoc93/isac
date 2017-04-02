@@ -18,6 +18,7 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -511,25 +512,30 @@ public class GridView extends View {
             while(goOn){
                 boolean [][] tmp=new boolean[row+2][column+2];
 
-                for(int i=1;i<row+1;i++){
-                    for(int j=1;j<column+1;j++){
-                        int neighbours=neighboursAlive(i,j);
+                if(handler.getConnectedDevice()!=0){//TODO: AGGIUSTARE COL NUMERO CORRETTO DI DEVICE
 
-                        //se attualmente la cellula è viva
-                        if(cellChecked[i][j]) {
-                            //e ha 2 o 3 vicini, continua a vivere
-                            if (neighbours==2 || neighbours==3) {
-                                tmp[i][j] = true;
-                            }
-                        }else{
-                            //se la cellula è morta e ha esattamente 3 vicini
-                            //nella generazione successiva prende vita
-                            if(neighbours==3){
-                                tmp[i][j]=true;
+                } else {
+                    for(int i=1;i<row+1;i++){
+                        for(int j=1;j<column+1;j++){
+                            int neighbours=neighboursAlive(i,j);
+
+                            //se attualmente la cellula è viva
+                            if(cellChecked[i][j]) {
+                                //e ha 2 o 3 vicini, continua a vivere
+                                if (neighbours==2 || neighbours==3) {
+                                    tmp[i][j] = true;
+                                }
+                            }else{
+                                //se la cellula è morta e ha esattamente 3 vicini
+                                //nella generazione successiva prende vita
+                                if(neighbours==3){
+                                    tmp[i][j]=true;
+                                }
                             }
                         }
                     }
                 }
+
 
                 cellChecked=tmp;
                 //forzo la chiamata del metodo onDraw
@@ -557,5 +563,9 @@ public class GridView extends View {
                 clear();
             }
         }
+    }
+
+    public void setPairedCells(int firstIndex, int lastIndex, List<Boolean> cells){
+
     }
 }
