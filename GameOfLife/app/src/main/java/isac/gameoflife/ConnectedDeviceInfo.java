@@ -3,6 +3,7 @@ package isac.gameoflife;
 import android.app.Application;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -12,7 +13,6 @@ import java.util.List;
 public class ConnectedDeviceInfo {
 
     private boolean reverseList;
-    private boolean portrait;
     private String nameQueueSender,nameQueueReceiver;
     private int orientation; //gradi di rotazione
     private int myWidth, myHeight, width, height,myXCoord,myYCoord,xCoord,yCoord;
@@ -20,11 +20,12 @@ public class ConnectedDeviceInfo {
     private float cellSize;
     private int l1, l2, indexFirstCell, indexLastCell;
     private List<Boolean> cellsToSend;
+    private GridView gridView;
+    private String direction;
 
-    public ConnectedDeviceInfo(float cellSize, boolean portrait, PinchInfo.Direction dir, PinchInfo.Direction myDir,
+    public ConnectedDeviceInfo(float cellSize, PinchInfo.Direction dir, PinchInfo.Direction myDir,
                                int xCoord, int yCoord, int width, int height, int myWidth, int myHeight,
                                int myXCoord, int myYCoord, String nameQueueSender, String nameQueueReceiver){
-        this.portrait = portrait;
         this.xCoord=xCoord;
         this.yCoord=yCoord;
         this.myYCoord = myYCoord;
@@ -34,17 +35,12 @@ public class ConnectedDeviceInfo {
         this.nameQueueReceiver=nameQueueReceiver;
         this.nameQueueSender=nameQueueSender;
         this.cellSize = cellSize;
-        this.cellsToSend = new ArrayList<>(); //TEMPORARY
+        this.cellsToSend = new ArrayList<>();
         this.reverseList = false;
         this.myWidth = myWidth;
         this.myHeight = myHeight;
         this.myDir = myDir;
         this.dir = dir;
-    }
-
-
-    public boolean isPortrait() {
-        return portrait;
     }
 
     public String getNameQueueSender() {
@@ -56,14 +52,20 @@ public class ConnectedDeviceInfo {
     }
 
 
+    public void calculateInfo(){
+        setRelativeOrientation();
+        calculateL1L2();
+        evaluateCells();
+    }
     /**
      * The orientation is calculated considering yourself(the device) as in the middle of the origin
      * with its center (0,0). We have then 16 cases, 4 for each border(4).
      */
-    public void setRelativeOrientation(){
+    private void setRelativeOrientation(){
 
         //RIGHT
         if(myXCoord > myWidth - 20 && myXCoord <= myWidth){
+            this.direction = "right";
 
             if(this.xCoord >= 0 && this.xCoord < 20){
                 this.orientation = 0;
@@ -77,6 +79,7 @@ public class ConnectedDeviceInfo {
 
         } else if(myXCoord >= 0 && myXCoord < 20){ //LEFT
 
+            this.direction = "left";
             if(this.xCoord >= 0 && this.xCoord < 20){
                 this.orientation = 270;
             } else if(this.xCoord <= this.width && this.xCoord > this.width - 20){
@@ -88,6 +91,7 @@ public class ConnectedDeviceInfo {
             }
 
         } else if (myYCoord > myHeight - 20 && myYCoord <= myHeight){ //TOP
+            this.direction = "top";
 
             if(this.xCoord >= 0 && this.xCoord < 20){
                 this.orientation = 270;
@@ -100,6 +104,7 @@ public class ConnectedDeviceInfo {
             }
 
         } else if(myYCoord >= 0 && myYCoord < 20){ //BOTTOM
+            this.direction = "bottom";
 
             if(this.xCoord >= 0 && this.xCoord < 20){
                 this.orientation = 90;
@@ -116,7 +121,6 @@ public class ConnectedDeviceInfo {
 
     }
     //NB: I CASI SI RIFERISCONO SEMPRE ALLA POSIZIONE DELL'ALTRO DEVICE
-    //TODO: PORZIONE DI SCHERMO DA RICEVERE E INVIARE
 
     //calcolo lunghezze ---> punto inizio (altezza inizio)/grandezza celle = indice cella iniziale da inviare
     //(punto inizio + somma lunghezze che indicano la parte di schermo in contatto)/grandezza cella = indice cella finale da inviare
@@ -189,9 +193,6 @@ public class ConnectedDeviceInfo {
         }
     }
 
-    public boolean isReversed(){
-        return this.reverseList;
-    }
 
     public int getIndexFirstCell(){
         return this.indexFirstCell;
@@ -199,6 +200,42 @@ public class ConnectedDeviceInfo {
 
     public int getIndexLastCell(){
         return this.indexLastCell;
+    }
+
+    public List<Boolean> getCellsValues(int firstIndex, int lastIndex){
+
+        boolean[][] matrix = this.gridView.getCellMatrix();
+        int rows = matrix.length;
+        int columns = matrix[0].length;
+        switch(direction){
+            case "right":
+                for(int i = firstIndex; i<lastIndex; i++){
+                    cellsToSend.add(matrix[columns][i]);
+                };
+                break;
+            case "left":
+                for(int i = firstIndex; i<lastIndex; i++){
+                    cellsToSend.add(matrix[0][i]);
+                };
+                break;
+            case "top":
+                for(int i = firstIndex; i<lastIndex; i++){
+                cellsToSend.add(matrix[i][rows]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                };
+                break;
+            case "bottom":
+                for(int i = firstIndex; i<lastIndex; i++){
+                cellsToSend.add(matrix[i][0]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                };
+                break;
+
+        }
+
+        if(reverseList){
+            Collections.reverse(cellsToSend);
+        }
+
+        return cellsToSend;
     }
 
 

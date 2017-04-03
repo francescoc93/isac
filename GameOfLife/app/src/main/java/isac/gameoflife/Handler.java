@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static android.content.Context.CONNECTIVITY_SERVICE;
 import static android.content.Context.WIFI_SERVICE;
 
 /**
@@ -136,11 +137,12 @@ public class Handler implements MessageListener {
                                 System.out.println("Nome coda su cui ricevo: " + nameReceiver);
 
 
-
-                                connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(this.cellSize,info.isPortrait(),
+                                ConnectedDeviceInfo connectionInfo = new ConnectedDeviceInfo(this.cellSize,
                                         info.getDirection(),timeStampDirection.second,
                                         info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),this.myWidth,
-                                        this.myHeight, coordinate.first, coordinate.second, nameSender, nameReceiver));
+                                        this.myHeight, coordinate.first, coordinate.second, nameSender, nameReceiver);
+                                connectedDevices.put(ipAddressDevice, connectionInfo);
+                                connectionInfo.calculateInfo();
 
                                 lock.unlock();
 
@@ -149,17 +151,17 @@ public class Handler implements MessageListener {
                                 nameSender = ipAddressDevice + ipAddress;
                                 rabbitMQ.addQueue(nameReceiver);
                                 rabbitMQ.addQueue(nameSender, this);
-
-                                //TODO: calcoli per x e y (pdf)
                                 lock.lock();
 
                                 System.out.println("Nome coda per inviare: " + nameReceiver);
                                 System.out.println("Nome coda su cui ricevo: " + nameSender);
 
-                                connectedDevices.put(ipAddressDevice, new ConnectedDeviceInfo(this.cellSize,info.isPortrait(),
+                                ConnectedDeviceInfo connectionInfo = new ConnectedDeviceInfo(this.cellSize,
                                         info.getDirection(),timeStampDirection.second,
-                                        info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(), this.myWidth,
-                                        this.myHeight,coordinate.first, coordinate.second, nameReceiver, nameSender));
+                                        info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),this.myWidth,
+                                        this.myHeight, coordinate.first, coordinate.second, nameSender, nameReceiver);
+                                connectedDevices.put(ipAddressDevice, connectionInfo);
+                                connectionInfo.calculateInfo();
 
 
                                 lock.unlock();
@@ -252,6 +254,8 @@ public class Handler implements MessageListener {
                     }
 
                 }
+            } else if (json.getString("type").equals("cells")){
+                //TODO: PRENDERE INFORMAZIONI DAL MESSAGGIO E RICHIAMARE IL METODO SETPAIREDCELLS DELLA GRIDVIEW
             }
         } catch (JSONException e) {
             e.printStackTrace();
