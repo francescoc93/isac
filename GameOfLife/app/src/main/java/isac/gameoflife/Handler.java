@@ -127,47 +127,35 @@ public class Handler implements MessageListener {
                             if (value_address > value_address_device) { //se sono il maggiore tra i due
                                 nameSender = ipAddress + ipAddressDevice;
                                 nameReceiver = ipAddressDevice + ipAddress;
-                                rabbitMQ.addQueue(nameSender);
-                                rabbitMQ.addQueue(nameReceiver, this);
-
-
-                                lock.lock();
 
                                 System.out.println("Nome coda per inviare: " + nameSender);
                                 System.out.println("Nome coda su cui ricevo: " + nameReceiver);
 
-
-                                ConnectedDeviceInfo connectionInfo = new ConnectedDeviceInfo(this.cellSize,
-                                        info.getDirection(),timeStampDirection.second,
-                                        info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),this.myWidth,
-                                        this.myHeight, coordinate.first, coordinate.second, nameSender, nameReceiver);
-                                connectedDevices.put(ipAddressDevice, connectionInfo);
-                                connectionInfo.calculateInfo();
-
-                                lock.unlock();
+                                rabbitMQ.addQueue(nameSender);
+                                rabbitMQ.addQueue(nameReceiver, this);
 
                             } else { //se sono il minore tra i due
                                 nameReceiver = ipAddress + ipAddressDevice;
                                 nameSender = ipAddressDevice + ipAddress;
-                                rabbitMQ.addQueue(nameReceiver);
-                                rabbitMQ.addQueue(nameSender, this);
-                                lock.lock();
 
                                 System.out.println("Nome coda per inviare: " + nameReceiver);
                                 System.out.println("Nome coda su cui ricevo: " + nameSender);
 
-                                ConnectedDeviceInfo connectionInfo = new ConnectedDeviceInfo(this.cellSize,
-                                        info.getDirection(),timeStampDirection.second,
-                                        info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),this.myWidth,
-                                        this.myHeight, coordinate.first, coordinate.second, nameSender, nameReceiver);
-                                connectedDevices.put(ipAddressDevice, connectionInfo);
-                                connectionInfo.calculateInfo();
-
-
-                                lock.unlock();
-
-
+                                rabbitMQ.addQueue(nameReceiver);
+                                rabbitMQ.addQueue(nameSender, this);
                             }
+
+                            lock.lock();
+
+                            ConnectedDeviceInfo connectionInfo = new ConnectedDeviceInfo(this.cellSize,
+                                    info.getDirection(),timeStampDirection.second,
+                                    info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),this.myWidth,
+                                    this.myHeight, coordinate.first, coordinate.second, nameSender, nameReceiver);
+
+                            connectedDevices.put(ipAddressDevice, connectionInfo);
+                            connectionInfo.calculateInfo();
+
+                            lock.unlock();
                         }
                     }else{
                         lock.unlock();
