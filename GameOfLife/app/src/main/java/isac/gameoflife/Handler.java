@@ -33,7 +33,6 @@ public class Handler implements MessageListener {
     private RabbitMQ rabbitMQ;
     private HashMap<String,ConnectedDeviceInfo> connectedDevices;
     private int value_address;
-    private boolean portrait;
     private ReentrantLock lock;
     private float cellSize;
     private int myWidth,myHeight;
@@ -79,10 +78,6 @@ public class Handler implements MessageListener {
         return false;
     }
 
-    public void setPortrait(boolean portrait){
-        this.portrait = portrait;
-    }
-
     @Override
     public void handleMessage(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, JSONObject json) {
         System.out.println("Messaggio ricevuto");
@@ -91,14 +86,14 @@ public class Handler implements MessageListener {
             //info è dell'altro device, infoSwipe sono i miei
             if(json.getString("type").equals("pinch")) { //messaggio broadcast
                 PinchInfo info = new PinchInfo(json.getString(PinchInfo.ADDRESS),PinchInfo.Direction.valueOf(json.getString(PinchInfo.DIRECTION)),json.getInt(PinchInfo.X_COORDINATE),
-                        json.getInt(PinchInfo.Y_COORDINATE), json.getBoolean(PinchInfo.PORTRAIT), json.getLong(PinchInfo.TIMESTAMP),
+                        json.getInt(PinchInfo.Y_COORDINATE), json.getLong(PinchInfo.TIMESTAMP),
                         json.getInt(PinchInfo.SCREEN_WIDTH), json.getInt(PinchInfo.SCREEN_HEIGHT));
 
                 Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> infoSwipe=gridView.getInfoSwipe();
                 Pair<Long,PinchInfo.Direction> timeStampDirection=infoSwipe.first;
                 Pair<Integer,Integer> coordinate=infoSwipe.second;
 
-                if(infoSwipe!=null && !ipAddress.equals(info.getAddress())) {
+                if(infoSwipe!=null && messageFromOther(info.getAddress())) {
 
 
                     lock.lock();
@@ -186,61 +181,16 @@ public class Handler implements MessageListener {
                     closeCommunication(deviceInfo.getNameQueueReceiver());
                 }
             }else if(json.getString("type").equals("start")){ //messaggio broadcast
-                System.out.println("Messaggio di start ricevuto");
-                if(!ipAddress.equals(json.getString(PinchInfo.ADDRESS))) {
-                    System.out.println("Da un altro device");
-                    boolean flag = false;
-
-                    lock.lock();
-
-                    if (connectedDevices.size() != 0) {
-                        System.out.println("Sono connesso con qualcuno");
-                        flag = true;
-                    }
-
-                    lock.unlock();
-
-                    if (flag) {
-                        System.out.println("START");
-                        gridView.start();
-                    }
+                if(messageFromOther(json.getString(PinchInfo.ADDRESS)) && isConnected()) {
+                    gridView.start();
                 }
-
             }else if(json.getString("type").equals("pause")){ //messaggio broadcast
-
-                if(!ipAddress.equals(json.getString(PinchInfo.ADDRESS))) {
-                    boolean flag = false;
-
-                    lock.lock();
-
-                    if (connectedDevices.size() != 0) {
-                        flag = true;
-                    }
-
-                    lock.unlock();
-
-                    if (flag) {
-                        gridView.pause();
-                    }
+                if(messageFromOther(json.getString(PinchInfo.ADDRESS)) && isConnected()) {
+                    gridView.pause();
                 }
-
             }else if(json.getString("type").equals("reset")){ //messaggio broadcast
-
-                if(!ipAddress.equals(json.getString(PinchInfo.ADDRESS))) {
-                    boolean flag = false;
-
-                    lock.lock();
-
-                    if (connectedDevices.size() != 0) {
-                        flag = true;
-                    }
-
-                    lock.unlock();
-
-                    if (flag) {
-                        gridView.clear();
-                    }
-
+                if(messageFromOther(json.getString(PinchInfo.ADDRESS)) && isConnected()) {
+                    gridView.clear();
                 }
             } else if (json.getString("type").equals("cells")){
                 //TODO: PRENDERE INFORMAZIONI DAL MESSAGGIO E RICHIAMARE IL METODO SETPAIREDCELLS DELLA GRIDVIEW
@@ -291,17 +241,19 @@ public class Handler implements MessageListener {
 
     }
 
-    public int getConnectedDevice(){
-
+    public boolean isConnected(){
         lock.lock();
 
-        int tmp=connectedDevices.size();
+        boolean tmp=connectedDevices.size()==0?false:true;
 
         lock.unlock();
 
         return tmp;
     }
 
+    private boolean messageFromOther (String ipAddressDevice){
+        return !ipAddress.equals(ipAddressDevice);
+    }
     private void closeCommunication(String name){
         rabbitMQ.close(name);
     }

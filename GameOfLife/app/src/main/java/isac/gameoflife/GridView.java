@@ -127,7 +127,7 @@ public class GridView extends View {
                         onTable = false;
                         System.out.println("non sono sul tavolo Z: " + z + " X: " + x + " Y: " + y+" Inclination: "+inclination);
 
-                        if(handler.getConnectedDevice()!=0){
+                        if(handler.isConnected()){
                             Toast.makeText(context, "Schermo scollegato", Toast.LENGTH_SHORT).show();
                             handler.closeDeviceCommunication();
                         }
@@ -307,8 +307,6 @@ public class GridView extends View {
                         long timeStamp = System.currentTimeMillis();
                         PinchInfo.Direction direction=null;
 
-                        handler.setPortrait(activity.isPortrait());
-
                         if (Math.abs(startX - stopX) >=10 && Math.abs(startY - stopY) <= 50){//se mi sono mosso sulle X
                             if((stopX - startX) > 0){
                                 direction=PinchInfo.Direction.RIGHT;
@@ -354,7 +352,7 @@ public class GridView extends View {
 
                     clear();
 
-                    if(handler.getConnectedDevice()!=0) {
+                    if(handler.isConnected()) {
 
                         JSONObject message = new JSONObject();
                         try {
@@ -378,7 +376,7 @@ public class GridView extends View {
 
                         pause();
 
-                        if(handler.getConnectedDevice()!=0){
+                        if(handler.isConnected()){
 
                             JSONObject message=new JSONObject();
                             try {
@@ -396,7 +394,7 @@ public class GridView extends View {
 
                         start();
 
-                        if(handler.getConnectedDevice()!=0){
+                        if(handler.isConnected()){
 
                             JSONObject message=new JSONObject();
                             try {
@@ -437,6 +435,49 @@ public class GridView extends View {
 
     }
 
+
+    public boolean[][] getCellMatrix(){
+        return this.cellChecked;
+    }
+
+
+    /**
+     * The final task of our project. Sets the outer border cells, where 2 devices are in contact.
+     * The direction of the swipe is essential: you need to recognise what portion of screen
+     * corresponds to one specific neighbour.
+     * @param firstIndex
+     * @param lastIndex
+     * @param cells
+     * @param direction the direction of the CURRENT device swipe
+     */
+    public void setPairedCells(int firstIndex, int lastIndex, List<Boolean> cells, PinchInfo.Direction direction){
+        //TODO: COMPLETARE METODO
+        switch(direction){
+            case RIGHT:
+                for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
+                    cellChecked[column][i] = cells.get(j);
+                };
+                break;
+            case LEFT:
+                for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
+                    cellChecked[0][i] = cells.get(j);
+                };
+                break;
+            case UP:
+                for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
+                    cellChecked[i][row] = cells.get(j); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                };
+                break;
+            case DOWN:
+                for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
+                    cellChecked[i][0] = cells.get(j);//TODO: VERIFY- la riga 0 è in cima o in fondo?
+                };
+                break;
+
+        }
+
+    }
+
     private void sendBroadcastMessage(Long timeStamp,PinchInfo.Direction direction,int x,int y){
         lockInfoSwipe.lock();
 
@@ -444,7 +485,7 @@ public class GridView extends View {
 
         lockInfoSwipe.unlock();
 
-        handler.sendBroadcastMessage(new PinchInfo(ipAddress, direction,x,y,activity.isPortrait(),timeStamp, width, height).toJSON());
+        handler.sendBroadcastMessage(new PinchInfo(ipAddress, direction,x,y,timeStamp, width, height).toJSON());
     }
 
     //async task che si occupa del calcolo delle generazioni di cellule
@@ -512,7 +553,7 @@ public class GridView extends View {
             while(goOn){
                 boolean [][] tmp=new boolean[row+2][column+2];
 
-                if(handler.getConnectedDevice()!=0){//TODO: AGGIUSTARE COL NUMERO CORRETTO DI DEVICE
+                if(handler.isConnected()){//TODO: AGGIUSTARE COL NUMERO CORRETTO DI DEVICE
                     //TODO: IF HO RICEVUTO MESSAGGI DA TUTTI I DEVICE CONNESSI
                     //calcolo la generazione
                     //TODO: send message with info to connected devices
@@ -567,47 +608,5 @@ public class GridView extends View {
                 clear();
             }
         }
-    }
-
-    public boolean[][] getCellMatrix(){
-        return this.cellChecked;
-    }
-
-
-    /**
-     * The final task of our project. Sets the outer border cells, where 2 devices are in contact.
-     * The direction of the swipe is essential: you need to recognise what portion of screen
-     * corresponds to one specific neighbour.
-     * @param firstIndex
-     * @param lastIndex
-     * @param cells
-     * @param direction the direction of the CURRENT device swipe
-     */
-    public void setPairedCells(int firstIndex, int lastIndex, List<Boolean> cells, PinchInfo.Direction direction){
-        //TODO: COMPLETARE METODO
-        switch(direction){
-            case RIGHT:
-                for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[column][i] = cells.get(j);
-                };
-                break;
-            case LEFT:
-                for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[0][i] = cells.get(j);
-                };
-                break;
-            case UP:
-                for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[i][row] = cells.get(j); //TODO: VERIFY- la riga 0 è in cima o in fondo?
-                };
-                break;
-            case DOWN:
-                for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[i][0] = cells.get(j);//TODO: VERIFY- la riga 0 è in cima o in fondo?
-                };
-                break;
-
-        }
-
     }
 }

@@ -22,23 +22,20 @@ public class PinchInfo implements Serializable {
     public final static String X_COORDINATE="xcoordinate";
     public final static String Y_COORDINATE="ycoordinate";
     public final static String TIMESTAMP="timestamp";
-    public final static String PORTRAIT="portrait";
     public final static String SCREEN_WIDTH="screenWidth";
     public final static String SCREEN_HEIGHT="screenHeight";
     private Direction direction;
     private String address;
     private Integer xcoordinate;
     private Integer ycoordinate;
-    private boolean portrait;
     private Long timestamp;
     private int screenWidth;
     private int screenHeight;
 
-    public PinchInfo(String address, Direction direction,Integer xcoordinate, Integer ycoordinate, boolean portrait, Long timestamp, int screenWidth, int screenHeight) {
+    public PinchInfo(String address, Direction direction,Integer xcoordinate, Integer ycoordinate, Long timestamp, int screenWidth, int screenHeight) {
         this.address = address;
         this.xcoordinate = xcoordinate;
         this.ycoordinate = ycoordinate;
-        this.portrait = portrait;
         this.timestamp = timestamp;
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
@@ -56,10 +53,6 @@ public class PinchInfo implements Serializable {
     public Integer getYcoordinate() {
         return ycoordinate;
     }
-
-    public boolean isPortrait() {
-        return portrait;
-        }
 
     public Long getTimestamp() {
         return timestamp;
@@ -96,7 +89,6 @@ public class PinchInfo implements Serializable {
             jo.put(X_COORDINATE, getXcoordinate());
             jo.put(Y_COORDINATE, getYcoordinate());
             jo.put(TIMESTAMP, getTimestamp());
-            jo.put(PORTRAIT, isPortrait());
             jo.put(SCREEN_WIDTH, getScreenWidth());
             jo.put(SCREEN_HEIGHT, getScreenHeight());
             jo.put("type","pinch");

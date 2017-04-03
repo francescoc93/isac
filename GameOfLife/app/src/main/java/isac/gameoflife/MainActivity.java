@@ -36,8 +36,4 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(gridView);
     }
-
-    public boolean isPortrait(){
-        return this.portrait;
-    }
 }
