@@ -35,9 +35,9 @@ public class Handler implements MessageListener {
     private RabbitMQ rabbitMQ;
     private HashMap<String,ConnectedDeviceInfo> connectedDevices;
     private int value_address;
-    private ReentrantLock lock;
+    private ReentrantLock lock,lockCounter,lockReady;
     private float cellSize;
-    private int myWidth,myHeight,messageReceived;
+    private int myWidth,myHeight,messageReceived,genCalculated;
 
     public Handler(GridView gridView,final MainActivity activity, int myWidth,int myHeight){
 
@@ -52,13 +52,16 @@ public class Handler implements MessageListener {
         this.rabbitMQ=new RabbitMQ(Utils.getAddress(),"[user]","[user]");
         connectedDevices=new HashMap<>();
         this.messageReceived = 0;
+        genCalculated=0;
         lock=new ReentrantLock();
+        lockCounter=new ReentrantLock();
+        lockReady=new ReentrantLock();
 
-        activity.runOnUiThread(new Runnable() {
+       /* activity.runOnUiThread(new Runnable() {
             public void run() {
                 Toast.makeText(activity, ipAddress, Toast.LENGTH_SHORT).show();
             }
-        });
+        });*/
     }
 
     public boolean connectToServer(){
@@ -106,7 +109,7 @@ public class Handler implements MessageListener {
                         lock.unlock();
 
                         if ((info.getTimestamp() > (timeStampDirection.first - /*20*/5000)) &&
-                                (info.getTimestamp() < (timeStampDirection.first + /*20*/5000)) && info.oppositeDirection(timeStampDirection.second)) {
+                                (info.getTimestamp() < (timeStampDirection.first + /*20*/5000))/* && info.oppositeDirection(timeStampDirection.second)*/) {
                             System.out.println("DEVICE PAIRED WITH " + info.getAddress());
 
                             activity.runOnUiThread(new Runnable() {
@@ -194,11 +197,23 @@ public class Handler implements MessageListener {
                     gridView.clear();
                 }
             } else if (json.getString("type").equals("cells")){
+
+                lockCounter.lock();
+
                 messageReceived++;
+
+                lockCounter.unlock();
+
                 List<Boolean> cellsToSet = (ArrayList<Boolean>)json.get("cellsList");
                 int firstIndex = connectedDevices.get(json.getString(PinchInfo.ADDRESS)).getIndexFirstCell();
                 int lastIndex = connectedDevices.get(json.getString(PinchInfo.ADDRESS)).getIndexLastCell();
                 gridView.setPairedCells(firstIndex,lastIndex,cellsToSet,connectedDevices.get(json.getString(PinchInfo.ADDRESS)).getMyDirection());
+            } else if(json.getString("type").equals("ready")){
+                lockReady.lock();
+
+                genCalculated++;
+
+                lockReady.unlock();
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -206,15 +221,59 @@ public class Handler implements MessageListener {
     }
 
     public boolean goOn(){
+
+        boolean tmp;
+
+        lockCounter.lock();
+        lock.lock();
+
         if (messageReceived == connectedDevices.size()){
-            return true;
+            tmp= true;
         } else {
-            return false;
+            tmp= false;
         }
+
+        lock.unlock();
+        lockCounter.unlock();
+
+        return tmp;
     }
 
     public void resetReceived(){
+
+        lockCounter.lock();
+
         this.messageReceived = 0;
+
+        lockCounter.unlock();
+    }
+
+    public boolean readyToSendCells(){
+
+        boolean tmp;
+
+        lockReady.lock();
+        lock.lock();
+
+        if (genCalculated == connectedDevices.size()){
+            tmp= true;
+        } else {
+            tmp= false;
+        }
+
+        lock.unlock();
+        lockReady.unlock();
+
+        return tmp;
+    }
+
+    public void resetReceivedReady(){
+
+        lockReady.lock();
+
+        genCalculated = 0;
+
+        lockReady.unlock();
     }
 
     public void sendCellsToOthers(){
@@ -231,7 +290,23 @@ public class Handler implements MessageListener {
             }
             rabbitMQ.sendMessage(queueSender, obj);
         }
+    }
 
+    //invio a tutti i device collegati un messaggio che indica
+    //che sono pronto a inviare a loro le mie celle per la generazione successiva
+    public void readyToContinue(){
+        for (String s : connectedDevices.keySet()){
+            JSONObject obj = new JSONObject();
+            ConnectedDeviceInfo infoConn = connectedDevices.get(s);
+            String queueSender = infoConn.getNameQueueSender();
+            try {
+                obj.put("type","ready");
+                //obj.put(PinchInfo.ADDRESS,ipAddress);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            rabbitMQ.sendMessage(queueSender, obj);
+        }
     }
 
     public void closeDeviceCommunication() {
@@ -270,9 +345,6 @@ public class Handler implements MessageListener {
 
             lock.unlock();
         }
-
-
-
     }
 
     public boolean isConnected(){
@@ -288,6 +360,7 @@ public class Handler implements MessageListener {
     private boolean messageFromOther (String ipAddressDevice){
         return !ipAddress.equals(ipAddressDevice);
     }
+
     private void closeCommunication(String name){
         rabbitMQ.close(name);
     }

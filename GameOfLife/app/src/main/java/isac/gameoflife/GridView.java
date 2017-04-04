@@ -31,7 +31,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class GridView extends View {
 
     private final static int TIME_DOUBLE_TAP=180;
-    private final static float DESIRED_DP_VALUE=50.0f;
+    private final static int DESIRED_DP_VALUE=50;
     private final float SIZE;
     private Handler handler;
     private int width;
@@ -68,8 +68,8 @@ public class GridView extends View {
         lastTapTimeMs=0L;
         touchDownMs=0L;
         onTable=false;
-        float scale = getResources().getDisplayMetrics().density;
-        SIZE =  DESIRED_DP_VALUE * scale + 0.5f;
+        //float scale = getResources().getDisplayMetrics().density;
+        SIZE =  /*DESIRED_DP_VALUE * scale + 0.5f*/ DESIRED_DP_VALUE*(getResources().getDisplayMetrics().densityDpi/160.0f);
         lockInfoSwipe=new ReentrantLock();
         lockAction=new ReentrantLock();
         handler=new Handler(this,activity,getWidth(),getHeight());
@@ -524,22 +524,66 @@ public class GridView extends View {
             return neighbours;
         }
 
+
+        private void calculateNextGen(){
+            boolean [][] tmp=new boolean[row+2][column+2];
+
+            for(int i=1;i<row+1;i++){
+                for(int j=1;j<column+1;j++){
+                    int neighbours=neighboursAlive(i,j);
+
+                    //se attualmente la cellula è viva
+                    if(cellChecked[i][j]) {
+                        //e ha 2 o 3 vicini, continua a vivere
+                        if (neighbours==2 || neighbours==3) {
+                            tmp[i][j] = true;
+                        }
+                    }else{
+                        //se la cellula è morta e ha esattamente 3 vicini
+                        //nella generazione successiva prende vita
+                        if(neighbours==3){
+                            tmp[i][j]=true;
+                        }
+                    }
+                }
+            }
+
+            cellChecked=tmp;
+            //forzo la chiamata del metodo onDraw
+            postInvalidate();
+
+        }
+
         @Override
         public void run() {
             boolean goOn=true;
 
             while(goOn){
-                boolean [][] tmp=new boolean[row+2][column+2];
+                //boolean [][] tmp=new boolean[row+2][column+2];
 
-                if(handler.isConnected()){//TODO: AGGIUSTARE COL NUMERO CORRETTO DI DEVICE
-                    //TODO: IF HO RICEVUTO MESSAGGI DA TUTTI I DEVICE CONNESSI
-                    //calcolo la generazione
-                    //TODO: send message with info to connected devices
+                if(handler.isConnected()){
 
+                    if(handler.goOn()){ //controllo se posso proseguire (ovvero ho ricevuto le celle da tutti i vicini)
+                        handler.resetReceived(); //resetto il contatore dei device che mi hanno inviato le celle
+                        calculateNextGen(); //calcolo la generazione
+                        handler.readyToContinue(); //invio un messaggio ai miei vicini con lo scopo di avvisarli che sono pronto a inviare le mie celle
 
+                        // faccio il while fino a quando tutti i miei vicini
+                        // non hanno terminato di calcolare la propria generazione
+                        while(!handler.readyToSendCells()){
+                            // sleep per non tenere di continuo il lock ed evitare una possibile starvation
+                            try {
+                                Thread.sleep(20);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
 
+                        handler.resetReceivedReady(); //resetto il contatore
+                        handler.sendCellsToOthers(); //invio ai miei vicini le celle
+                    }
                 } else {
-                    for(int i=1;i<row+1;i++){
+                    /*for(int i=1;i<row+1;i++){
                         for(int j=1;j<column+1;j++){
                             int neighbours=neighboursAlive(i,j);
 
@@ -557,20 +601,22 @@ public class GridView extends View {
                                 }
                             }
                         }
-                    }
+                    }*/
+
+                    calculateNextGen();
 
                 }
 
 
-                cellChecked=tmp;
+                //cellChecked=tmp;
+
                 //forzo la chiamata del metodo onDraw
-                postInvalidate();
+                //postInvalidate();
 
                 //se l'utente non ha messo in pausa il gioco
                 if(started.get()){
-                    //sleep di 1 secondo
                     try {
-                        Thread.sleep(500);
+                        Thread.sleep(handler.isConnected()?100:500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
