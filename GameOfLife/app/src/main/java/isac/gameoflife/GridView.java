@@ -31,7 +31,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class GridView extends View {
 
     private final static int TIME_DOUBLE_TAP=180;
-    private final static int DESIRED_DP_VALUE=50;
+    private final static float DESIRED_DP_VALUE=50.0f;
     private final float SIZE;
     private Handler handler;
     private int width;
@@ -40,8 +40,6 @@ public class GridView extends View {
     private int column;
     private int startX;
     private int startY;
-   /* private int stopX;
-    private int stopY;*/
     private int numberOfTaps ;
 
     private Paint whitePaint = new Paint();
@@ -149,26 +147,9 @@ public class GridView extends View {
         }, sensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
-   /* public void setHandler(Handler handler){
-        this.handler=handler;
-    }
-*/
-  /*  public void setActivity(MainActivity activity){
-       this.activity = activity;
-    }*/
-
     public float getCellSize(){
        return this.SIZE;
     }
-    
-   /* public int getStopX() {
-        return stopX;
-    }
-
-    public int getStopY() {
-        return stopY;
-    }*/
-
 
     public /*Pair<Long,PinchInfo.Direction>*/Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> getInfoSwipe(){
         lockInfoSwipe.lock();
@@ -408,7 +389,6 @@ public class GridView extends View {
                         }
                     }
 
-
                 }
 
                 return true;
@@ -451,7 +431,6 @@ public class GridView extends View {
      * @param direction the direction of the CURRENT device swipe
      */
     public void setPairedCells(int firstIndex, int lastIndex, List<Boolean> cells, PinchInfo.Direction direction){
-        //TODO: COMPLETARE METODO
         switch(direction){
             case RIGHT:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
@@ -465,15 +444,14 @@ public class GridView extends View {
                 break;
             case UP:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[i][row] = cells.get(j); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                    cellChecked[i][0] = cells.get(j); //TODO: VERIFY- la riga 0 è in cima o in fondo?
                 };
                 break;
             case DOWN:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[i][0] = cells.get(j);//TODO: VERIFY- la riga 0 è in cima o in fondo?
+                    cellChecked[i][row] = cells.get(j);//TODO: VERIFY- la riga 0 è in cima o in fondo?
                 };
                 break;
-
         }
 
     }
@@ -557,6 +535,8 @@ public class GridView extends View {
                     //TODO: IF HO RICEVUTO MESSAGGI DA TUTTI I DEVICE CONNESSI
                     //calcolo la generazione
                     //TODO: send message with info to connected devices
+
+
 
                 } else {
                     for(int i=1;i<row+1;i++){

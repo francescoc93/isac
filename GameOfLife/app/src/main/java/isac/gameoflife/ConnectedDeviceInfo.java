@@ -51,6 +51,9 @@ public class ConnectedDeviceInfo {
         return nameQueueReceiver;
     }
 
+    public PinchInfo.Direction getMyDirection(){
+        return this.myDir;
+    }
 
     public void calculateInfo(){
         setRelativeOrientation();
@@ -193,7 +196,6 @@ public class ConnectedDeviceInfo {
         }
     }
 
-
     public int getIndexFirstCell(){
         return this.indexFirstCell;
     }
@@ -202,30 +204,30 @@ public class ConnectedDeviceInfo {
         return this.indexLastCell;
     }
 
-    public List<Boolean> getCellsValues(int firstIndex, int lastIndex){
+    public List<Boolean> getCellsValues(){
 
         boolean[][] matrix = this.gridView.getCellMatrix();
         int rows = matrix.length;
         int columns = matrix[0].length;
         switch(direction){
             case "right":
-                for(int i = firstIndex; i<lastIndex; i++){
+                for(int i = this.indexFirstCell; i<this.indexLastCell; i++){
                     cellsToSend.add(matrix[columns][i]);
                 };
                 break;
             case "left":
-                for(int i = firstIndex; i<lastIndex; i++){
+                for(int i = this.indexFirstCell; i<this.indexLastCell; i++){
                     cellsToSend.add(matrix[0][i]);
                 };
                 break;
             case "top":
-                for(int i = firstIndex; i<lastIndex; i++){
-                cellsToSend.add(matrix[i][rows]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                for(int i = this.indexFirstCell; i<this.indexLastCell; i++){
+                cellsToSend.add(matrix[i][0]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
                 };
                 break;
             case "bottom":
-                for(int i = firstIndex; i<lastIndex; i++){
-                cellsToSend.add(matrix[i][0]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                for(int i = this.indexFirstCell; i<this.indexLastCell; i++){
+                cellsToSend.add(matrix[i][rows]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
                 };
                 break;
 
