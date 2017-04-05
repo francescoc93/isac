@@ -48,7 +48,7 @@ public class GridView extends View {
     private boolean onTable;
     private String ipAddress;
     private MainActivity activity;
-    private float xDots,yDots;
+    private float xDots,yDots,desiredWidth = 0.30f;
     //private PinchInfo.Direction direction;
     //se uso i lock, si blocca il thread UI, meglio utilizzare AtomicBoolean che permette
     //di effettuare operazioni thread-safe sui booleani
@@ -72,6 +72,8 @@ public class GridView extends View {
         onTable=false;
         //float scale = getResources().getDisplayMetrics().density;
         SIZE =  /*DESIRED_DP_VALUE * scale + 0.5f*/ DESIRED_DP_VALUE*(getResources().getDisplayMetrics().densityDpi/160.0f);
+        float deviceXDpi = getResources().getDisplayMetrics().xdpi;
+        SIZE = deviceXDpi*desiredWidth;
        /* switch(getResources().getDisplayMetrics().densityDpi){
             case 120: SIZE = 120* 50 + 0.5f; break;
             case 160: SIZE = 160*50+ 0.5f; break;
