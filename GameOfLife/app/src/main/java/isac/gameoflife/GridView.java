@@ -74,6 +74,7 @@ public class GridView extends View {
         SIZE =  /*DESIRED_DP_VALUE * scale + 0.5f*/ DESIRED_DP_VALUE*(getResources().getDisplayMetrics().densityDpi/160.0f);
         float deviceXDpi = getResources().getDisplayMetrics().xdpi;
         SIZE = deviceXDpi*desiredWidth;
+        Toast.makeText(getContext(),"Size: " + SIZE, Toast.LENGTH_LONG);
        /* switch(getResources().getDisplayMetrics().densityDpi){
             case 120: SIZE = 120* 50 + 0.5f; break;
             case 160: SIZE = 160*50+ 0.5f; break;
