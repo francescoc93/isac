@@ -32,7 +32,8 @@ public class GridView extends View {
 
     private final static int TIME_DOUBLE_TAP=180;
     private final static int DESIRED_DP_VALUE=50;
-    private final float SIZE;
+    private float SIZE;
+    private final float SIZE_INCHES = 0.520833333f;
     private Handler handler;
     private int width;
     private int height;
@@ -47,6 +48,7 @@ public class GridView extends View {
     private boolean onTable;
     private String ipAddress;
     private MainActivity activity;
+    private float xDots,yDots;
     //private PinchInfo.Direction direction;
     //se uso i lock, si blocca il thread UI, meglio utilizzare AtomicBoolean che permette
     //di effettuare operazioni thread-safe sui booleani
@@ -70,6 +72,25 @@ public class GridView extends View {
         onTable=false;
         //float scale = getResources().getDisplayMetrics().density;
         SIZE =  /*DESIRED_DP_VALUE * scale + 0.5f*/ DESIRED_DP_VALUE*(getResources().getDisplayMetrics().densityDpi/160.0f);
+       /* switch(getResources().getDisplayMetrics().densityDpi){
+            case 120: SIZE = 120* 50 + 0.5f; break;
+            case 160: SIZE = 160*50+ 0.5f; break;
+            case 213: SIZE = 213*50+ 0.5f; break;
+            case 240: SIZE = 240*50+ 0.5f; break;
+            case 320: SIZE = 320*50+ 0.5f; break;
+            case 480: SIZE = 480*50+ 0.5f; break;
+            case 640: SIZE = 640*50+ 0.5f; break;
+        }*/
+
+
+        //c'è modo di usarlo?
+        float inches = 30/25.4f;
+        //SIZE = inches;
+        float xdpi = getResources().getDisplayMetrics().xdpi;
+        xDots = inches * xdpi;
+        float ydpi = getResources().getDisplayMetrics().ydpi;
+        yDots = inches * ydpi;
+
         lockInfoSwipe=new ReentrantLock();
         lockAction=new ReentrantLock();
         handler=new Handler(this,activity,getWidth(),getHeight());
@@ -215,21 +236,25 @@ public class GridView extends View {
         canvas.drawColor(Color.BLACK);
         int count=0;
 
-
         //disegno delle righe per formare la griglia
         while(count<=row){
             float coordinate=count*SIZE;
             canvas.drawLine(coordinate,0,coordinate,column*SIZE,whitePaint);
+           // canvas.drawRect(coordinate,0,xDots,yDots,whitePaint);
             count++;
         }
+
 
         count=0;
 
         while(count<=column){
             float coordinate=count*SIZE;
             canvas.drawLine(0,coordinate,row*SIZE,coordinate,whitePaint);
+            //canvas.drawRect(0,coordinate,xDots,yDots,whitePaint);
             count++;
         }
+
+
 
         //setto le cellule vive
         for (int i = 0; i < row; i++) {
