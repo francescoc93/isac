@@ -588,55 +588,39 @@ public class GridView extends View {
 
                 if(handler.isConnected()){
 
-                    if(handler.goOn()){ //controllo se posso proseguire (ovvero ho ricevuto le celle da tutti i vicini)
-                        handler.resetReceived(); //resetto il contatore dei device che mi hanno inviato le celle
-                        calculateNextGen(); //calcolo la generazione
-                        handler.readyToContinue(); //invio un messaggio ai miei vicini con lo scopo di avvisarli che sono pronto a inviare le mie celle
+                    //invio ai miei vicini le celle
+                    handler.sendCellsToOthers();
 
-                        // faccio il while fino a quando tutti i miei vicini
-                        // non hanno terminato di calcolare la propria generazione
-                        while(!handler.readyToSendCells()){
-                            // sleep per non tenere di continuo il lock ed evitare una possibile starvation
-                            try {
-                                Thread.sleep(20);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
+                    //controllo se posso proseguire (ovvero ho ricevuto le celle da tutti i vicini)
+                    while(!handler.goOn()){
+                        // sleep per non tenere di continuo il lock ed evitare una possibile starvation
+                        try {
+                            Thread.sleep(20);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
                         }
-
-                        handler.resetReceivedReady(); //resetto il contatore
-                        handler.sendCellsToOthers(); //invio ai miei vicini le celle
                     }
-                } else {
-                    /*for(int i=1;i<row+1;i++){
-                        for(int j=1;j<column+1;j++){
-                            int neighbours=neighboursAlive(i,j);
 
-                            //se attualmente la cellula è viva
-                            if(cellChecked[i][j]) {
-                                //e ha 2 o 3 vicini, continua a vivere
-                                if (neighbours==2 || neighbours==3) {
-                                    tmp[i][j] = true;
-                                }
-                            }else{
-                                //se la cellula è morta e ha esattamente 3 vicini
-                                //nella generazione successiva prende vita
-                                if(neighbours==3){
-                                    tmp[i][j]=true;
-                                }
-                            }
+                    handler.resetReceived(); //resetto il contatore dei device che mi hanno inviato le celle
+                    calculateNextGen(); //calcolo la generazione
+                    handler.readyToContinue(); //invio un messaggio ai miei vicini con lo scopo di avvisarli che sono pronto a inviare le mie celle
+
+                    // faccio il while fino a quando tutti i miei vicini
+                    // non hanno terminato di calcolare la propria generazione
+                    while(!handler.readyToSendCells()){
+                        // sleep per non tenere di continuo il lock ed evitare una possibile starvation
+                        try {
+                            Thread.sleep(20);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
                         }
-                    }*/
+                    }
 
+                    handler.resetReceivedReady(); //resetto il contatore
+                } else {
                     calculateNextGen();
-
                 }
 
-
-                //cellChecked=tmp;
-
-                //forzo la chiamata del metodo onDraw
-                //postInvalidate();
 
                 //se l'utente non ha messo in pausa il gioco
                 if(started.get()){
@@ -654,8 +638,6 @@ public class GridView extends View {
             //una volta terminato il task, controllo
             //se l'utente ha richiesto un reset della griglia
             if(clear.compareAndSet(true,false)){
-               /* cellChecked=new boolean[row+2][column+2];
-                postInvalidate();*/
                 clear();
             }
         }
