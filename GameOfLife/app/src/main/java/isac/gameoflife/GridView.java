@@ -77,7 +77,7 @@ public class GridView extends View {
         SIZE=(DESIRED_DP_VALUE * scale /*+0.5f*/);
 
         System.out.println("Altezza in pixel " + getResources().getDisplayMetrics().widthPixels + " Larghezza in pixel " +
-                getResources().getDisplayMetrics().heightPixels );
+                getResources().getDisplayMetrics().heightPixels + "densità: " +scale);
        /* double x = Math.pow(getResources().getDisplayMetrics().widthPixels/getResources().getDisplayMetrics().xdpi,2);
         double y = Math.pow(getResources().getDisplayMetrics().heightPixels/getResources().getDisplayMetrics().ydpi,2);
         double screenInches = Math.sqrt(x+y);
@@ -436,10 +436,10 @@ public class GridView extends View {
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         if(changed) {
-            width = getResources().getDisplayMetrics().widthPixels;
-            height = getResources().getDisplayMetrics().heightPixels;
-            //width = getWidth();
-            //height = getHeight();
+           // width = getResources().getDisplayMetrics().widthPixels;
+           // height = getResources().getDisplayMetrics().heightPixels;
+            width = getWidth();
+            height = getHeight();
             row = /*width % SIZE == 0 ?*/(int) (width /SIZE) ;//: (width / SIZE) + 1;
             column = /*height % SIZE == 0 ?*/ (int)(height /SIZE);// : (height / SIZE) + 1;
             cellChecked = new boolean[row+2][column+2];
