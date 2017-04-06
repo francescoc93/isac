@@ -74,24 +74,16 @@ public class GridView extends View {
         touchDownMs=0L;
         onTable=false;
 
-       // float scale = getResources().getDisplayMetrics().density;
-        //SIZE=(DESIRED_DP_VALUE * scale /*+0.5f*/);
+        float scale = getResources().getDisplayMetrics().density;
+        SIZE=(DESIRED_DP_VALUE * scale /*+0.5f*/);
 
-        double x = Math.pow(getResources().getDisplayMetrics().widthPixels/getResources().getDisplayMetrics().xdpi,2);
+       /* double x = Math.pow(getResources().getDisplayMetrics().widthPixels/getResources().getDisplayMetrics().xdpi,2);
         double y = Math.pow(getResources().getDisplayMetrics().heightPixels/getResources().getDisplayMetrics().ydpi,2);
         double screenInches = Math.sqrt(x+y);
         System.out.println("Pollici schermo: "+screenInches);
         double ppi=Math.sqrt(Math.pow(getResources().getDisplayMetrics().widthPixels,2)+Math.pow(getResources().getDisplayMetrics().heightPixels,2))/screenInches;
-        SIZE=(25.0f * (float)ppi) / 72.0f;
-       /* switch(getResources().getDisplayMetrics().densityDpi){
-            case 120: SIZE = 120* 50 + 0.5f; break;
-            case 160: SIZE = 160*50+ 0.5f; break;
-            case 213: SIZE = 213*50+ 0.5f; break;
-            case 240: SIZE = 240*50+ 0.5f; break;
-            case 320: SIZE = 320*50+ 0.5f; break;
-            case 480: SIZE = 480*50+ 0.5f; break;
-            case 640: SIZE = 640*50+ 0.5f; break;
-        }*/
+        SIZE=(25.0f * (float)ppi) / 72.0f;*/
+
 
 
         //c'è modo di usarlo?
@@ -247,10 +239,13 @@ public class GridView extends View {
         canvas.drawColor(Color.BLACK);
         int count=0;
 
+        float canvasWidth = canvas.getWidth();
+        float canvasHeight = canvas.getHeight();
+        float ratio=canvasWidth/canvasHeight;
         //disegno delle righe per formare la griglia
         while(count<=row){
             float coordinate=count*SIZE;
-            canvas.drawLine(coordinate,0,coordinate,column*SIZE,whitePaint);
+            canvas.drawLine(coordinate*ratio,0,coordinate*ratio,column*SIZE*ratio,whitePaint);
            // canvas.drawRect(coordinate,0,xDots,yDots,whitePaint);
             count++;
         }
@@ -260,7 +255,7 @@ public class GridView extends View {
 
         while(count<=column){
             float coordinate=count*SIZE;
-            canvas.drawLine(0,coordinate,row*SIZE,coordinate,whitePaint);
+            canvas.drawLine(0,coordinate*ratio,row*SIZE*ratio,coordinate*ratio,whitePaint);
             //canvas.drawRect(0,coordinate,xDots,yDots,whitePaint);
             count++;
         }
