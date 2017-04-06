@@ -74,8 +74,15 @@ public class GridView extends View {
         touchDownMs=0L;
         onTable=false;
 
-        float scale = getResources().getDisplayMetrics().density;
-        SIZE=(DESIRED_DP_VALUE * scale /*+0.5f*/);
+       // float scale = getResources().getDisplayMetrics().density;
+        //SIZE=(DESIRED_DP_VALUE * scale /*+0.5f*/);
+
+        double x = Math.pow(getResources().getDisplayMetrics().widthPixels/getResources().getDisplayMetrics().xdpi,2);
+        double y = Math.pow(getResources().getDisplayMetrics().heightPixels/getResources().getDisplayMetrics().ydpi,2);
+        double screenInches = Math.sqrt(x+y);
+        System.out.println("Pollici schermo: "+screenInches);
+        double ppi=Math.sqrt(Math.pow(getResources().getDisplayMetrics().widthPixels,2)+Math.pow(getResources().getDisplayMetrics().heightPixels,2))/screenInches;
+        SIZE=(25.0f * (float)ppi) / 72.0f;
        /* switch(getResources().getDisplayMetrics().densityDpi){
             case 120: SIZE = 120* 50 + 0.5f; break;
             case 160: SIZE = 160*50+ 0.5f; break;
