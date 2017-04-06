@@ -462,7 +462,7 @@ public class GridView extends View {
         switch(direction){
             case RIGHT:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[column][i] = cells.get(j);
+                    cellChecked[/*column+1*/row+1][i] = cells.get(j);
                 };
                 break;
             case LEFT:
@@ -477,7 +477,7 @@ public class GridView extends View {
                 break;
             case DOWN:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[i][row] = cells.get(j);//TODO: VERIFY- la riga 0 è in cima o in fondo?
+                    cellChecked[i][/*row+1*/column+1] = cells.get(j);//TODO: VERIFY- la riga 0 è in cima o in fondo?
                 };
                 break;
         }
@@ -587,15 +587,13 @@ public class GridView extends View {
             boolean goOn=true;
 
             while(goOn){
-                //boolean [][] tmp=new boolean[row+2][column+2];
 
                 if(handler.isConnected()){
-
                     //invio ai miei vicini le celle
                     handler.sendCellsToOthers();
 
                     //controllo se posso proseguire (ovvero ho ricevuto le celle da tutti i vicini)
-                    while(!handler.goOn()){
+                    while(!handler.goOn() && handler.isConnected()){
                         // sleep per non tenere di continuo il lock ed evitare una possibile starvation
                         try {
                             Thread.sleep(20);
@@ -605,21 +603,36 @@ public class GridView extends View {
                     }
 
                     handler.resetReceived(); //resetto il contatore dei device che mi hanno inviato le celle
-                    calculateNextGen(); //calcolo la generazione
-                    handler.readyToContinue(); //invio un messaggio ai miei vicini con lo scopo di avvisarli che sono pronto a inviare le mie celle
 
-                    // faccio il while fino a quando tutti i miei vicini
-                    // non hanno terminato di calcolare la propria generazione
-                    while(!handler.readyToSendCells()){
-                        // sleep per non tenere di continuo il lock ed evitare una possibile starvation
-                        try {
-                            Thread.sleep(20);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
+                    if(handler.isConnected()) {
+                        calculateNextGen(); //calcolo la generazione
+                        handler.readyToContinue(); //invio un messaggio ai miei vicini con lo scopo di avvisarli che sono pronto a inviare le mie celle
+
+                        // faccio il while fino a quando tutti i miei vicini
+                        // non hanno terminato di calcolare la propria generazione
+                        while (!handler.readyToSendCells() && handler.isConnected()) {
+                            // sleep per non tenere di continuo il lock ed evitare una possibile starvation
+                            try {
+                                Thread.sleep(20);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                         }
-                    }
 
-                    handler.resetReceivedReady(); //resetto il contatore
+                        handler.resetReceivedReady(); //resetto il contatore
+                    }else{
+                        for(int i=0;i<column+2;i++){
+                            cellChecked[0][i]=false;
+                            cellChecked[row+1][i]=false;
+                        }
+
+                        for(int i=0;i<row+2;i++){
+                            cellChecked[i][0]=false;
+                            cellChecked[i][column+1]=false;
+                        }
+
+                        calculateNextGen();
+                    }
                 } else {
                     calculateNextGen();
                 }
