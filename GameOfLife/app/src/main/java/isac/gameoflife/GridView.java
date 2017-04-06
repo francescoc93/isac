@@ -45,7 +45,6 @@ public class GridView extends View {
     private int startX;
     private int startY;
     private int numberOfTaps ;
-
     private Paint whitePaint = new Paint();
     private boolean[][] cellChecked;
     private boolean onTable;
@@ -77,6 +76,8 @@ public class GridView extends View {
         float scale = getResources().getDisplayMetrics().density;
         SIZE=(DESIRED_DP_VALUE * scale /*+0.5f*/);
 
+        System.out.println("Altezza in pixel " + getResources().getDisplayMetrics().widthPixels + " Larghezza in pixel " +
+                getResources().getDisplayMetrics().heightPixels );
        /* double x = Math.pow(getResources().getDisplayMetrics().widthPixels/getResources().getDisplayMetrics().xdpi,2);
         double y = Math.pow(getResources().getDisplayMetrics().heightPixels/getResources().getDisplayMetrics().ydpi,2);
         double screenInches = Math.sqrt(x+y);
@@ -239,13 +240,11 @@ public class GridView extends View {
         canvas.drawColor(Color.BLACK);
         int count=0;
 
-        float canvasWidth = canvas.getWidth();
-        float canvasHeight = canvas.getHeight();
-        float ratio=canvasWidth/canvasHeight;
         //disegno delle righe per formare la griglia
         while(count<=row){
             float coordinate=count*SIZE;
-            canvas.drawLine(coordinate*ratio,0,coordinate*ratio,column*SIZE*ratio,whitePaint);
+            canvas.drawLine(coordinate,0,coordinate,column*SIZE,whitePaint);
+
            // canvas.drawRect(coordinate,0,xDots,yDots,whitePaint);
             count++;
         }
@@ -255,7 +254,7 @@ public class GridView extends View {
 
         while(count<=column){
             float coordinate=count*SIZE;
-            canvas.drawLine(0,coordinate*ratio,row*SIZE*ratio,coordinate*ratio,whitePaint);
+            canvas.drawLine(0,coordinate,row*SIZE,coordinate,whitePaint);
             //canvas.drawRect(0,coordinate,xDots,yDots,whitePaint);
             count++;
         }
