@@ -34,7 +34,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class GridView extends View {
 
     private final static int TIME_DOUBLE_TAP=180;
-    //private final static int DESIRED_DP_VALUE=50;
+    private final static float DESIRED_DP_VALUE=35.0f;
     private float SIZE;
     //private final float SIZE_INCHES = 0.5f;
     private Handler handler;
@@ -73,30 +73,9 @@ public class GridView extends View {
         lastTapTimeMs=0L;
         touchDownMs=0L;
         onTable=false;
-        //float scale = getResources().getDisplayMetrics().density;
-        //SIZE =  /*DESIRED_DP_VALUE * scale + 0.5f*/ DESIRED_DP_VALUE*(getResources().getDisplayMetrics().densityDpi/160.0f);
-       // float deviceXDpi = getResources().getDisplayMetrics().xdpi;
-        //SIZE = deviceXDpi*desiredWidth;
 
-        //DisplayMetrics dm = new DisplayMetrics();
-        //((Activity)getContext()).getWindowManager().getDefaultDisplay().getMetrics(dm);
-        int width = getWidth();
-        int height = getHeight();
-        //float mXDpi = dm.xdpi;
-        //SIZE = 0.67f*mXDpi;
-        //double wi=(double)width/(double)dm.xdpi;
-        //double hi=(double)height/(double)dm.ydpi;
-        //SIZE = (int)(getResources().getDisplayMetrics().densityDpi * SIZE_INCHES);
-
-        //SIZE = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DESIRED_DP_VALUE, getResources().getDisplayMetrics());
-
-
-        double x = Math.pow(getResources().getDisplayMetrics().widthPixels/getResources().getDisplayMetrics().xdpi,2);
-        double y = Math.pow(getResources().getDisplayMetrics().heightPixels/getResources().getDisplayMetrics().ydpi,2);
-        double screenInches = Math.sqrt(x+y);
-        System.out.println("Pollici schermo: "+screenInches);
-        double ppi=Math.sqrt(Math.pow(getResources().getDisplayMetrics().widthPixels,2)+Math.pow(getResources().getDisplayMetrics().heightPixels,2))/screenInches;
-        SIZE=(25.0f * (float)ppi) / 72.0f;
+        float scale = getResources().getDisplayMetrics().density;
+        SIZE=(DESIRED_DP_VALUE * scale + 0.5f);
        /* switch(getResources().getDisplayMetrics().densityDpi){
             case 120: SIZE = 120* 50 + 0.5f; break;
             case 160: SIZE = 160*50+ 0.5f; break;
