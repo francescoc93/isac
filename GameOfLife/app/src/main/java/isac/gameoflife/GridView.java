@@ -1,5 +1,6 @@
 package isac.gameoflife;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -11,6 +12,7 @@ import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.support.v4.util.Pair;
 import android.support.v4.view.MotionEventCompat;
+import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
@@ -34,7 +36,7 @@ public class GridView extends View {
     private final static int TIME_DOUBLE_TAP=180;
     private final static int DESIRED_DP_VALUE=50;
     private float SIZE;
-    private final float SIZE_INCHES = 0.520833333f;
+    private final float SIZE_INCHES = 0.5f;
     private Handler handler;
     private int width;
     private int height;
@@ -73,13 +75,22 @@ public class GridView extends View {
         onTable=false;
         //float scale = getResources().getDisplayMetrics().density;
         //SIZE =  /*DESIRED_DP_VALUE * scale + 0.5f*/ DESIRED_DP_VALUE*(getResources().getDisplayMetrics().densityDpi/160.0f);
-        //float deviceXDpi = getResources().getDisplayMetrics().xdpi;
+       // float deviceXDpi = getResources().getDisplayMetrics().xdpi;
         //SIZE = deviceXDpi*desiredWidth;
 
+        DisplayMetrics dm = new DisplayMetrics();
+        ((Activity)getContext()).getWindowManager().getDefaultDisplay().getMetrics(dm);
+        int width=dm.widthPixels;
+        int height=dm.heightPixels;
+        float mXDpi = dm.xdpi;
+        SIZE = 0.67f*mXDpi;
+        double wi=(double)width/(double)dm.xdpi;
+        double hi=(double)height/(double)dm.ydpi;
+        //SIZE = (int)(getResources().getDisplayMetrics().densityDpi * SIZE_INCHES);
 
-        SIZE = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DESIRED_DP_VALUE, getResources().getDisplayMetrics());
+        //SIZE = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DESIRED_DP_VALUE, getResources().getDisplayMetrics());
 
-        Toast.makeText(context,"Size: " + SIZE, Toast.LENGTH_LONG);
+
        /* switch(getResources().getDisplayMetrics().densityDpi){
             case 120: SIZE = 120* 50 + 0.5f; break;
             case 160: SIZE = 160*50+ 0.5f; break;
@@ -467,22 +478,22 @@ public class GridView extends View {
         switch(direction){
             case RIGHT:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[/*column+1*/row+1][i] = cells.get(j);
+                    cellChecked[i][column+1] = cells.get(j);
                 };
                 break;
             case LEFT:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[0][i] = cells.get(j);
+                    cellChecked[i][0] = cells.get(j);
                 };
                 break;
             case UP:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[i][0] = cells.get(j); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                    cellChecked[0][i] = cells.get(j); //TODO: VERIFY- la riga 0 è in cima o in fondo?
                 };
                 break;
             case DOWN:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[i][/*row+1*/column+1] = cells.get(j);//TODO: VERIFY- la riga 0 è in cima o in fondo?
+                    cellChecked[row+1][i] = cells.get(j);//TODO: VERIFY- la riga 0 è in cima o in fondo?
                 };
                 break;
         }
