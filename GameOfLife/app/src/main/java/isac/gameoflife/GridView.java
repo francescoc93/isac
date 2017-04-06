@@ -34,7 +34,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class GridView extends View {
 
     private final static int TIME_DOUBLE_TAP=180;
-    private final static float DESIRED_DP_VALUE=35.0f;
+    private final static float DESIRED_DP_VALUE=70.0f;
     private float SIZE;
     //private final float SIZE_INCHES = 0.5f;
     private Handler handler;
@@ -75,7 +75,7 @@ public class GridView extends View {
         onTable=false;
 
         float scale = getResources().getDisplayMetrics().density;
-        SIZE=(DESIRED_DP_VALUE * scale + 0.5f);
+        SIZE=(DESIRED_DP_VALUE * scale /*+0.5f*/);
        /* switch(getResources().getDisplayMetrics().densityDpi){
             case 120: SIZE = 120* 50 + 0.5f; break;
             case 160: SIZE = 160*50+ 0.5f; break;
@@ -435,8 +435,10 @@ public class GridView extends View {
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         if(changed) {
-            width = getWidth();
-            height = getHeight();
+            width = getResources().getDisplayMetrics().widthPixels;
+            height = getResources().getDisplayMetrics().heightPixels;
+            //width = getWidth();
+            //height = getHeight();
             row = /*width % SIZE == 0 ?*/(int) (width /SIZE) ;//: (width / SIZE) + 1;
             column = /*height % SIZE == 0 ?*/ (int)(height /SIZE);// : (height / SIZE) + 1;
             cellChecked = new boolean[row+2][column+2];
