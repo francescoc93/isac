@@ -34,9 +34,9 @@ import java.util.concurrent.locks.ReentrantLock;
 public class GridView extends View {
 
     private final static int TIME_DOUBLE_TAP=180;
-    private final static int DESIRED_DP_VALUE=50;
+    //private final static int DESIRED_DP_VALUE=50;
     private float SIZE;
-    private final float SIZE_INCHES = 0.5f;
+    //private final float SIZE_INCHES = 0.5f;
     private Handler handler;
     private int width;
     private int height;
@@ -51,7 +51,7 @@ public class GridView extends View {
     private boolean onTable;
     private String ipAddress;
     private MainActivity activity;
-    private float xDots,yDots,desiredWidth = 0.30f;
+    //private float xDots,yDots,desiredWidth = 0.30f;
     //private PinchInfo.Direction direction;
     //se uso i lock, si blocca il thread UI, meglio utilizzare AtomicBoolean che permette
     //di effettuare operazioni thread-safe sui booleani
@@ -78,19 +78,25 @@ public class GridView extends View {
        // float deviceXDpi = getResources().getDisplayMetrics().xdpi;
         //SIZE = deviceXDpi*desiredWidth;
 
-        DisplayMetrics dm = new DisplayMetrics();
-        ((Activity)getContext()).getWindowManager().getDefaultDisplay().getMetrics(dm);
-        int width=dm.widthPixels;
-        int height=dm.heightPixels;
-        float mXDpi = dm.xdpi;
-        SIZE = 0.67f*mXDpi;
-        double wi=(double)width/(double)dm.xdpi;
-        double hi=(double)height/(double)dm.ydpi;
+        //DisplayMetrics dm = new DisplayMetrics();
+        //((Activity)getContext()).getWindowManager().getDefaultDisplay().getMetrics(dm);
+        int width = getWidth();
+        int height = getHeight();
+        //float mXDpi = dm.xdpi;
+        //SIZE = 0.67f*mXDpi;
+        //double wi=(double)width/(double)dm.xdpi;
+        //double hi=(double)height/(double)dm.ydpi;
         //SIZE = (int)(getResources().getDisplayMetrics().densityDpi * SIZE_INCHES);
 
         //SIZE = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DESIRED_DP_VALUE, getResources().getDisplayMetrics());
 
 
+        double x = Math.pow(getResources().getDisplayMetrics().widthPixels/getResources().getDisplayMetrics().xdpi,2);
+        double y = Math.pow(getResources().getDisplayMetrics().heightPixels/getResources().getDisplayMetrics().ydpi,2);
+        double screenInches = Math.sqrt(x+y);
+        System.out.println("Pollici schermo: "+screenInches);
+        double ppi=Math.sqrt(Math.pow(getResources().getDisplayMetrics().widthPixels,2)+Math.pow(getResources().getDisplayMetrics().heightPixels,2))/screenInches;
+        SIZE=(25.0f * (float)ppi) / 72.0f;
        /* switch(getResources().getDisplayMetrics().densityDpi){
             case 120: SIZE = 120* 50 + 0.5f; break;
             case 160: SIZE = 160*50+ 0.5f; break;
@@ -103,12 +109,12 @@ public class GridView extends View {
 
 
         //c'è modo di usarlo?
-        float inches = 30/25.4f;
+        //float inches = 30/25.4f;
         //SIZE = inches;
-        float xdpi = getResources().getDisplayMetrics().xdpi;
-        xDots = inches * xdpi;
-        float ydpi = getResources().getDisplayMetrics().ydpi;
-        yDots = inches * ydpi;
+        //float xdpi = getResources().getDisplayMetrics().xdpi;
+        //xDots = inches * xdpi;
+        //float ydpi = getResources().getDisplayMetrics().ydpi;
+        //yDots = inches * ydpi;
 
         lockInfoSwipe=new ReentrantLock();
         lockAction=new ReentrantLock();
