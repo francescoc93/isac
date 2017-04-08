@@ -149,7 +149,7 @@ public class Handler implements MessageListener {
                             ConnectedDeviceInfo connectionInfo = new ConnectedDeviceInfo(this.cellSize,
                                     info.getDirection(),timeStampDirection.second,
                                     info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),this.myWidth,
-                                    this.myHeight, coordinate.first, coordinate.second, nameSender, nameReceiver);
+                                    this.myHeight, coordinate.first, coordinate.second, nameSender, nameReceiver,this.gridView);
 
                             lock.lock();
                             connectedDevices.put(ipAddressDevice, connectionInfo);
@@ -204,7 +204,9 @@ public class Handler implements MessageListener {
 
                 lockCounter.unlock();
 
+                System.out.println("LISTA: " + json.getString("cellsList"));
                 List<Boolean> cellsToSet = (ArrayList<Boolean>)json.get("cellsList");
+
                 int firstIndex = connectedDevices.get(json.getString(PinchInfo.ADDRESS)).getIndexFirstCell();
                 int lastIndex = connectedDevices.get(json.getString(PinchInfo.ADDRESS)).getIndexLastCell();
                 gridView.setPairedCells(firstIndex,lastIndex,cellsToSet,connectedDevices.get(json.getString(PinchInfo.ADDRESS)).getMyDirection());
@@ -284,6 +286,7 @@ public class Handler implements MessageListener {
             try {
                 obj.put("type","cells");
                 obj.put(PinchInfo.ADDRESS,ipAddress);
+                System.out.println("LISTA PRIMA DI INVIARE " + infoConn.getCellsValues().toString());
                 obj.put("cellsList",infoConn.getCellsValues());
             } catch (JSONException e) {
                 e.printStackTrace();

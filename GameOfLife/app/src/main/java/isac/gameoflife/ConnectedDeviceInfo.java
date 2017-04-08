@@ -1,7 +1,5 @@
 package isac.gameoflife;
 
-import android.app.Application;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -12,35 +10,41 @@ import java.util.List;
 
 public class ConnectedDeviceInfo {
 
+    //TODO: SIZE IN POLLICI PER FARE LA DIVISIONE, POLLICI = SIZE/50 (PIXEL/DPI)
     private boolean reverseList;
     private String nameQueueSender,nameQueueReceiver;
     private int orientation; //gradi di rotazione
-    private int myWidth, myHeight, width, height,myXCoord,myYCoord,xCoord,yCoord;
+    private float myWidth, myHeight, width, height,myXCoord,myYCoord,xCoord,yCoord;
     private PinchInfo.Direction myDir,dir;
     private float cellSize;
-    private int l1, l2, indexFirstCell, indexLastCell;
+    private int indexFirstCell, indexLastCell;
+    private float l1,l2;
     private List<Boolean> cellsToSend;
     private GridView gridView;
     private String direction;
+    private float scale;
 
     public ConnectedDeviceInfo(float cellSize, PinchInfo.Direction dir, PinchInfo.Direction myDir,
                                int xCoord, int yCoord, int width, int height, int myWidth, int myHeight,
-                               int myXCoord, int myYCoord, String nameQueueSender, String nameQueueReceiver){
-        this.xCoord=xCoord;
-        this.yCoord=yCoord;
-        this.myYCoord = myYCoord;
-        this.myXCoord = myXCoord;
-        this.width = width;
-        this.height = height;
+                               int myXCoord, int myYCoord, String nameQueueSender, String nameQueueReceiver0,GridView gridView){
+        this.scale = gridView.getScale();
+        this.xCoord=Utils.pixelsToInches(xCoord,scale);
+        this.yCoord=Utils.pixelsToInches(yCoord,scale);
+        this.myYCoord = Utils.pixelsToInches(myYCoord,scale);
+        this.myXCoord = Utils.pixelsToInches(myXCoord,scale);
+        this.width = Utils.pixelsToInches(width,scale);
+        this.height = Utils.pixelsToInches(height,scale);
         this.nameQueueReceiver=nameQueueReceiver;
         this.nameQueueSender=nameQueueSender;
-        this.cellSize = cellSize;
+        this.cellSize = 50/*cellSize*/;
         this.cellsToSend = new ArrayList<>();
         this.reverseList = false;
-        this.myWidth = myWidth;
-        this.myHeight = myHeight;
+        System.out.println("MIA ALTEZZA COSTRUTTORE " + myHeight);
+        this.myWidth = Utils.pixelsToInches(myWidth,scale);
+        this.myHeight = Utils.pixelsToInches(myHeight,scale);
         this.myDir = myDir;
         this.dir = dir;
+        this.gridView = gridView;
     }
 
     public String getNameQueueSender() {
@@ -121,6 +125,7 @@ public class ConnectedDeviceInfo {
 
         }
 
+        System.out.println("ORIENTAMENTO: " + this.orientation);
 
     }
     //NB: I CASI SI RIFERISCONO SEMPRE ALLA POSIZIONE DELL'ALTRO DEVICE
@@ -133,6 +138,8 @@ public class ConnectedDeviceInfo {
      */
     private void calculateL1L2(){ //16 casi (TRIMMED TO 8)
 
+        System.out.println("MIA COORDINATA Y " + myYCoord + "SUA COORDINATA Y " +yCoord + "MIA ALTEZZA " +myHeight +
+        "SUA ALTEZZA " + height + "MIA COORDINATA X " + myXCoord + "SUA COORDINATA X " + xCoord);
         //SECOND: CALCULATE L1 AND L2 (length of the portions of screen before and after the swipe point)
         if(myDir.equals(PinchInfo.Direction.RIGHT) || myDir.equals(PinchInfo.Direction.LEFT)){
             if(orientation == 0){
@@ -164,6 +171,7 @@ public class ConnectedDeviceInfo {
             }
         }
 
+        System.out.println("L1: "+ this.l1 + "L2: " + this.l2);
     }
 
     //THIRD: calculate the cells to be sent.
@@ -207,27 +215,30 @@ public class ConnectedDeviceInfo {
     public List<Boolean> getCellsValues(){
 
         boolean[][] matrix = this.gridView.getCellMatrix();
+        System.out.println("MATRICE " + matrix.toString());
         int rows = matrix.length;
         int columns = matrix[0].length;
-        switch(direction){
-            case "right":
+
+        System.out.println("PRIMO INDICE: +" + this.indexFirstCell + " ULTIMO INDICE " + this.indexLastCell);
+        switch(myDir){
+            case RIGHT:
                 for(int i = this.indexFirstCell; i<this.indexLastCell; i++){
-                    cellsToSend.add(matrix[columns][i]);
+                    cellsToSend.add(matrix[i][columns]);
                 };
                 break;
-            case "left":
+            case LEFT:
                 for(int i = this.indexFirstCell; i<this.indexLastCell; i++){
-                    cellsToSend.add(matrix[0][i]);
+                    cellsToSend.add(matrix[i][0]);
                 };
                 break;
-            case "top":
+            case UP:
                 for(int i = this.indexFirstCell; i<this.indexLastCell; i++){
-                cellsToSend.add(matrix[i][0]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                cellsToSend.add(matrix[0][i]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
                 };
                 break;
-            case "bottom":
+            case DOWN:
                 for(int i = this.indexFirstCell; i<this.indexLastCell; i++){
-                cellsToSend.add(matrix[i][rows]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                cellsToSend.add(matrix[rows][i]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
                 };
                 break;
 

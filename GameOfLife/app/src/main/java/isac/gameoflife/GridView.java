@@ -34,7 +34,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class GridView extends View {
 
     private final static int TIME_DOUBLE_TAP=180;
-    private final static float DESIRED_DP_VALUE=70.0f;
+    private final static float DESIRED_DP_VALUE=50.0f;
     private float SIZE;
     //private final float SIZE_INCHES = 0.5f;
     private Handler handler;
@@ -59,6 +59,7 @@ public class GridView extends View {
     //il primo pair sono il timestamp e la direzione, il secondo le coordinate x e y
     private Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> infoSwipe;
     private ReentrantLock lockInfoSwipe,lockAction;
+    float scale;
 
     public GridView(final Context context) {
         super(context);
@@ -73,14 +74,15 @@ public class GridView extends View {
         touchDownMs=0L;
         onTable=false;
 
-        float scale = getResources().getDisplayMetrics().density;
+         scale = getResources().getDisplayMetrics().density;
         SIZE=(DESIRED_DP_VALUE * scale /*+0.5f*/);
 
         System.out.println("Altezza in pixel " + getResources().getDisplayMetrics().widthPixels + " Larghezza in pixel " +
                 getResources().getDisplayMetrics().heightPixels + "densità: " +scale);
-       /* double x = Math.pow(getResources().getDisplayMetrics().widthPixels/getResources().getDisplayMetrics().xdpi,2);
+        /*double x = Math.pow(getResources().getDisplayMetrics().widthPixels/getResources().getDisplayMetrics().xdpi,2);
         double y = Math.pow(getResources().getDisplayMetrics().heightPixels/getResources().getDisplayMetrics().ydpi,2);
-        double screenInches = Math.sqrt(x+y);
+        System.out.println("X in pollici: " + x + " Y in pollici: " + y );*/
+       /* double screenInches = Math.sqrt(x+y);
         System.out.println("Pollici schermo: "+screenInches);
         double ppi=Math.sqrt(Math.pow(getResources().getDisplayMetrics().widthPixels,2)+Math.pow(getResources().getDisplayMetrics().heightPixels,2))/screenInches;
         SIZE=(25.0f * (float)ppi) / 72.0f;*/
@@ -97,7 +99,7 @@ public class GridView extends View {
 
         lockInfoSwipe=new ReentrantLock();
         lockAction=new ReentrantLock();
-        handler=new Handler(this,activity,getWidth(),getHeight());
+        handler=new Handler(this,activity,getResources().getDisplayMetrics().widthPixels,getResources().getDisplayMetrics().heightPixels);
 
         Toast.makeText(context, Utils.getAddress(), Toast.LENGTH_SHORT).show();
 
@@ -172,6 +174,9 @@ public class GridView extends View {
         }, sensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
+    public float getScale(){
+        return this.scale;
+    }
     public float getCellSize(){
        return this.SIZE;
     }
