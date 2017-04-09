@@ -26,8 +26,10 @@ public class ConnectedDeviceInfo {
 
     public ConnectedDeviceInfo(float cellSize, PinchInfo.Direction dir, PinchInfo.Direction myDir,
                                int xCoord, int yCoord, int width, int height, int myWidth, int myHeight,
-                               int myXCoord, int myYCoord, String nameQueueSender, String nameQueueReceiver0,GridView gridView,
+                               int myXCoord, int myYCoord, String nameQueueSender, String nameQueueReceiver,GridView gridView,
                                float xdpi,float ydpi){
+
+        this.gridView = gridView;
         this.scale = gridView.getScale();
         this.xCoord=Utils.pixelsToInches(xCoord,xdpi);
         this.yCoord=Utils.pixelsToInches(yCoord,ydpi);
@@ -37,22 +39,27 @@ public class ConnectedDeviceInfo {
         this.height = Utils.pixelsToInches(height,ydpi);
         this.nameQueueReceiver=nameQueueReceiver;
         this.nameQueueSender=nameQueueSender;
-        this.cellSize = 50/*cellSize*/;
+        this.cellSize = gridView.getCellSize()/gridView.getXDpi();
         this.cellsToSend = new ArrayList<>();
         this.reverseList = false;
-        System.out.println("MIA ALTEZZA COSTRUTTORE " + myHeight);
         this.myWidth = Utils.pixelsToInches(myWidth,gridView.getXDpi());
         this.myHeight = Utils.pixelsToInches(myHeight,gridView.getYDpi());
         this.myDir = myDir;
         this.dir = dir;
-        this.gridView = gridView;
+        System.out.println("CODA SU CUI INVIARE DENTRO INFO " + this.nameQueueSender);
+        System.out.println("CODA SU CUI RICEVERE DENTRO INFO " + this.nameQueueReceiver);
+        System.out.println("PARAMETRO CODA SU CUI INVIARE DENTRO INFO " +nameQueueSender);
+        System.out.println("PARAMETRO CODA SU CUI RICEVERE DENTRO INFO " +nameQueueReceiver);
+
     }
 
     public String getNameQueueSender() {
+        System.out.println("GETTER SENDER " +nameQueueSender);
         return nameQueueSender;
     }
 
     public String getNameQueueReceiver() {
+        System.out.println("GETTER RECEIVER " +nameQueueReceiver);
         return nameQueueReceiver;
     }
 
@@ -126,7 +133,7 @@ public class ConnectedDeviceInfo {
 
         }
 
-        System.out.println("ORIENTAMENTO: " + this.orientation);
+
 
     }
     //NB: I CASI SI RIFERISCONO SEMPRE ALLA POSIZIONE DELL'ALTRO DEVICE
@@ -139,8 +146,6 @@ public class ConnectedDeviceInfo {
      */
     private void calculateL1L2(){ //16 casi (TRIMMED TO 8)
 
-        System.out.println("MIA COORDINATA Y " + myYCoord + "SUA COORDINATA Y " +yCoord + "MIA ALTEZZA " +myHeight +
-        "SUA ALTEZZA " + height + "MIA COORDINATA X " + myXCoord + "SUA COORDINATA X " + xCoord);
         //SECOND: CALCULATE L1 AND L2 (length of the portions of screen before and after the swipe point)
         if(myDir.equals(PinchInfo.Direction.RIGHT) || myDir.equals(PinchInfo.Direction.LEFT)){
             if(orientation == 0){
@@ -171,15 +176,14 @@ public class ConnectedDeviceInfo {
                 this.l2 = Math.min((myWidth-myXCoord),yCoord);
             }
         }
-
-        System.out.println("L1: "+ this.l1 + "L2: " + this.l2);
     }
 
     //THIRD: calculate the cells to be sent.
     //reverseList is used to know how to manage the array of cells received.
     private void evaluateCells(){
+
         if(myDir.equals(PinchInfo.Direction.RIGHT) || myDir.equals(PinchInfo.Direction.LEFT)){
-            indexFirstCell =(int) Math.ceil((double)(myYCoord - l1)/(double)this.cellSize/50.0);
+            indexFirstCell =(int) Math.ceil((double)(myYCoord - l1)/(double)this.cellSize) +1;
             indexLastCell = (int)((myYCoord + l2)/this.cellSize);
             if(orientation == 0){
                 this.reverseList = false;
@@ -191,7 +195,7 @@ public class ConnectedDeviceInfo {
                 this.reverseList = false;
             }
         } else if (myDir.equals(PinchInfo.Direction.UP) || myDir.equals(PinchInfo.Direction.DOWN)){
-            indexFirstCell =(int) Math.ceil((double)(myXCoord - l1)/(double)this.cellSize/50.0);
+            indexFirstCell =(int) Math.ceil((double)(myXCoord - l1)/(double)this.cellSize) +1;
             indexLastCell = (int) ((myXCoord + l2)/this.cellSize);
             if(orientation == 0){
                 this.reverseList = false;
@@ -216,30 +220,28 @@ public class ConnectedDeviceInfo {
     public List<Boolean> getCellsValues(){
 
         boolean[][] matrix = this.gridView.getCellMatrix();
-        System.out.println("MATRICE " + matrix.toString());
-        int rows = matrix.length;
-        int columns = matrix[0].length;
+        int rows = matrix[0].length-1;
+        int columns = matrix.length-1;
 
-        System.out.println("PRIMO INDICE: +" + this.indexFirstCell + " ULTIMO INDICE " + this.indexLastCell);
         switch(myDir){
             case RIGHT:
-                for(int i = this.indexFirstCell; i<this.indexLastCell; i++){
-                    cellsToSend.add(matrix[i][columns]);
+                for(int i = this.indexFirstCell; i<=this.indexLastCell; i++){
+                    cellsToSend.add(matrix[columns][i]);
                 };
                 break;
             case LEFT:
-                for(int i = this.indexFirstCell; i<this.indexLastCell; i++){
-                    cellsToSend.add(matrix[i][0]);
+                for(int i = this.indexFirstCell; i<=this.indexLastCell; i++){
+                    cellsToSend.add(matrix[1][i]);
                 };
                 break;
             case UP:
-                for(int i = this.indexFirstCell; i<this.indexLastCell; i++){
-                cellsToSend.add(matrix[0][i]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                for(int i = this.indexFirstCell; i<=this.indexLastCell; i++){
+                cellsToSend.add(matrix[i][1]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
                 };
                 break;
             case DOWN:
-                for(int i = this.indexFirstCell; i<this.indexLastCell; i++){
-                cellsToSend.add(matrix[rows][i]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                for(int i = this.indexFirstCell; i<=this.indexLastCell; i++){
+                cellsToSend.add(matrix[i][rows]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
                 };
                 break;
 

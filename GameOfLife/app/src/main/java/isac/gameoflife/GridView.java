@@ -182,6 +182,7 @@ public class GridView extends View {
     }
     public float getXDpi() {return getResources().getDisplayMetrics().xdpi; }
     public float getYDpi() {return getResources().getDisplayMetrics().ydpi; }
+   // public float get dpiPerCell() {return getResources().getDisplayMetrics().xdpi/;}
 
     public /*Pair<Long,PinchInfo.Direction>*/Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> getInfoSwipe(){
         lockInfoSwipe.lock();
@@ -473,22 +474,22 @@ public class GridView extends View {
         switch(direction){
             case RIGHT:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[i][column+1] = cells.get(j);
+                    cellChecked[column+1][i] = cells.get(j);
                 };
                 break;
             case LEFT:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[i][0] = cells.get(j);
+                    cellChecked[0][i] = cells.get(j);
                 };
                 break;
             case UP:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[0][i] = cells.get(j); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                    cellChecked[i][0] = cells.get(j); //TODO: VERIFY- la riga 0 è in cima o in fondo?
                 };
                 break;
             case DOWN:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[row+1][i] = cells.get(j);//TODO: VERIFY- la riga 0 è in cima o in fondo?
+                    cellChecked[i][row+1] = cells.get(j);//TODO: VERIFY- la riga 0 è in cima o in fondo?
                 };
                 break;
         }
@@ -589,7 +590,7 @@ public class GridView extends View {
 
             cellChecked=tmp;
             //forzo la chiamata del metodo onDraw
-            postInvalidate();
+
 
         }
 
@@ -600,8 +601,74 @@ public class GridView extends View {
             while(goOn){
 
                 if(handler.isConnected()){
+
+                    Thread t =new Thread(){
+                        public void run(){
+
+                            //invio ai miei vicini le celle
+                            handler.sendCellsToOthers();
+                            System.out.println("INVIATE LE CELLE ");
+
+
+                            //controllo se posso proseguire (ovvero ho ricevuto le celle da tutti i vicini)
+                            while(!handler.goOn() && handler.isConnected()){
+                                // sleep per non tenere di continuo il lock ed evitare una possibile starvation
+                                try {
+                                    Thread.sleep(20);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            System.out.println("HO RICEVUTO LE CELLE");
+
+                            handler.resetReceived(); //resetto il contatore dei device che mi hanno inviato le celle
+
+                            if(handler.isConnected()) {
+                                calculateNextGen(); //calcolo la generazione
+                                System.out.println("HO CALCOLATO LA GENERAZIONE SUCCESSIVA");
+                                handler.readyToContinue(); //invio un messaggio ai miei vicini con lo scopo di avvisarli che sono pronto a inviare le mie celle
+                                System.out.println("HO COMUNICATO CHE SON PRONTO A CONTINUARE");
+                                // faccio il while fino a quando tutti i miei vicini
+                                // non hanno terminato di calcolare la propria generazione
+                                while (!handler.readyToSendCells() && handler.isConnected()) {
+                                    // sleep per non tenere di continuo il lock ed evitare una possibile starvation
+                                    try {
+                                        Thread.sleep(20);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                System.out.println("GLI ALTRI SONO PRONTI A INVIARE");
+                                handler.resetReceivedReady(); //resetto il contatore
+                            }else{
+                                for(int i=0;i<column+2;i++){
+                                    cellChecked[0][i]=false;
+                                    cellChecked[row+1][i]=false;
+                                }
+
+                                for(int i=0;i<row+2;i++){
+                                    cellChecked[i][0]=false;
+                                    cellChecked[i][column+1]=false;
+                                }
+
+                                calculateNextGen();
+                            }
+                        }
+                    };
+
+                    t.start();
+                    try {
+                        t.join();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+
+/*
                     //invio ai miei vicini le celle
                     handler.sendCellsToOthers();
+                    System.out.println("INVIATE LE CELLE ");
+
 
                     //controllo se posso proseguire (ovvero ho ricevuto le celle da tutti i vicini)
                     while(!handler.goOn() && handler.isConnected()){
@@ -612,13 +679,15 @@ public class GridView extends View {
                             e.printStackTrace();
                         }
                     }
+                    System.out.println("HO RICEVUTO LE CELLE");
 
                     handler.resetReceived(); //resetto il contatore dei device che mi hanno inviato le celle
 
                     if(handler.isConnected()) {
                         calculateNextGen(); //calcolo la generazione
+                        System.out.println("HO CALCOLATO LA GENERAZIONE SUCCESSIVA");
                         handler.readyToContinue(); //invio un messaggio ai miei vicini con lo scopo di avvisarli che sono pronto a inviare le mie celle
-
+                        System.out.println("HO COMUNICATO CHE SON PRONTO A CONTINUARE");
                         // faccio il while fino a quando tutti i miei vicini
                         // non hanno terminato di calcolare la propria generazione
                         while (!handler.readyToSendCells() && handler.isConnected()) {
@@ -629,7 +698,7 @@ public class GridView extends View {
                                 e.printStackTrace();
                             }
                         }
-
+                        System.out.println("GLI ALTRI SONO PRONTI A INVIARE");
                         handler.resetReceivedReady(); //resetto il contatore
                     }else{
                         for(int i=0;i<column+2;i++){
@@ -644,6 +713,8 @@ public class GridView extends View {
 
                         calculateNextGen();
                     }
+
+                    */
                 } else {
                     calculateNextGen();
                 }
@@ -652,6 +723,7 @@ public class GridView extends View {
                 //se l'utente non ha messo in pausa il gioco
                 if(started.get()){
                     try {
+                        postInvalidate();
                         Thread.sleep(handler.isConnected()?100:500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();

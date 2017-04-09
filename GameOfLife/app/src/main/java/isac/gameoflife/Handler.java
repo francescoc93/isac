@@ -95,14 +95,15 @@ public class Handler implements MessageListener {
                         json.getInt(PinchInfo.X_COORDINATE),
                         json.getInt(PinchInfo.Y_COORDINATE), json.getLong(PinchInfo.TIMESTAMP),
                         json.getInt(PinchInfo.SCREEN_WIDTH), json.getInt(PinchInfo.SCREEN_HEIGHT),
-                        (float)json.get(PinchInfo.XDPI),(float)json.get(PinchInfo.YDPI));
+                        Float.parseFloat(json.getString(PinchInfo.XDPI)),Float.parseFloat(json.getString(PinchInfo.YDPI)));
 
                 Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> infoSwipe=gridView.getInfoSwipe();
-                Pair<Long,PinchInfo.Direction> timeStampDirection=infoSwipe.first;
-                Pair<Integer,Integer> coordinate=infoSwipe.second;
+
 
                 if(infoSwipe!=null && messageFromOther(info.getAddress())) {
 
+                    Pair<Long,PinchInfo.Direction> timeStampDirection=infoSwipe.first;
+                    Pair<Integer,Integer> coordinate=infoSwipe.second;
 
                     lock.lock();
 
@@ -127,7 +128,10 @@ public class Handler implements MessageListener {
                             int value_address_device = Integer.parseInt(ipAddressDevice.split("\\.")[3]);
 
 
+                            System.out.println("IP MIO: " + value_address + " IP SUO: " +value_address_device);
+
                             if (value_address > value_address_device) { //se sono il maggiore tra i due
+                                System.out.println("IL MIO INDIRIZZO E' MAGGIORE ");
                                 nameSender = ipAddress + ipAddressDevice;
                                 nameReceiver = ipAddressDevice + ipAddress;
 
@@ -138,14 +142,15 @@ public class Handler implements MessageListener {
                                 rabbitMQ.addQueue(nameReceiver, this);
 
                             } else { //se sono il minore tra i due
+                                System.out.println("IL MIO INDIRIZZO E' MINORE ");
                                 nameReceiver = ipAddress + ipAddressDevice;
                                 nameSender = ipAddressDevice + ipAddress;
 
-                                System.out.println("Nome coda per inviare: " + nameReceiver);
-                                System.out.println("Nome coda su cui ricevo: " + nameSender);
+                                System.out.println("Nome coda per inviare: " + nameSender);
+                                System.out.println("Nome coda su cui ricevo: " + nameReceiver);
 
-                                rabbitMQ.addQueue(nameReceiver);
-                                rabbitMQ.addQueue(nameSender, this);
+                                rabbitMQ.addQueue(nameSender);
+                                rabbitMQ.addQueue(nameReceiver, this);
                             }
 
                             ConnectedDeviceInfo connectionInfo = new ConnectedDeviceInfo(this.cellSize,
@@ -155,6 +160,7 @@ public class Handler implements MessageListener {
                                     info.getXDpi(),info.getYDpi());
 
                             lock.lock();
+                            System.out.println("STO METTENDO NELLA MAPPA L'IP DELL'ALTRO: " + ipAddressDevice);
                             connectedDevices.put(ipAddressDevice, connectionInfo);
                             lock.unlock();
                             connectionInfo.calculateInfo();
@@ -201,15 +207,32 @@ public class Handler implements MessageListener {
                 }
             } else if (json.getString("type").equals("cells")){
 
-                lockCounter.lock();
+                System.out.println("HO RICEVUTO LE CELLE");
+
+                //lockCounter.lock();
 
                 messageReceived++;
 
-                lockCounter.unlock();
+                System.out.println("MESSAGGIO RICEVUTO; MESSAGGI TOTALI: " + messageReceived);
+                //lockCounter.unlock();
 
                 System.out.println("LISTA: " + json.getString("cellsList"));
-                List<Boolean> cellsToSet = (ArrayList<Boolean>)json.get("cellsList");
+                String[] cellsString = json.getString("cellsList").replace("\\[", "").replace("\\]", "").split(",");
+                List<Boolean> cellsToSet = new ArrayList<>();
+                for (String s : cellsString){
+                   cellsToSet.add( Boolean.parseBoolean(s));
+                }
 
+                System.out.println("ADDRESS PRIMA DEL GET DELL'ALTRO: " + json.getString(PinchInfo.ADDRESS));
+                if (connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))){
+                    System.out.println("CONNECTED CONTIENE LA CHIAVE DELL'ALTRO " + json.getString(PinchInfo.ADDRESS));
+                } else {
+                    System.out.println("NON LA CONTIENE ");
+                }
+
+                for (String s: connectedDevices.keySet()){
+                    System.out.println("CHIAVE DELL'ALTRO: " + s);
+                }
                 int firstIndex = connectedDevices.get(json.getString(PinchInfo.ADDRESS)).getIndexFirstCell();
                 int lastIndex = connectedDevices.get(json.getString(PinchInfo.ADDRESS)).getIndexLastCell();
                 gridView.setPairedCells(firstIndex,lastIndex,cellsToSet,connectedDevices.get(json.getString(PinchInfo.ADDRESS)).getMyDirection());
@@ -228,9 +251,8 @@ public class Handler implements MessageListener {
     public boolean goOn(){
 
         boolean tmp;
-
-        lockCounter.lock();
-        lock.lock();
+        //lockCounter.lock();
+        //lock.lock();
 
         if (messageReceived == connectedDevices.size()){
             tmp= true;
@@ -238,8 +260,8 @@ public class Handler implements MessageListener {
             tmp= false;
         }
 
-        lock.unlock();
-        lockCounter.unlock();
+        //lock.unlock();
+        //lockCounter.unlock();
 
         return tmp;
     }
@@ -288,12 +310,14 @@ public class Handler implements MessageListener {
             String queueSender = infoConn.getNameQueueSender();
             try {
                 obj.put("type","cells");
+                System.out.println("INDIRIZZO CHE METTO NEL JASON MIO: " + ipAddress);
                 obj.put(PinchInfo.ADDRESS,ipAddress);
                 System.out.println("LISTA PRIMA DI INVIARE " + infoConn.getCellsValues().toString());
                 obj.put("cellsList",infoConn.getCellsValues());
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+            System.out.println("CODA SU CUI STO INVIANDO: " + queueSender);
             rabbitMQ.sendMessage(queueSender, obj);
         }
     }
