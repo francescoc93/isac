@@ -91,9 +91,11 @@ public class Handler implements MessageListener {
 
             //info è dell'altro device, infoSwipe sono i miei
             if(json.getString("type").equals("pinch")) { //messaggio broadcast
-                PinchInfo info = new PinchInfo(json.getString(PinchInfo.ADDRESS),PinchInfo.Direction.valueOf(json.getString(PinchInfo.DIRECTION)),json.getInt(PinchInfo.X_COORDINATE),
+                PinchInfo info = new PinchInfo(json.getString(PinchInfo.ADDRESS),PinchInfo.Direction.valueOf(json.getString(PinchInfo.DIRECTION)),
+                        json.getInt(PinchInfo.X_COORDINATE),
                         json.getInt(PinchInfo.Y_COORDINATE), json.getLong(PinchInfo.TIMESTAMP),
-                        json.getInt(PinchInfo.SCREEN_WIDTH), json.getInt(PinchInfo.SCREEN_HEIGHT));
+                        json.getInt(PinchInfo.SCREEN_WIDTH), json.getInt(PinchInfo.SCREEN_HEIGHT),
+                        (float)json.get(PinchInfo.XDPI),(float)json.get(PinchInfo.YDPI));
 
                 Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> infoSwipe=gridView.getInfoSwipe();
                 Pair<Long,PinchInfo.Direction> timeStampDirection=infoSwipe.first;
@@ -149,7 +151,8 @@ public class Handler implements MessageListener {
                             ConnectedDeviceInfo connectionInfo = new ConnectedDeviceInfo(this.cellSize,
                                     info.getDirection(),timeStampDirection.second,
                                     info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),this.myWidth,
-                                    this.myHeight, coordinate.first, coordinate.second, nameSender, nameReceiver,this.gridView);
+                                    this.myHeight, coordinate.first, coordinate.second, nameSender, nameReceiver,this.gridView,
+                                    info.getXDpi(),info.getYDpi());
 
                             lock.lock();
                             connectedDevices.put(ipAddressDevice, connectionInfo);

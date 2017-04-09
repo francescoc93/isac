@@ -26,22 +26,23 @@ public class ConnectedDeviceInfo {
 
     public ConnectedDeviceInfo(float cellSize, PinchInfo.Direction dir, PinchInfo.Direction myDir,
                                int xCoord, int yCoord, int width, int height, int myWidth, int myHeight,
-                               int myXCoord, int myYCoord, String nameQueueSender, String nameQueueReceiver0,GridView gridView){
+                               int myXCoord, int myYCoord, String nameQueueSender, String nameQueueReceiver0,GridView gridView,
+                               float xdpi,float ydpi){
         this.scale = gridView.getScale();
-        this.xCoord=Utils.pixelsToInches(xCoord,scale);
-        this.yCoord=Utils.pixelsToInches(yCoord,scale);
-        this.myYCoord = Utils.pixelsToInches(myYCoord,scale);
-        this.myXCoord = Utils.pixelsToInches(myXCoord,scale);
-        this.width = Utils.pixelsToInches(width,scale);
-        this.height = Utils.pixelsToInches(height,scale);
+        this.xCoord=Utils.pixelsToInches(xCoord,xdpi);
+        this.yCoord=Utils.pixelsToInches(yCoord,ydpi);
+        this.myYCoord = Utils.pixelsToInches(myYCoord,gridView.getYDpi());
+        this.myXCoord = Utils.pixelsToInches(myXCoord,gridView.getXDpi());
+        this.width = Utils.pixelsToInches(width,xdpi);
+        this.height = Utils.pixelsToInches(height,ydpi);
         this.nameQueueReceiver=nameQueueReceiver;
         this.nameQueueSender=nameQueueSender;
         this.cellSize = 50/*cellSize*/;
         this.cellsToSend = new ArrayList<>();
         this.reverseList = false;
         System.out.println("MIA ALTEZZA COSTRUTTORE " + myHeight);
-        this.myWidth = Utils.pixelsToInches(myWidth,scale);
-        this.myHeight = Utils.pixelsToInches(myHeight,scale);
+        this.myWidth = Utils.pixelsToInches(myWidth,gridView.getXDpi());
+        this.myHeight = Utils.pixelsToInches(myHeight,gridView.getYDpi());
         this.myDir = myDir;
         this.dir = dir;
         this.gridView = gridView;
@@ -178,7 +179,7 @@ public class ConnectedDeviceInfo {
     //reverseList is used to know how to manage the array of cells received.
     private void evaluateCells(){
         if(myDir.equals(PinchInfo.Direction.RIGHT) || myDir.equals(PinchInfo.Direction.LEFT)){
-            indexFirstCell =(int) Math.ceil((double)(myYCoord - l1)/(double)this.cellSize);
+            indexFirstCell =(int) Math.ceil((double)(myYCoord - l1)/(double)this.cellSize/50.0);
             indexLastCell = (int)((myYCoord + l2)/this.cellSize);
             if(orientation == 0){
                 this.reverseList = false;
@@ -190,7 +191,7 @@ public class ConnectedDeviceInfo {
                 this.reverseList = false;
             }
         } else if (myDir.equals(PinchInfo.Direction.UP) || myDir.equals(PinchInfo.Direction.DOWN)){
-            indexFirstCell =(int) Math.ceil((double)(myXCoord - l1)/(double)this.cellSize);
+            indexFirstCell =(int) Math.ceil((double)(myXCoord - l1)/(double)this.cellSize/50.0);
             indexLastCell = (int) ((myXCoord + l2)/this.cellSize);
             if(orientation == 0){
                 this.reverseList = false;

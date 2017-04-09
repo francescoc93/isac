@@ -74,7 +74,7 @@ public class GridView extends View {
         touchDownMs=0L;
         onTable=false;
 
-         scale = getResources().getDisplayMetrics().density;
+        scale = getResources().getDisplayMetrics().density;
         SIZE=(DESIRED_DP_VALUE * scale /*+0.5f*/);
 
         System.out.println("Altezza in pixel " + getResources().getDisplayMetrics().widthPixels + " Larghezza in pixel " +
@@ -180,6 +180,8 @@ public class GridView extends View {
     public float getCellSize(){
        return this.SIZE;
     }
+    public float getXDpi() {return getResources().getDisplayMetrics().xdpi; }
+    public float getYDpi() {return getResources().getDisplayMetrics().ydpi; }
 
     public /*Pair<Long,PinchInfo.Direction>*/Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> getInfoSwipe(){
         lockInfoSwipe.lock();
@@ -500,7 +502,7 @@ public class GridView extends View {
 
         lockInfoSwipe.unlock();
 
-        handler.sendBroadcastMessage(new PinchInfo(ipAddress, direction,x,y,timeStamp, width, height).toJSON());
+        handler.sendBroadcastMessage(new PinchInfo(ipAddress, direction,x,y,timeStamp, width, height,getXDpi(),getYDpi()).toJSON());
     }
 
     //async task che si occupa del calcolo delle generazioni di cellule

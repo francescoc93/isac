@@ -24,6 +24,8 @@ public class PinchInfo implements Serializable {
     public final static String TIMESTAMP="timestamp";
     public final static String SCREEN_WIDTH="screenWidth";
     public final static String SCREEN_HEIGHT="screenHeight";
+    public final static String XDPI="xdpi";
+    public final static String YDPI="ydpi";
     private Direction direction;
     private String address;
     private Integer xcoordinate;
@@ -31,8 +33,10 @@ public class PinchInfo implements Serializable {
     private Long timestamp;
     private int screenWidth;
     private int screenHeight;
+    private float myXDpi, myYDpi;
 
-    public PinchInfo(String address, Direction direction,Integer xcoordinate, Integer ycoordinate, Long timestamp, int screenWidth, int screenHeight) {
+    public PinchInfo(String address, Direction direction,Integer xcoordinate, Integer ycoordinate, Long timestamp, int screenWidth,
+                     int screenHeight,float xDpi, float yDpi) {
         this.address = address;
         this.xcoordinate = xcoordinate;
         this.ycoordinate = ycoordinate;
@@ -40,6 +44,9 @@ public class PinchInfo implements Serializable {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         this.direction=direction;
+        this.myXDpi = xDpi;
+        this.myYDpi = yDpi;
+
     }
 
     public String getAddress() {
@@ -70,6 +77,10 @@ public class PinchInfo implements Serializable {
         return direction;
     }
 
+    public float getXDpi() {return this.myXDpi; }
+
+    public float getYDpi() {return this.myYDpi; }
+
     public boolean oppositeDirection(Direction direction){
         switch (direction){
             case UP:return this.direction==Direction.DOWN;
@@ -91,6 +102,8 @@ public class PinchInfo implements Serializable {
             jo.put(TIMESTAMP, getTimestamp());
             jo.put(SCREEN_WIDTH, getScreenWidth());
             jo.put(SCREEN_HEIGHT, getScreenHeight());
+            jo.put(XDPI, getXDpi() );
+            jo.put(YDPI, getYDpi() );
             jo.put("type","pinch");
         } catch (JSONException e) {
             e.printStackTrace();
