@@ -249,7 +249,8 @@ public class GridView extends View {
         int count=0;
 
         //disegno delle righe per formare la griglia
-        while(count<=row){
+        //while(count<=row){
+        while(count<=column){
             float coordinate=count*SIZE;
             canvas.drawLine(coordinate,0,coordinate,column*SIZE,whitePaint);
 
@@ -260,7 +261,8 @@ public class GridView extends View {
 
         count=0;
 
-        while(count<=column){
+        //while(count<=column){
+        while(count<=row){
             float coordinate=count*SIZE;
             canvas.drawLine(0,coordinate,row*SIZE,coordinate,whitePaint);
             //canvas.drawRect(0,coordinate,xDots,yDots,whitePaint);
@@ -448,8 +450,8 @@ public class GridView extends View {
            // height = getResources().getDisplayMetrics().heightPixels;
             width = getWidth();
             height = getHeight();
-            row = /*width % SIZE == 0 ?*/(int) (width /SIZE) ;//: (width / SIZE) + 1;
-            column = /*height % SIZE == 0 ?*/ (int)(height /SIZE);// : (height / SIZE) + 1;
+            column = /*width % SIZE == 0 ?*/(int) (width /SIZE) ;//: (width / SIZE) + 1;
+            row = /*height % SIZE == 0 ?*/ (int)(height /SIZE);// : (height / SIZE) + 1;
             cellChecked = new boolean[row+2][column+2];
         }
 
@@ -476,25 +478,29 @@ public class GridView extends View {
             case RIGHT:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
                    // cellChecked[column+1][i] = cells.get(j);
-                    cellChecked[0][i] = cells.get(j);
+                    //cellChecked[0][i] = cells.get(j);
+                    cellChecked[i][column+1] = cells.get(j);
                 };
                 break;
             case LEFT:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
                     //cellChecked[0][i] = cells.get(j);
-                    cellChecked[row+1][i] = cells.get(j);
+                    //cellChecked[row+1][i] = cells.get(j);
+                    cellChecked[i][0] = cells.get(j);
                 };
                 break;
             case UP:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
                     //cellChecked[i][0] = cells.get(j); //TODO: VERIFY- la riga 0 è in cima o in fondo?
-                    cellChecked[i][0] = cells.get(j);
+                    //cellChecked[i][0] = cells.get(j);
+                    cellChecked[0][i] = cells.get(j);
                 };
                 break;
             case DOWN:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
                     //cellChecked[i][row+1] = cells.get(j);//TODO: VERIFY- la riga 0 è in cima o in fondo?
-                    cellChecked[i][column+1] = cells.get(j);
+                    //cellChecked[i][column+1] = cells.get(j);
+                    cellChecked[row+1][i] = cells.get(j);
                 };
                 break;
         }
@@ -645,6 +651,7 @@ public class GridView extends View {
                                 }
                                 System.out.println("GLI ALTRI SONO PRONTI A INVIARE");
                                 handler.resetReceivedReady(); //resetto il contatore
+                               // handler.resetReceived();
                             }else{
                                 for(int i=0;i<column+2;i++){
                                     cellChecked[0][i]=false;

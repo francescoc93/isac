@@ -256,7 +256,7 @@ public class Handler implements MessageListener {
 
         boolean tmp;
         lockCounter.lock();
-        //lock.lock();
+        lock.lock();
 
         if (messageReceived >= connectedDevices.size()){
             tmp= true;
@@ -265,7 +265,7 @@ public class Handler implements MessageListener {
             tmp= false;
         }
 
-        //lock.unlock();
+        lock.unlock();
         lockCounter.unlock();
 
         return tmp;

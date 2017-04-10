@@ -214,33 +214,37 @@ public class ConnectedDeviceInfo {
     public List<Boolean> getCellsValues(){
 
         boolean[][] matrix = this.gridView.getCellMatrix();
-        int rows = matrix.length-1;
-        int columns = matrix[0].length-1;
+        int rows = matrix.length-2;
+        int columns = matrix[0].length-2;
 
         cellsToSend.clear();
         switch(myDir){
             case RIGHT:
                 for(int i = this.indexFirstCell; i<=this.indexLastCell; i++){
                    // cellsToSend.add(matrix[columns][i]);
-                    cellsToSend.add(matrix[rows][i]);
+                    //cellsToSend.add(matrix[rows-1][i]);
+                    cellsToSend.add(matrix[i][columns]);
                 };
                 break;
-            case LEFT:
+            case LEFT: //corretto
                 for(int i = this.indexFirstCell; i<=this.indexLastCell; i++){
                     //cellsToSend.add(matrix[1][i]);
-                    cellsToSend.add(matrix[1][i]);
+                    //cellsToSend.add(matrix[1][i]);
+                    cellsToSend.add(matrix[i][1]);
                 };
                 break;
             case UP:
                 for(int i = this.indexFirstCell; i<=this.indexLastCell; i++){
                 //cellsToSend.add(matrix[i][1]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
-                    cellsToSend.add(matrix[i][columns]);
+                   // cellsToSend.add(matrix[i][columns]);
+                    cellsToSend.add(matrix[1][i]);
                 };
                 break;
             case DOWN:
                 for(int i = this.indexFirstCell; i<=this.indexLastCell; i++){
                // cellsToSend.add(matrix[i][rows]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
-                    cellsToSend.add(matrix[i][1]);
+                   // cellsToSend.add(matrix[i][1]);
+                    cellsToSend.add(matrix[rows][i]);
                 };
                 break;
 
