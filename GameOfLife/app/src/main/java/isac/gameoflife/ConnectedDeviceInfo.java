@@ -46,20 +46,14 @@ public class ConnectedDeviceInfo {
         this.myHeight = Utils.pixelsToInches(myHeight,gridView.getYDpi());
         this.myDir = myDir;
         this.dir = dir;
-        System.out.println("CODA SU CUI INVIARE DENTRO INFO " + this.nameQueueSender);
-        System.out.println("CODA SU CUI RICEVERE DENTRO INFO " + this.nameQueueReceiver);
-        System.out.println("PARAMETRO CODA SU CUI INVIARE DENTRO INFO " +nameQueueSender);
-        System.out.println("PARAMETRO CODA SU CUI RICEVERE DENTRO INFO " +nameQueueReceiver);
 
     }
 
     public String getNameQueueSender() {
-        System.out.println("GETTER SENDER " +nameQueueSender);
         return nameQueueSender;
     }
 
     public String getNameQueueReceiver() {
-        System.out.println("GETTER RECEIVER " +nameQueueReceiver);
         return nameQueueReceiver;
     }
 
@@ -220,28 +214,33 @@ public class ConnectedDeviceInfo {
     public List<Boolean> getCellsValues(){
 
         boolean[][] matrix = this.gridView.getCellMatrix();
-        int rows = matrix[0].length-1;
-        int columns = matrix.length-1;
+        int rows = matrix.length-1;
+        int columns = matrix[0].length-1;
 
+        cellsToSend.clear();
         switch(myDir){
             case RIGHT:
                 for(int i = this.indexFirstCell; i<=this.indexLastCell; i++){
-                    cellsToSend.add(matrix[columns][i]);
+                   // cellsToSend.add(matrix[columns][i]);
+                    cellsToSend.add(matrix[rows][i]);
                 };
                 break;
             case LEFT:
                 for(int i = this.indexFirstCell; i<=this.indexLastCell; i++){
+                    //cellsToSend.add(matrix[1][i]);
                     cellsToSend.add(matrix[1][i]);
                 };
                 break;
             case UP:
                 for(int i = this.indexFirstCell; i<=this.indexLastCell; i++){
-                cellsToSend.add(matrix[i][1]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                //cellsToSend.add(matrix[i][1]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                    cellsToSend.add(matrix[i][columns]);
                 };
                 break;
             case DOWN:
                 for(int i = this.indexFirstCell; i<=this.indexLastCell; i++){
-                cellsToSend.add(matrix[i][rows]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+               // cellsToSend.add(matrix[i][rows]); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                    cellsToSend.add(matrix[i][1]);
                 };
                 break;
 
@@ -250,6 +249,8 @@ public class ConnectedDeviceInfo {
         if(reverseList){
             Collections.reverse(cellsToSend);
         }
+
+        System.out.println("LISTA DA INVIARE " + cellsToSend.toString());
 
         return cellsToSend;
     }

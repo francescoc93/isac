@@ -86,7 +86,11 @@ public class Handler implements MessageListener {
 
     @Override
     public void handleMessage(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, JSONObject json) {
-        System.out.println("Messaggio ricevuto");
+        try {
+            System.out.println("Messaggio ricevuto " + json.getString("type"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         try {
 
             //info è dell'altro device, infoSwipe sono i miei
@@ -143,8 +147,8 @@ public class Handler implements MessageListener {
 
                             } else { //se sono il minore tra i due
                                 System.out.println("IL MIO INDIRIZZO E' MINORE ");
-                                nameReceiver = ipAddress + ipAddressDevice;
-                                nameSender = ipAddressDevice + ipAddress;
+                                nameReceiver =  ipAddressDevice+ipAddress;
+                                nameSender = ipAddress + ipAddressDevice;
 
                                 System.out.println("Nome coda per inviare: " + nameSender);
                                 System.out.println("Nome coda su cui ricevo: " + nameReceiver);
@@ -209,12 +213,12 @@ public class Handler implements MessageListener {
 
                 System.out.println("HO RICEVUTO LE CELLE");
 
-                //lockCounter.lock();
+                lockCounter.lock();
 
                 messageReceived++;
 
                 System.out.println("MESSAGGIO RICEVUTO; MESSAGGI TOTALI: " + messageReceived);
-                //lockCounter.unlock();
+                lockCounter.unlock();
 
                 System.out.println("LISTA: " + json.getString("cellsList"));
                 String[] cellsString = json.getString("cellsList").replace("\\[", "").replace("\\]", "").split(",");
@@ -251,17 +255,18 @@ public class Handler implements MessageListener {
     public boolean goOn(){
 
         boolean tmp;
-        //lockCounter.lock();
+        lockCounter.lock();
         //lock.lock();
 
-        if (messageReceived == connectedDevices.size()){
+        if (messageReceived >= connectedDevices.size()){
             tmp= true;
+            System.out.println("POSSO ANDARE AVANTI");
         } else {
             tmp= false;
         }
 
         //lock.unlock();
-        //lockCounter.unlock();
+        lockCounter.unlock();
 
         return tmp;
     }

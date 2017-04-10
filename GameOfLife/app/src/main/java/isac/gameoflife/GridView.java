@@ -462,7 +462,7 @@ public class GridView extends View {
 
 
     /**
-     * The final task of our project. Sets the outer border cells, where 2 devices are in contact.
+     * Sets the outer border cells, where 2 devices are in contact.
      * The direction of the swipe is essential: you need to recognise what portion of screen
      * corresponds to one specific neighbour.
      * @param firstIndex
@@ -471,25 +471,30 @@ public class GridView extends View {
      * @param direction the direction of the CURRENT device swipe
      */
     public void setPairedCells(int firstIndex, int lastIndex, List<Boolean> cells, PinchInfo.Direction direction){
+        System.out.println("PRIMO INDICE: " + firstIndex + " LAST INDEX: " + lastIndex + " RIGHE: " + row + " COLONNE: " + column);
         switch(direction){
             case RIGHT:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[column+1][i] = cells.get(j);
+                   // cellChecked[column+1][i] = cells.get(j);
+                    cellChecked[0][i] = cells.get(j);
                 };
                 break;
             case LEFT:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[0][i] = cells.get(j);
+                    //cellChecked[0][i] = cells.get(j);
+                    cellChecked[row+1][i] = cells.get(j);
                 };
                 break;
             case UP:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[i][0] = cells.get(j); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                    //cellChecked[i][0] = cells.get(j); //TODO: VERIFY- la riga 0 è in cima o in fondo?
+                    cellChecked[i][0] = cells.get(j);
                 };
                 break;
             case DOWN:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                    cellChecked[i][row+1] = cells.get(j);//TODO: VERIFY- la riga 0 è in cima o in fondo?
+                    //cellChecked[i][row+1] = cells.get(j);//TODO: VERIFY- la riga 0 è in cima o in fondo?
+                    cellChecked[i][column+1] = cells.get(j);
                 };
                 break;
         }
