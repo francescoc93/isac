@@ -178,11 +178,11 @@ public class GridView extends View {
         return this.scale;
     }
     public float getCellSize(){
-       return this.SIZE;
+        return this.SIZE;
     }
     public float getXDpi() {return getResources().getDisplayMetrics().xdpi; }
     public float getYDpi() {return getResources().getDisplayMetrics().ydpi; }
-   // public float get dpiPerCell() {return getResources().getDisplayMetrics().xdpi/;}
+    // public float get dpiPerCell() {return getResources().getDisplayMetrics().xdpi/;}
 
     public /*Pair<Long,PinchInfo.Direction>*/Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> getInfoSwipe(){
         lockInfoSwipe.lock();
@@ -252,9 +252,9 @@ public class GridView extends View {
         //while(count<=row){
         while(count<=column){
             float coordinate=count*SIZE;
-            canvas.drawLine(coordinate,0,coordinate,column*SIZE,whitePaint);
+            canvas.drawLine(coordinate,0,coordinate,/*column*/row*SIZE,whitePaint);
 
-           // canvas.drawRect(coordinate,0,xDots,yDots,whitePaint);
+            // canvas.drawRect(coordinate,0,xDots,yDots,whitePaint);
             count++;
         }
 
@@ -264,7 +264,7 @@ public class GridView extends View {
         //while(count<=column){
         while(count<=row){
             float coordinate=count*SIZE;
-            canvas.drawLine(0,coordinate,row*SIZE,coordinate,whitePaint);
+            canvas.drawLine(0,coordinate,/*row*/column*SIZE,coordinate,whitePaint);
             //canvas.drawRect(0,coordinate,xDots,yDots,whitePaint);
             count++;
         }
@@ -276,10 +276,11 @@ public class GridView extends View {
             for (int j = 0; j < column; j++) {
                 if (cellChecked[i+1][j+1]) {
                     //disegno un rettangolo in corrispondenza della cellula viva
-                    canvas.drawRect(i * SIZE, j * SIZE,(i + 1) * SIZE, (j + 1) * SIZE,whitePaint);
+                    canvas.drawRect(j * SIZE, i * SIZE,(j + 1) * SIZE, (i + 1) * SIZE,whitePaint);
                 }
             }
         }
+
     }
 
     //metodo che rileva i tocchi sullo schermo
@@ -315,11 +316,11 @@ public class GridView extends View {
                         int column = (int) (event.getX() / SIZE);
                         int row = (int) (event.getY() / SIZE);
 
-                        if(column<this.row && row<this.column) {
+                        if(column<this.column && row<this.row) {
                             column+=1;
                             row+=1;
 
-                            cellChecked[column][row] = !cellChecked[column][row];
+                            cellChecked[row][column] = !cellChecked[row][column];
                             //chiamo il metodo invalidate così forzo la chiamata del metodo onDraw
                             invalidate();
                         }
@@ -446,8 +447,8 @@ public class GridView extends View {
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         if(changed) {
-           // width = getResources().getDisplayMetrics().widthPixels;
-           // height = getResources().getDisplayMetrics().heightPixels;
+            // width = getResources().getDisplayMetrics().widthPixels;
+            // height = getResources().getDisplayMetrics().heightPixels;
             width = getWidth();
             height = getHeight();
             column = /*width % SIZE == 0 ?*/(int) (width /SIZE) ;//: (width / SIZE) + 1;
@@ -477,7 +478,7 @@ public class GridView extends View {
         switch(direction){
             case RIGHT:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
-                   // cellChecked[column+1][i] = cells.get(j);
+                    // cellChecked[column+1][i] = cells.get(j);
                     //cellChecked[0][i] = cells.get(j);
                     cellChecked[i][column+1] = cells.get(j);
                 };
@@ -613,7 +614,7 @@ public class GridView extends View {
 
                 if(handler.isConnected()){
 
-                    Thread t =new Thread(){
+           /*         Thread t =new Thread(){
                         public void run(){
 
                             //invio ai miei vicini le celle
@@ -651,7 +652,7 @@ public class GridView extends View {
                                 }
                                 System.out.println("GLI ALTRI SONO PRONTI A INVIARE");
                                 handler.resetReceivedReady(); //resetto il contatore
-                               // handler.resetReceived();
+                                // handler.resetReceived();
                             }else{
                                 for(int i=0;i<column+2;i++){
                                     cellChecked[0][i]=false;
@@ -674,9 +675,9 @@ public class GridView extends View {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+*/
 
 
-/*
                     //invio ai miei vicini le celle
                     handler.sendCellsToOthers();
                     System.out.println("INVIATE LE CELLE ");
@@ -726,7 +727,7 @@ public class GridView extends View {
                         calculateNextGen();
                     }
 
-                    */
+
                 } else {
                     calculateNextGen();
                 }

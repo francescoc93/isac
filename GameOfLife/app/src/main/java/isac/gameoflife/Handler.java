@@ -129,7 +129,7 @@ public class Handler implements MessageListener {
                             String nameSender = "", nameReceiver = "";
                             String ipAddressDevice = info.getAddress();
 
-                            int value_address_device = Integer.parseInt(ipAddressDevice.split("\\.")[3]);
+/*                            int value_address_device = Integer.parseInt(ipAddressDevice.split("\\.")[3]);
 
 
                             System.out.println("IP MIO: " + value_address + " IP SUO: " +value_address_device);
@@ -155,7 +155,16 @@ public class Handler implements MessageListener {
 
                                 rabbitMQ.addQueue(nameSender);
                                 rabbitMQ.addQueue(nameReceiver, this);
-                            }
+                            }*/
+
+                            nameSender = ipAddress + ipAddressDevice;
+                            nameReceiver = ipAddressDevice + ipAddress;
+
+                            System.out.println("Nome coda per inviare: " + nameSender);
+                            System.out.println("Nome coda su cui ricevo: " + nameReceiver);
+
+                            rabbitMQ.addQueue(nameSender);
+                            rabbitMQ.addQueue(nameReceiver, this);
 
                             ConnectedDeviceInfo connectionInfo = new ConnectedDeviceInfo(this.cellSize,
                                     info.getDirection(),timeStampDirection.second,
