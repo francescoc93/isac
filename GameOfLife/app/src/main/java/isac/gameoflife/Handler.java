@@ -182,7 +182,7 @@ public class Handler implements MessageListener {
                         lock.unlock();
                     }
                 }
-            }/*else if(json.getString("type").equals("close")){ //messaggio al singolo device
+            }else if(json.getString("type").equals("close")){ //messaggio al singolo device
 
                 ConnectedDeviceInfo deviceInfo=null;
 
@@ -206,7 +206,7 @@ public class Handler implements MessageListener {
                     closeCommunication(deviceInfo.getNameQueueSender());
                     closeCommunication(deviceInfo.getNameQueueReceiver());
                 }
-            }*/else if(json.getString("type").equals("start")){ //messaggio broadcast
+            }else if(json.getString("type").equals("start")){ //messaggio broadcast
                 if(messageFromOther(json.getString(PinchInfo.ADDRESS)) && isConnected()) {
                     gridView.start();
                 }
@@ -230,7 +230,7 @@ public class Handler implements MessageListener {
                 lockCounter.unlock();
 
                 System.out.println("LISTA: " + json.getString("cellsList"));
-               String[] cellsString = json.getString("cellsList").replace("\\[", "").replace("\\]", "").split(",");
+                String[] cellsString = json.getString("cellsList").replaceAll("\\[", "").replaceAll("\\]", "").split(",");
 
                 for (String s: cellsString){
                     System.out.println("LISTA DOPO IL REPLACE: " + s);

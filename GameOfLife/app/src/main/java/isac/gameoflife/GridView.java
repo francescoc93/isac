@@ -612,14 +612,16 @@ public class GridView extends View {
             }
 
             cellChecked=tmp;
-            //forzo la chiamata del metodo onDraw
-
-
         }
 
         @Override
         public void run() {
             boolean goOn=true;
+
+            /*TODO: se esce dopo il secondo while quando sono connessi, resettare le celle della matrice ai bordi (righe/colonne fantasma)
+              TODO: considerare il caso in cui il dispositivo inizia a calcolare senza essere connesso a nessun device, ma lo era precedentemente
+              TODO: anche in questo caso, resettare le celle fantasma
+            */
 
             while(goOn){
 
