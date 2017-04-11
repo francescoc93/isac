@@ -230,7 +230,7 @@ public class Handler implements MessageListener {
                 lockCounter.unlock();
 
                 System.out.println("LISTA: " + json.getString("cellsList"));
-                String[] cellsString = json.getString("cellsList").replaceAll("\\[", "").replaceAll("\\]", "").split(",");
+                String[] cellsString = json.getString("cellsList").replaceAll("\\[", "").replaceAll("\\]", "").split(", ");
 
                 for (String s: cellsString){
                     System.out.println("LISTA DOPO IL REPLACE: " + s);
