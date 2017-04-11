@@ -182,7 +182,7 @@ public class Handler implements MessageListener {
                         lock.unlock();
                     }
                 }
-            }else if(json.getString("type").equals("close")){ //messaggio al singolo device
+            }/*else if(json.getString("type").equals("close")){ //messaggio al singolo device
 
                 ConnectedDeviceInfo deviceInfo=null;
 
@@ -206,7 +206,7 @@ public class Handler implements MessageListener {
                     closeCommunication(deviceInfo.getNameQueueSender());
                     closeCommunication(deviceInfo.getNameQueueReceiver());
                 }
-            }else if(json.getString("type").equals("start")){ //messaggio broadcast
+            }*/else if(json.getString("type").equals("start")){ //messaggio broadcast
                 if(messageFromOther(json.getString(PinchInfo.ADDRESS)) && isConnected()) {
                     gridView.start();
                 }
@@ -230,22 +230,17 @@ public class Handler implements MessageListener {
                 lockCounter.unlock();
 
                 System.out.println("LISTA: " + json.getString("cellsList"));
-                String[] cellsString = json.getString("cellsList").replace("\\[", "").replace("\\]", "").split(",");
+               String[] cellsString = json.getString("cellsList").replace("\\[", "").replace("\\]", "").split(",");
+
+                for (String s: cellsString){
+                    System.out.println("LISTA DOPO IL REPLACE: " + s);
+                }
                 List<Boolean> cellsToSet = new ArrayList<>();
                 for (String s : cellsString){
                    cellsToSet.add( Boolean.parseBoolean(s));
                 }
 
-                System.out.println("ADDRESS PRIMA DEL GET DELL'ALTRO: " + json.getString(PinchInfo.ADDRESS));
-                if (connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))){
-                    System.out.println("CONNECTED CONTIENE LA CHIAVE DELL'ALTRO " + json.getString(PinchInfo.ADDRESS));
-                } else {
-                    System.out.println("NON LA CONTIENE ");
-                }
-
-                for (String s: connectedDevices.keySet()){
-                    System.out.println("CHIAVE DELL'ALTRO: " + s);
-                }
+                System.out.println("LISTA DOPO IL PARSE: " + cellsToSet.toString());
                 int firstIndex = connectedDevices.get(json.getString(PinchInfo.ADDRESS)).getIndexFirstCell();
                 int lastIndex = connectedDevices.get(json.getString(PinchInfo.ADDRESS)).getIndexLastCell();
                 gridView.setPairedCells(firstIndex,lastIndex,cellsToSet,connectedDevices.get(json.getString(PinchInfo.ADDRESS)).getMyDirection());

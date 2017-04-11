@@ -474,10 +474,11 @@ public class GridView extends View {
      * @param direction the direction of the CURRENT device swipe
      */
     public void setPairedCells(int firstIndex, int lastIndex, List<Boolean> cells, PinchInfo.Direction direction){
-        System.out.println("PRIMO INDICE: " + firstIndex + " LAST INDEX: " + lastIndex + " RIGHE: " + row + " COLONNE: " + column);
+        System.out.println("PRIMO INDICE: " + firstIndex + " LAST INDEX: " + lastIndex );
         switch(direction){
             case RIGHT:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
+                    System.out.println("SWIPE A DESTRA, LISTA RICEVUTA: "+cells.toString());
                     // cellChecked[column+1][i] = cells.get(j);
                     //cellChecked[0][i] = cells.get(j);
                     cellChecked[i][column+1] = cells.get(j);
@@ -485,6 +486,7 @@ public class GridView extends View {
                 break;
             case LEFT:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
+                    System.out.println("SWIPE A SINISTRA, LISTA RICEVUTA: "+cells.toString());
                     //cellChecked[0][i] = cells.get(j);
                     //cellChecked[row+1][i] = cells.get(j);
                     cellChecked[i][0] = cells.get(j);
@@ -492,6 +494,7 @@ public class GridView extends View {
                 break;
             case UP:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
+                    System.out.println("SWIPE IN ALTO, LISTA RICEVUTA: "+cells.toString());
                     //cellChecked[i][0] = cells.get(j); //TODO: VERIFY- la riga 0 è in cima o in fondo?
                     //cellChecked[i][0] = cells.get(j);
                     cellChecked[0][i] = cells.get(j);
@@ -499,11 +502,19 @@ public class GridView extends View {
                 break;
             case DOWN:
                 for(int i = firstIndex,j=0; i<lastIndex; i++,j++){
+                    System.out.println("SWIPE IN BASSO, LISTA RICEVUTA: "+cells.toString());
                     //cellChecked[i][row+1] = cells.get(j);//TODO: VERIFY- la riga 0 è in cima o in fondo?
                     //cellChecked[i][column+1] = cells.get(j);
                     cellChecked[row+1][i] = cells.get(j);
                 };
                 break;
+        }
+
+        for (int i = 0; i<row+2; i++){
+            System.out.print("\n");
+            for (int j = 0; j<column+2; j++){
+                System.out.print("| " + (cellChecked[i][j] == true ? "T" : "F") + " |");
+            }
         }
 
     }
