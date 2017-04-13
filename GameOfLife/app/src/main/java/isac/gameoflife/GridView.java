@@ -449,8 +449,8 @@ public class GridView extends View {
             // width = getResources().getDisplayMetrics().widthPixels;
             // height = getResources().getDisplayMetrics().heightPixels;
 
-            width = getWidth();
-            height = getHeight();
+            //width = getWidth();
+            //height = getHeight();
             column = /*width % SIZE == 0 ?*/(int) (width /SIZE) ;//: (width / SIZE) + 1;
             row = /*height % SIZE == 0 ?*/ (int)(height /SIZE);// : (height / SIZE) + 1;
             width = column*Utils.pixelsToInches(SIZE,getResources().getDisplayMetrics().xdpi);
@@ -543,8 +543,8 @@ public class GridView extends View {
 
         lockInfoSwipe.unlock();
 
-        width = column*Utils.pixelsToInches(SIZE,getResources().getDisplayMetrics().xdpi);
-        height = row*Utils.pixelsToInches(SIZE,getResources().getDisplayMetrics().ydpi);
+        //width = column*Utils.pixelsToInches(SIZE,getResources().getDisplayMetrics().xdpi);
+        //height = row*Utils.pixelsToInches(SIZE,getResources().getDisplayMetrics().ydpi);
         handler.sendBroadcastMessage(new PinchInfo(ipAddress, direction,x,y,timeStamp, width, height,getXDpi(),getYDpi()).toJSON());
     }
 
