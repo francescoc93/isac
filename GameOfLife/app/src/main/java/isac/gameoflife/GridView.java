@@ -34,17 +34,17 @@ import java.util.concurrent.locks.ReentrantLock;
 public class GridView extends View {
 
     private final static int TIME_DOUBLE_TAP=180;
-    private final static float DESIRED_DP_VALUE=50.0f;
+    private final static float DESIRED_DP_VALUE=70.0f;
     private float SIZE;
     //private final float SIZE_INCHES = 0.5f;
     private Handler handler;
-    private int width;
-    private int height;
+    private float width;
+    private float height;
     private int row;
     private int column;
     private int startX;
     private int startY;
-    private int numberOfTaps ;
+    private int numberOfTaps, numGen;
     private Paint whitePaint = new Paint();
     private boolean[][] cellChecked;
     private boolean onTable;
@@ -73,7 +73,7 @@ public class GridView extends View {
         lastTapTimeMs=0L;
         touchDownMs=0L;
         onTable=false;
-
+        numGen = 1;
         scale = getResources().getDisplayMetrics().density;
         SIZE=(DESIRED_DP_VALUE * scale /*+0.5f*/);
 
@@ -99,11 +99,11 @@ public class GridView extends View {
 
         lockInfoSwipe=new ReentrantLock();
         lockAction=new ReentrantLock();
-        handler=new Handler(this,activity,getResources().getDisplayMetrics().widthPixels,getResources().getDisplayMetrics().heightPixels);
+        //handler=new Handler(this,activity,getResources().getDisplayMetrics().widthPixels,getResources().getDisplayMetrics().heightPixels);
 
         Toast.makeText(context, Utils.getAddress(), Toast.LENGTH_SHORT).show();
 
-        new AsyncTask<Void,Void,Void>(){
+       /* new AsyncTask<Void,Void,Void>(){
 
             @Override
             protected Void doInBackground(Void... params) {
@@ -118,7 +118,7 @@ public class GridView extends View {
                 return null;
             }
 
-        }.execute();
+        }.execute();*/
 
         SensorManager sensorManager = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
         Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -442,17 +442,39 @@ public class GridView extends View {
         }
     }
 
-
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         if(changed) {
             // width = getResources().getDisplayMetrics().widthPixels;
             // height = getResources().getDisplayMetrics().heightPixels;
+
             width = getWidth();
             height = getHeight();
             column = /*width % SIZE == 0 ?*/(int) (width /SIZE) ;//: (width / SIZE) + 1;
             row = /*height % SIZE == 0 ?*/ (int)(height /SIZE);// : (height / SIZE) + 1;
+            width = column*Utils.pixelsToInches(SIZE,getResources().getDisplayMetrics().xdpi);
+            height = row*Utils.pixelsToInches(SIZE,getResources().getDisplayMetrics().ydpi);
+           // handler.setMyWidth(width);
+           // handler.setMyHeight(height);
+            handler=new Handler(this,activity,width,height);
+            new AsyncTask<Void,Void,Void>(){
+
+                @Override
+                protected Void doInBackground(Void... params) {
+
+                    if(handler.connectToServer()) {
+                        System.out.println("Connessione riuscita");
+                        handler.bindToBroadcastQueue();
+                    }else{
+                        System.out.println("Connessione non riuscita");
+                    }
+
+                    return null;
+                }
+
+            }.execute();
+
             cellChecked = new boolean[row+2][column+2];
         }
 
@@ -510,12 +532,7 @@ public class GridView extends View {
                 break;
         }
 
-        for (int i = 0; i<row+2; i++){
-            System.out.print("\n");
-            for (int j = 0; j<column+2; j++){
-                System.out.print("| " + (cellChecked[i][j] == true ? "T" : "F") + " |");
-            }
-        }
+
 
     }
 
@@ -526,9 +543,18 @@ public class GridView extends View {
 
         lockInfoSwipe.unlock();
 
+        width = column*Utils.pixelsToInches(SIZE,getResources().getDisplayMetrics().xdpi);
+        height = row*Utils.pixelsToInches(SIZE,getResources().getDisplayMetrics().ydpi);
         handler.sendBroadcastMessage(new PinchInfo(ipAddress, direction,x,y,timeStamp, width, height,getXDpi(),getYDpi()).toJSON());
     }
 
+    public float getMyWidth(){
+        return this.width;
+    }
+
+    public float getMyHeight(){
+        return this.height;
+    }
     //async task che si occupa del calcolo delle generazioni di cellule
     private class CalculateGeneration extends Thread {
 
@@ -591,6 +617,16 @@ public class GridView extends View {
         private void calculateNextGen(){
             boolean [][] tmp=new boolean[row+2][column+2];
 
+            for(int i=0;i<column+2;i++){
+                System.out.println("RIGA 0 " + cellChecked[0][i]);
+               System.out.println("ULTIMA RIGA "+  cellChecked[row+1][i]);
+            }
+
+            for(int i=0;i<row+2;i++){
+                System.out.println("COLONNA 0 " + cellChecked[i][0] );
+                System.out.println("UTLIMA COLONNA " + cellChecked[i][column+1] );
+            }
+
             for(int i=1;i<row+1;i++){
                 for(int j=1;j<column+1;j++){
                     int neighbours=neighboursAlive(i,j);
@@ -627,69 +663,6 @@ public class GridView extends View {
 
                 if(handler.isConnected()){
 
-           /*         Thread t =new Thread(){
-                        public void run(){
-
-                            //invio ai miei vicini le celle
-                            handler.sendCellsToOthers();
-                            System.out.println("INVIATE LE CELLE ");
-
-
-                            //controllo se posso proseguire (ovvero ho ricevuto le celle da tutti i vicini)
-                            while(!handler.goOn() && handler.isConnected()){
-                                // sleep per non tenere di continuo il lock ed evitare una possibile starvation
-                                try {
-                                    Thread.sleep(20);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                            System.out.println("HO RICEVUTO LE CELLE");
-
-                            handler.resetReceived(); //resetto il contatore dei device che mi hanno inviato le celle
-
-                            if(handler.isConnected()) {
-                                calculateNextGen(); //calcolo la generazione
-                                System.out.println("HO CALCOLATO LA GENERAZIONE SUCCESSIVA");
-                                handler.readyToContinue(); //invio un messaggio ai miei vicini con lo scopo di avvisarli che sono pronto a inviare le mie celle
-                                System.out.println("HO COMUNICATO CHE SON PRONTO A CONTINUARE");
-                                // faccio il while fino a quando tutti i miei vicini
-                                // non hanno terminato di calcolare la propria generazione
-                                while (!handler.readyToSendCells() && handler.isConnected()) {
-                                    // sleep per non tenere di continuo il lock ed evitare una possibile starvation
-                                    try {
-                                        Thread.sleep(20);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                                System.out.println("GLI ALTRI SONO PRONTI A INVIARE");
-                                handler.resetReceivedReady(); //resetto il contatore
-                                // handler.resetReceived();
-                            }else{
-                                for(int i=0;i<column+2;i++){
-                                    cellChecked[0][i]=false;
-                                    cellChecked[row+1][i]=false;
-                                }
-
-                                for(int i=0;i<row+2;i++){
-                                    cellChecked[i][0]=false;
-                                    cellChecked[i][column+1]=false;
-                                }
-
-                                calculateNextGen();
-                            }
-                        }
-                    };
-
-                    t.start();
-                    try {
-                        t.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-*/
-
 
                     //invio ai miei vicini le celle
                     handler.sendCellsToOthers();
@@ -711,6 +684,7 @@ public class GridView extends View {
 
                     if(handler.isConnected()) {
                         calculateNextGen(); //calcolo la generazione
+                        System.out.println("Generazione numero " + numGen++);
                         System.out.println("HO CALCOLATO LA GENERAZIONE SUCCESSIVA");
                         handler.readyToContinue(); //invio un messaggio ai miei vicini con lo scopo di avvisarli che sono pronto a inviare le mie celle
                         System.out.println("HO COMUNICATO CHE SON PRONTO A CONTINUARE");
@@ -750,7 +724,7 @@ public class GridView extends View {
                 if(started.get()){
                     try {
                         postInvalidate();
-                        Thread.sleep(handler.isConnected()?100:500);
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }

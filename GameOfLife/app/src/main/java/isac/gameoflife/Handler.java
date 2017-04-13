@@ -37,9 +37,10 @@ public class Handler implements MessageListener {
     private int value_address;
     private ReentrantLock lock,lockCounter,lockReady;
     private float cellSize;
-    private int myWidth,myHeight,messageReceived,genCalculated;
+    private int messageReceived,genCalculated;
+    private float myWidth,myHeight;
 
-    public Handler(GridView gridView,final MainActivity activity, int myWidth,int myHeight){
+    public Handler(GridView gridView,final MainActivity activity, float myWidth,float myHeight){
 
         this.myHeight = myHeight;
         this.myWidth = myWidth;
@@ -64,6 +65,13 @@ public class Handler implements MessageListener {
         });*/
     }
 
+    public void setMyHeight(float height){
+        this.myHeight = height;
+    }
+
+    public void setMyWidth(float width){
+        this.myWidth = width;
+    }
     public boolean connectToServer(){
         return rabbitMQ.connect();
     }
@@ -166,6 +174,7 @@ public class Handler implements MessageListener {
                             rabbitMQ.addQueue(nameSender);
                             rabbitMQ.addQueue(nameReceiver, this);
 
+                            System.out.println("ALTEZZA: " +this.myHeight + "LARGHEZZA: " + this.myWidth);
                             ConnectedDeviceInfo connectionInfo = new ConnectedDeviceInfo(this.cellSize,
                                     info.getDirection(),timeStampDirection.second,
                                     info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),this.myWidth,
@@ -222,12 +231,7 @@ public class Handler implements MessageListener {
 
                 System.out.println("HO RICEVUTO LE CELLE");
 
-                lockCounter.lock();
 
-                messageReceived++;
-
-                System.out.println("MESSAGGIO RICEVUTO; MESSAGGI TOTALI: " + messageReceived);
-                lockCounter.unlock();
 
                 System.out.println("LISTA: " + json.getString("cellsList"));
                 String[] cellsString = json.getString("cellsList").replaceAll("\\[", "").replaceAll("\\]", "").split(", ");
@@ -244,6 +248,12 @@ public class Handler implements MessageListener {
                 int firstIndex = connectedDevices.get(json.getString(PinchInfo.ADDRESS)).getIndexFirstCell();
                 int lastIndex = connectedDevices.get(json.getString(PinchInfo.ADDRESS)).getIndexLastCell();
                 gridView.setPairedCells(firstIndex,lastIndex,cellsToSet,connectedDevices.get(json.getString(PinchInfo.ADDRESS)).getMyDirection());
+                lockCounter.lock();
+
+                messageReceived++;
+
+                System.out.println("MESSAGGIO RICEVUTO; MESSAGGI TOTALI: " + messageReceived);
+                lockCounter.unlock();
             } else if(json.getString("type").equals("ready")){
                 lockReady.lock();
 

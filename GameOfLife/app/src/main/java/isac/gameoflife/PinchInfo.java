@@ -31,12 +31,12 @@ public class PinchInfo implements Serializable {
     private Integer xcoordinate;
     private Integer ycoordinate;
     private Long timestamp;
-    private int screenWidth;
-    private int screenHeight;
+    private float screenWidth;
+    private float screenHeight;
     private float myXDpi, myYDpi;
 
-    public PinchInfo(String address, Direction direction,Integer xcoordinate, Integer ycoordinate, Long timestamp, int screenWidth,
-                     int screenHeight,float xDpi, float yDpi) {
+    public PinchInfo(String address, Direction direction,Integer xcoordinate, Integer ycoordinate, Long timestamp, float screenWidth,
+                     float screenHeight,float xDpi, float yDpi) {
         this.address = address;
         this.xcoordinate = xcoordinate;
         this.ycoordinate = ycoordinate;
@@ -65,11 +65,11 @@ public class PinchInfo implements Serializable {
         return timestamp;
     }
 
-    public int getScreenWidth() {
+    public float getScreenWidth() {
         return screenWidth;
     }
 
-    public int getScreenHeight() {
+    public float getScreenHeight() {
         return screenHeight;
     }
 

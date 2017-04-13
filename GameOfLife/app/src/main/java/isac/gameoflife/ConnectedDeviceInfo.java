@@ -25,7 +25,7 @@ public class ConnectedDeviceInfo {
     private float scale;
 
     public ConnectedDeviceInfo(float cellSize, PinchInfo.Direction dir, PinchInfo.Direction myDir,
-                               int xCoord, int yCoord, int width, int height, int myWidth, int myHeight,
+                               int xCoord, int yCoord, float width, float height, float myWidth, float myHeight,
                                int myXCoord, int myYCoord, String nameQueueSender, String nameQueueReceiver,GridView gridView,
                                float xdpi,float ydpi){
 
@@ -35,15 +35,19 @@ public class ConnectedDeviceInfo {
         this.yCoord=Utils.pixelsToInches(yCoord,ydpi);
         this.myYCoord = Utils.pixelsToInches(myYCoord,gridView.getYDpi());
         this.myXCoord = Utils.pixelsToInches(myXCoord,gridView.getXDpi());
-        this.width = Utils.pixelsToInches(width,xdpi);
-        this.height = Utils.pixelsToInches(height,ydpi);
+        //this.width = Utils.pixelsToInches(width,xdpi);
+        //this.height = Utils.pixelsToInches(height,ydpi);
+        this.width = width;
+        this.height = height;
         this.nameQueueReceiver=nameQueueReceiver;
         this.nameQueueSender=nameQueueSender;
         this.cellSize = gridView.getCellSize()/gridView.getXDpi();
         this.cellsToSend = new ArrayList<>();
         this.reverseList = false;
-        this.myWidth = Utils.pixelsToInches(myWidth,gridView.getXDpi());
-        this.myHeight = Utils.pixelsToInches(myHeight,gridView.getYDpi());
+       // this.myWidth = Utils.pixelsToInches(myWidth,gridView.getXDpi());
+        //this.myHeight = Utils.pixelsToInches(myHeight,gridView.getYDpi());
+        this.myWidth = myWidth;
+        this.myHeight = myHeight;
         this.myDir = myDir;
         this.dir = dir;
 
@@ -73,55 +77,58 @@ public class ConnectedDeviceInfo {
     private void setRelativeOrientation(){
 
         //RIGHT
-        if(myXCoord > myWidth - 20 && myXCoord <= myWidth){
+        //if(myXCoord > myWidth - 20 && myXCoord <= myWidth){
+            if(myDir.equals(PinchInfo.Direction.RIGHT)){
             this.direction = "right";
 
-            if(this.xCoord >= 0 && this.xCoord < 20){
+            if(dir.equals(PinchInfo.Direction.LEFT)){
                 this.orientation = 0;
-            } else if(this.xCoord <= this.width && this.xCoord > this.width - 20){
+            } else if(dir.equals(PinchInfo.Direction.RIGHT)){
                 this.orientation = 180;
-            } else if(this.yCoord >= 0 && this.height < 20){
+            } else if(dir.equals(PinchInfo.Direction.DOWN)){
                 this.orientation = 90;
-            } else if(this.yCoord <= this.height && this.yCoord > this.height - 20){
+            } else if(dir.equals(PinchInfo.Direction.UP)){
                 this.orientation = 270;
             }
 
-        } else if(myXCoord >= 0 && myXCoord < 20){ //LEFT
+
+        } else if(myDir.equals(PinchInfo.Direction.LEFT)){ //LEFT
 
             this.direction = "left";
-            if(this.xCoord >= 0 && this.xCoord < 20){
+            if(dir.equals(PinchInfo.Direction.LEFT)){
                 this.orientation = 270;
-            } else if(this.xCoord <= this.width && this.xCoord > this.width - 20){
+            } else if(dir.equals(PinchInfo.Direction.RIGHT)){
                 this.orientation = 0;
-            } else if(this.yCoord >= 0 && this.yCoord < 20){
+            } else if(dir.equals(PinchInfo.Direction.DOWN)){
                 this.orientation = 180;
-            } else if(this.yCoord <= this.height && this.yCoord > this.height - 20){
+            } else if(dir.equals(PinchInfo.Direction.UP)){
                 this.orientation = 90;
             }
 
-        } else if (myYCoord > myHeight - 20 && myYCoord <= myHeight){ //TOP
+
+        } else if (myDir.equals(PinchInfo.Direction.UP)){ //TOP
             this.direction = "top";
 
-            if(this.xCoord >= 0 && this.xCoord < 20){
+            if(dir.equals(PinchInfo.Direction.LEFT)){
                 this.orientation = 270;
-            } else if(this.xCoord <= this.width && this.xCoord > this.width - 20){
+            } else if(dir.equals(PinchInfo.Direction.RIGHT)){
                 this.orientation = 90;
-            } else if(this.yCoord >= 0 && this.yCoord < 20){
+            } else if(dir.equals(PinchInfo.Direction.DOWN)){
                 this.orientation = 0;
-            } else if(this.yCoord <= this.height && this.yCoord > this.height - 20){
+            } else if(dir.equals(PinchInfo.Direction.UP)){
                 this.orientation = 180;
             }
 
-        } else if(myYCoord >= 0 && myYCoord < 20){ //BOTTOM
+        } else if(myDir.equals(PinchInfo.Direction.DOWN)){ //BOTTOM
             this.direction = "bottom";
 
-            if(this.xCoord >= 0 && this.xCoord < 20){
+            if(dir.equals(PinchInfo.Direction.LEFT)){
                 this.orientation = 90;
-            } else if(this.xCoord <= this.width && this.xCoord > this.width - 20){
+            } else if(dir.equals(PinchInfo.Direction.RIGHT)){
                 this.orientation = 270;
-            } else if(this.yCoord >= 0 && this.yCoord < 20){
+            } else if(dir.equals(PinchInfo.Direction.DOWN)){
                 this.orientation = 180;
-            } else if(this.yCoord <= this.height && this.yCoord > this.height - 20){
+            } else if(dir.equals(PinchInfo.Direction.UP)){
                 this.orientation = 0;
             }
 
@@ -170,6 +177,9 @@ public class ConnectedDeviceInfo {
                 this.l2 = Math.min((myWidth-myXCoord),yCoord);
             }
         }
+
+        System.out.println("L1: " + this.l1 + " L2: " + this.l2 + " COORDINATA X " + myXCoord + " COORDINATA Y " +myYCoord +
+        " ALTEZZA: " + myHeight + " LARGHEZZA " + myWidth + " ALTEZZA SUA " + height + " LARGHEZZA SUA " +width);
     }
 
     //THIRD: calculate the cells to be sent.
