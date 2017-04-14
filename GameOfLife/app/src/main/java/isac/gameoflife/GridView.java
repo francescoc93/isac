@@ -269,7 +269,7 @@ public class GridView extends View {
             count++;
         }
 
-
+System.out.println("Ho disegnato righe: "+row+" Ho disegnato colonne: "+column);
 
         //setto le cellule vive
         for (int i = 0; i < row; i++) {
@@ -445,12 +445,17 @@ public class GridView extends View {
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
+
+
+
         if(changed) {
             // width = getResources().getDisplayMetrics().widthPixels;
             // height = getResources().getDisplayMetrics().heightPixels;
 
-            //width = getWidth();
-            //height = getHeight();
+            System.out.println("Ciaoooooooo");
+
+            width = getWidth();
+            height = getHeight();
             column = /*width % SIZE == 0 ?*/(int) (width /SIZE) ;//: (width / SIZE) + 1;
             row = /*height % SIZE == 0 ?*/ (int)(height /SIZE);// : (height / SIZE) + 1;
             width = column*Utils.pixelsToInches(SIZE,getResources().getDisplayMetrics().xdpi);
@@ -680,7 +685,7 @@ public class GridView extends View {
                     }
                     System.out.println("HO RICEVUTO LE CELLE");
 
-                    handler.resetReceived(); //resetto il contatore dei device che mi hanno inviato le celle
+                    //handler.resetReceived(); //resetto il contatore dei device che mi hanno inviato le celle
 
                     if(handler.isConnected()) {
                         calculateNextGen(); //calcolo la generazione
@@ -699,7 +704,7 @@ public class GridView extends View {
                             }
                         }
                         System.out.println("GLI ALTRI SONO PRONTI A INVIARE");
-                        handler.resetReceivedReady(); //resetto il contatore
+                        //handler.resetReceivedReady(); //resetto il contatore
                     }else{
                         for(int i=0;i<column+2;i++){
                             cellChecked[0][i]=false;

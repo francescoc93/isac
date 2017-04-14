@@ -23,6 +23,7 @@ public class ConnectedDeviceInfo {
     private GridView gridView;
     private String direction;
     private float scale;
+    private boolean cellsReceived, readyReceived;
 
     public ConnectedDeviceInfo(float cellSize, PinchInfo.Direction dir, PinchInfo.Direction myDir,
                                int xCoord, int yCoord, float width, float height, float myWidth, float myHeight,
@@ -50,6 +51,9 @@ public class ConnectedDeviceInfo {
         this.myHeight = myHeight;
         this.myDir = myDir;
         this.dir = dir;
+
+        cellsReceived=false;
+        readyReceived=false;
 
     }
 
@@ -270,4 +274,19 @@ public class ConnectedDeviceInfo {
     }
 
 
+    public boolean isCellsReceived() {
+        return cellsReceived;
+    }
+
+    public void setCellsReceived(boolean cellsReceived) {
+        this.cellsReceived = cellsReceived;
+    }
+
+    public boolean isReadyReceived() {
+        return readyReceived;
+    }
+
+    public void setReadyReceived(boolean readyReceived) {
+        this.readyReceived = readyReceived;
+    }
 }
