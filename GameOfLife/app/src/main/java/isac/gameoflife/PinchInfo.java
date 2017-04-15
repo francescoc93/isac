@@ -4,7 +4,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
-import java.net.InetAddress;
 
 /**
  * Created by luca on 13/03/17.

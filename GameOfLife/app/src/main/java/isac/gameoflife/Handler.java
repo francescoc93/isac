@@ -1,10 +1,6 @@
 package isac.gameoflife;
 
-import android.content.Context;
-import android.net.wifi.WifiManager;
-import android.os.AsyncTask;
 import android.support.v4.util.Pair;
-import android.text.format.Formatter;
 import android.widget.Toast;
 
 import com.rabbitmq.client.AMQP;
@@ -18,11 +14,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static android.content.Context.CONNECTIVITY_SERVICE;
-import static android.content.Context.WIFI_SERVICE;
 
 /**
  * Created by Francesco on 16/03/2017.
@@ -56,12 +48,6 @@ public class Handler implements MessageListener {
         lock=new ReentrantLock();
         lockCounter=new ReentrantLock();
         lockReady=new ReentrantLock();
-
-       /* activity.runOnUiThread(new Runnable() {
-            public void run() {
-                Toast.makeText(activity, ipAddress, Toast.LENGTH_SHORT).show();
-            }
-        });*/
     }
 
     public void setMyHeight(float height){

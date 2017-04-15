@@ -1,6 +1,5 @@
 package isac.gameoflife;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -12,8 +11,6 @@ import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.support.v4.util.Pair;
 import android.support.v4.view.MotionEventCompat;
-import android.util.DisplayMetrics;
-import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
@@ -22,8 +19,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -79,29 +74,10 @@ public class GridView extends View {
 
         System.out.println("Altezza in pixel " + getResources().getDisplayMetrics().widthPixels + " Larghezza in pixel " +
                 getResources().getDisplayMetrics().heightPixels + "densità: " +scale);
-        /*double x = Math.pow(getResources().getDisplayMetrics().widthPixels/getResources().getDisplayMetrics().xdpi,2);
-        double y = Math.pow(getResources().getDisplayMetrics().heightPixels/getResources().getDisplayMetrics().ydpi,2);
-        System.out.println("X in pollici: " + x + " Y in pollici: " + y );*/
-       /* double screenInches = Math.sqrt(x+y);
-        System.out.println("Pollici schermo: "+screenInches);
-        double ppi=Math.sqrt(Math.pow(getResources().getDisplayMetrics().widthPixels,2)+Math.pow(getResources().getDisplayMetrics().heightPixels,2))/screenInches;
-        SIZE=(25.0f * (float)ppi) / 72.0f;*/
-
-
-
-        //c'è modo di usarlo?
-        //float inches = 30/25.4f;
-        //SIZE = inches;
-        //float xdpi = getResources().getDisplayMetrics().xdpi;
-        //xDots = inches * xdpi;
-        //float ydpi = getResources().getDisplayMetrics().ydpi;
-        //yDots = inches * ydpi;
 
         lockInfoSwipe=new ReentrantLock();
         lockAction=new ReentrantLock();
         //handler=new Handler(this,activity,getResources().getDisplayMetrics().widthPixels,getResources().getDisplayMetrics().heightPixels);
-
-        Toast.makeText(context, Utils.getAddress(), Toast.LENGTH_SHORT).show();
 
        /* new AsyncTask<Void,Void,Void>(){
 
@@ -145,12 +121,10 @@ public class GridView extends View {
                         &&y>=(oldY-0.5)&&y<=(oldY+0.5)){
                     if(!onTable) {
                         onTable = true;
-                        System.out.println("sono sul tavolo Z: " + z + " X: " + x + " Y: " + y+" Inclination: "+inclination);
                     }
                 }else{
                     if(onTable) {
                         onTable = false;
-                        System.out.println("non sono sul tavolo Z: " + z + " X: " + x + " Y: " + y+" Inclination: "+inclination);
 
                         if(handler.isConnected()){
                             Toast.makeText(context, "Schermo scollegato", Toast.LENGTH_SHORT).show();
@@ -182,12 +156,11 @@ public class GridView extends View {
     }
     public float getXDpi() {return getResources().getDisplayMetrics().xdpi; }
     public float getYDpi() {return getResources().getDisplayMetrics().ydpi; }
-    // public float get dpiPerCell() {return getResources().getDisplayMetrics().xdpi/;}
 
-    public /*Pair<Long,PinchInfo.Direction>*/Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> getInfoSwipe(){
+    public Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> getInfoSwipe(){
         lockInfoSwipe.lock();
 
-        /*Pair<Long,PinchInfo.Direction>*/Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> tmp;
+        Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> tmp;
 
         if(infoSwipe!=null) {
             tmp=new Pair<>(new Pair<>(infoSwipe.first.first,infoSwipe.first.second), new Pair<>(infoSwipe.second.first,infoSwipe.second.second));
@@ -213,6 +186,12 @@ public class GridView extends View {
 
         if(started.compareAndSet(false,true)){
             new CalculateGeneration().start();
+            //Toast.makeText(getContext(), "Start", Toast.LENGTH_SHORT).show();
+            activity.runOnUiThread(new Runnable() {
+                public void run() {
+                    Toast.makeText(activity, "Start", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
 
         lockAction.unlock();
@@ -226,6 +205,14 @@ public class GridView extends View {
         started.compareAndSet(true,false);
 
         lockAction.unlock();
+
+        activity.runOnUiThread(new Runnable() {
+            public void run() {
+                Toast.makeText(activity, "Pause", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        //Toast.makeText(getContext(), "Pause", Toast.LENGTH_SHORT).show();
     }
 
     public void clear(){
@@ -239,6 +226,14 @@ public class GridView extends View {
             pause();
         }
 
+
+        activity.runOnUiThread(new Runnable() {
+            public void run() {
+                Toast.makeText(activity, "Reset", Toast.LENGTH_SHORT).show();
+            }
+        });
+//        Toast.makeText(getContext(), "Reset", Toast.LENGTH_SHORT).show();
+
         lockAction.unlock();
     }
 
@@ -249,27 +244,20 @@ public class GridView extends View {
         int count=0;
 
         //disegno delle righe per formare la griglia
-        //while(count<=row){
         while(count<=column){
             float coordinate=count*SIZE;
-            canvas.drawLine(coordinate,0,coordinate,/*column*/row*SIZE,whitePaint);
-
-            // canvas.drawRect(coordinate,0,xDots,yDots,whitePaint);
+            canvas.drawLine(coordinate,0,coordinate,row*SIZE,whitePaint);
             count++;
         }
 
 
         count=0;
 
-        //while(count<=column){
         while(count<=row){
             float coordinate=count*SIZE;
-            canvas.drawLine(0,coordinate,/*row*/column*SIZE,coordinate,whitePaint);
-            //canvas.drawRect(0,coordinate,xDots,yDots,whitePaint);
+            canvas.drawLine(0,coordinate,column*SIZE,coordinate,whitePaint);
             count++;
         }
-
-System.out.println("Ho disegnato righe: "+row+" Ho disegnato colonne: "+column);
 
         //setto le cellule vive
         for (int i = 0; i < row; i++) {
@@ -332,11 +320,8 @@ System.out.println("Ho disegnato righe: "+row+" Ho disegnato colonne: "+column);
                         if (Math.abs(startX - stopX) >=10 && Math.abs(startY - stopY) <= 50){//se mi sono mosso sulle X
                             if((stopX - startX) > 0){
                                 direction=PinchInfo.Direction.RIGHT;
-                                Toast.makeText(getContext(), "Asse X destra", Toast.LENGTH_SHORT).show();
-                                System.out.println("Destra su X");
                             } else if ((stopX - startX)<0){
                                 direction=PinchInfo.Direction.LEFT;
-                                Toast.makeText(getContext(), "Asse X sinistra", Toast.LENGTH_SHORT).show();
                             }
 
                             sendBroadcastMessage(timeStamp,direction,stopX,stopY);
@@ -344,10 +329,8 @@ System.out.println("Ho disegnato righe: "+row+" Ho disegnato colonne: "+column);
                         } else if (Math.abs(startX - stopX) <=50 && Math.abs(startY - stopY) >= 10){//mi sono mosso sulle Y
                             if((stopY - startY) > 0){
                                 direction=PinchInfo.Direction.DOWN;
-                                Toast.makeText(getContext(), "Asse Y basso", Toast.LENGTH_SHORT).show();
                             } else if ((stopY - startY)<0){
                                 direction=PinchInfo.Direction.UP;
-                                Toast.makeText(getContext(), "Asse Y alto", Toast.LENGTH_SHORT).show();
                             }
 
                             sendBroadcastMessage(timeStamp,direction,stopX,stopY);
@@ -369,9 +352,6 @@ System.out.println("Ho disegnato righe: "+row+" Ho disegnato colonne: "+column);
                 lastTapTimeMs = System.currentTimeMillis();
 
                 if (numberOfTaps == 3) {
-                    System.out.println("Triplo tap");
-                    Toast.makeText(getContext(), "Reset", Toast.LENGTH_SHORT).show();
-
                     clear();
 
                     if(handler.isConnected()) {
@@ -388,13 +368,8 @@ System.out.println("Ho disegnato righe: "+row+" Ho disegnato colonne: "+column);
                     }
 
                 } else if (numberOfTaps == 2) {
-                    System.out.println("Doppio tap");
-
-
 
                     if(isStarted()){
-                        Toast.makeText(getContext(), "Pause", Toast.LENGTH_SHORT).show();
-                        System.out.println("Pausa");
 
                         pause();
 
@@ -411,9 +386,6 @@ System.out.println("Ho disegnato righe: "+row+" Ho disegnato colonne: "+column);
                             handler.sendBroadcastMessage(message);
                         }
                     }else{
-                        Toast.makeText(getContext(), "Start", Toast.LENGTH_SHORT).show();
-                        System.out.println("Inizio");
-
                         start();
 
                         if(handler.isConnected()){
@@ -446,14 +418,7 @@ System.out.println("Ho disegnato righe: "+row+" Ho disegnato colonne: "+column);
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
 
-
-
         if(changed) {
-            // width = getResources().getDisplayMetrics().widthPixels;
-            // height = getResources().getDisplayMetrics().heightPixels;
-
-            System.out.println("Ciaoooooooo");
-
             width = getWidth();
             height = getHeight();
             column = /*width % SIZE == 0 ?*/(int) (width /SIZE) ;//: (width / SIZE) + 1;
@@ -548,8 +513,6 @@ System.out.println("Ho disegnato righe: "+row+" Ho disegnato colonne: "+column);
 
         lockInfoSwipe.unlock();
 
-        //width = column*Utils.pixelsToInches(SIZE,getResources().getDisplayMetrics().xdpi);
-        //height = row*Utils.pixelsToInches(SIZE,getResources().getDisplayMetrics().ydpi);
         handler.sendBroadcastMessage(new PinchInfo(ipAddress, direction,x,y,timeStamp, width, height,getXDpi(),getYDpi()).toJSON());
     }
 
@@ -561,6 +524,7 @@ System.out.println("Ho disegnato righe: "+row+" Ho disegnato colonne: "+column);
         return this.height;
     }
     //async task che si occupa del calcolo delle generazioni di cellule
+
     private class CalculateGeneration extends Thread {
 
         private int neighboursAlive(int i,int j){
@@ -624,7 +588,7 @@ System.out.println("Ho disegnato righe: "+row+" Ho disegnato colonne: "+column);
 
             for(int i=0;i<column+2;i++){
                 System.out.println("RIGA 0 " + cellChecked[0][i]);
-               System.out.println("ULTIMA RIGA "+  cellChecked[row+1][i]);
+                System.out.println("ULTIMA RIGA "+  cellChecked[row+1][i]);
             }
 
             for(int i=0;i<row+2;i++){
@@ -655,19 +619,29 @@ System.out.println("Ho disegnato righe: "+row+" Ho disegnato colonne: "+column);
             cellChecked=tmp;
         }
 
+        private void resetGhostCells(){
+            for(int i=0;i<column+2;i++){
+                cellChecked[0][i]=false;
+                cellChecked[row+1][i]=false;
+            }
+
+            for(int i=0;i<row+2;i++){
+                cellChecked[i][0]=false;
+                cellChecked[i][column+1]=false;
+            }
+        }
+
         @Override
         public void run() {
-            boolean goOn=true;
-
-            /*TODO: se esce dopo il secondo while quando sono connessi, resettare le celle della matrice ai bordi (righe/colonne fantasma)
-              TODO: considerare il caso in cui il dispositivo inizia a calcolare senza essere connesso a nessun device, ma lo era precedentemente
-              TODO: anche in questo caso, resettare le celle fantasma
-            */
+            boolean goOn=true,flag=false;
 
             while(goOn){
 
                 if(handler.isConnected()){
-
+                    //passo dalla modalità "schermo singolo" alla modalità "schermo condiviso"
+                    if(!flag){
+                        flag=true;
+                    }
 
                     //invio ai miei vicini le celle
                     handler.sendCellsToOthers();
@@ -687,6 +661,7 @@ System.out.println("Ho disegnato righe: "+row+" Ho disegnato colonne: "+column);
 
                     //handler.resetReceived(); //resetto il contatore dei device che mi hanno inviato le celle
 
+                    //se il while termina perchè ho ricevuto le celle da tutti i device, calcolo la generazione successiva
                     if(handler.isConnected()) {
                         calculateNextGen(); //calcolo la generazione
                         System.out.println("Generazione numero " + numGen++);
@@ -705,22 +680,23 @@ System.out.println("Ho disegnato righe: "+row+" Ho disegnato colonne: "+column);
                         }
                         System.out.println("GLI ALTRI SONO PRONTI A INVIARE");
                         //handler.resetReceivedReady(); //resetto il contatore
+
                     }else{
-                        for(int i=0;i<column+2;i++){
-                            cellChecked[0][i]=false;
-                            cellChecked[row+1][i]=false;
-                        }
-
-                        for(int i=0;i<row+2;i++){
-                            cellChecked[i][0]=false;
-                            cellChecked[i][column+1]=false;
-                        }
-
+                        //altrimenti resetto le celle fantasma e calcolo la generazione successiva
+                        resetGhostCells();
                         calculateNextGen();
                     }
-
-
                 } else {
+
+                    //se il flag è a true, la generazione precedente è stata calcolata
+                    //in modalità "schermo condiviso"
+                    if(flag){
+                        flag=false;
+                        //resetto quindi le celle fantasma, in modo da non influenzare il calcolo
+                        //della generazione successiva
+                        resetGhostCells();
+                    }
+
                     calculateNextGen();
                 }
 
