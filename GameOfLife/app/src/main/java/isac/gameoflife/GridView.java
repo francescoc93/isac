@@ -356,6 +356,7 @@ public class GridView extends View {
 
                     if(handler.isConnected()) {
 
+                        handler.stopGame(true);
                         JSONObject message = new JSONObject();
                         try {
                             message.put("type", "reset");
@@ -375,6 +376,7 @@ public class GridView extends View {
 
                         if(handler.isConnected()){
 
+                            handler.stopGame(true);
                             JSONObject message=new JSONObject();
                             try {
                                 message.put("type","pause");
@@ -390,6 +392,7 @@ public class GridView extends View {
 
                         if(handler.isConnected()){
 
+                            handler.stopGame(false);
                             JSONObject message=new JSONObject();
                             try {
                                 message.put("type","start");
@@ -649,7 +652,7 @@ public class GridView extends View {
 
 
                     //controllo se posso proseguire (ovvero ho ricevuto le celle da tutti i vicini)
-                    while(!handler.goOn() && handler.isConnected()){
+                    while(!handler.goOn() && handler.isConnected() && !handler.stopGame()){
                         // sleep per non tenere di continuo il lock ed evitare una possibile starvation
                         try {
                             Thread.sleep(20);
@@ -662,7 +665,7 @@ public class GridView extends View {
                     //handler.resetReceived(); //resetto il contatore dei device che mi hanno inviato le celle
 
                     //se il while termina perchè ho ricevuto le celle da tutti i device, calcolo la generazione successiva
-                    if(handler.isConnected()) {
+                    if(!handler.stopGame() && handler.isConnected()) {
                         calculateNextGen(); //calcolo la generazione
                         System.out.println("Generazione numero " + numGen++);
                         System.out.println("HO CALCOLATO LA GENERAZIONE SUCCESSIVA");
@@ -670,7 +673,7 @@ public class GridView extends View {
                         System.out.println("HO COMUNICATO CHE SON PRONTO A CONTINUARE");
                         // faccio il while fino a quando tutti i miei vicini
                         // non hanno terminato di calcolare la propria generazione
-                        while (!handler.readyToSendCells() && handler.isConnected()) {
+                        while (!handler.readyToSendCells() && handler.isConnected() && !handler.stopGame()) {
                             // sleep per non tenere di continuo il lock ed evitare una possibile starvation
                             try {
                                 Thread.sleep(20);
@@ -692,6 +695,7 @@ public class GridView extends View {
                     //in modalità "schermo condiviso"
                     if(flag){
                         flag=false;
+                        handler.stopGame(false);
                         //resetto quindi le celle fantasma, in modo da non influenzare il calcolo
                         //della generazione successiva
                         resetGhostCells();

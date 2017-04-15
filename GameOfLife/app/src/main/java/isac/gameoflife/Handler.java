@@ -27,10 +27,11 @@ public class Handler implements MessageListener {
     private String ipAddress;
     private RabbitMQ rabbitMQ;
     private HashMap<String,ConnectedDeviceInfo> connectedDevices;
-    private ReentrantLock lock,lockCounter,lockReady;
+    private ReentrantLock lock,lockCounter,lockReady,lockStop;
     private float cellSize;
     private int messageReceived,genCalculated;
     private float myWidth,myHeight;
+    private boolean stop;
 
     public Handler(GridView gridView,final MainActivity activity, float myWidth,float myHeight){
 
@@ -48,6 +49,8 @@ public class Handler implements MessageListener {
         lock=new ReentrantLock();
         lockCounter=new ReentrantLock();
         lockReady=new ReentrantLock();
+        lockStop=new ReentrantLock();
+        stop=false;
     }
 
     public void setMyHeight(float height){
@@ -174,14 +177,26 @@ public class Handler implements MessageListener {
                 }
             }else if(json.getString("type").equals("start")){ //messaggio broadcast
                 if(messageFromOther(json.getString(PinchInfo.ADDRESS)) && isConnected()) {
+                    lockStop.lock();
+                    stop=false;
+                    lockStop.unlock();
+
                     gridView.start();
                 }
             }else if(json.getString("type").equals("pause")){ //messaggio broadcast
                 if(messageFromOther(json.getString(PinchInfo.ADDRESS)) && isConnected()) {
+                    lockStop.lock();
+                    stop=true;
+                    lockStop.unlock();
+
                     gridView.pause();
                 }
             }else if(json.getString("type").equals("reset")){ //messaggio broadcast
                 if(messageFromOther(json.getString(PinchInfo.ADDRESS)) && isConnected()) {
+                    lockStop.lock();
+                    stop=true;
+                    lockStop.unlock();
+
                     gridView.clear();
                 }
             } else if (json.getString("type").equals("cells")){
@@ -425,6 +440,21 @@ public class Handler implements MessageListener {
 
             lock.unlock();
         }
+    }
+
+    public boolean stopGame(){
+
+        lockStop.lock();
+        boolean tmp=stop;
+        lockStop.unlock();
+
+        return tmp;
+    }
+
+    public void stopGame(boolean value){
+        lockStop.lock();
+        stop=value;
+        lockStop.unlock();
     }
 
     public boolean isConnected(){
