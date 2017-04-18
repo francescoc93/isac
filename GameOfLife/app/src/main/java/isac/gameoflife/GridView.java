@@ -29,7 +29,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class GridView extends View {
 
     private final static int TIME_DOUBLE_TAP=180;
-    private final static float DESIRED_DP_VALUE=70.0f;
+    private final static float DESIRED_DP_VALUE=80.0f;
     private float SIZE;
     //private final float SIZE_INCHES = 0.5f;
     private Handler handler;
@@ -242,7 +242,7 @@ public class GridView extends View {
     protected void onDraw(Canvas canvas) {
         canvas.drawColor(Color.BLACK);
         int count=0;
-
+        //System.out.println(" CELLA " + SIZE);
         //disegno delle righe per formare la griglia
         while(count<=column){
             float coordinate=count*SIZE;

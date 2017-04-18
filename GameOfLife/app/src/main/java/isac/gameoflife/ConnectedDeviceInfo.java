@@ -100,11 +100,11 @@ public class ConnectedDeviceInfo {
 
             this.direction = "left";
             if(dir.equals(PinchInfo.Direction.LEFT)){
-                this.orientation = 270;
+                this.orientation = 180;
             } else if(dir.equals(PinchInfo.Direction.RIGHT)){
                 this.orientation = 0;
             } else if(dir.equals(PinchInfo.Direction.DOWN)){
-                this.orientation = 180;
+                this.orientation = 270;
             } else if(dir.equals(PinchInfo.Direction.UP)){
                 this.orientation = 90;
             }
@@ -154,6 +154,12 @@ public class ConnectedDeviceInfo {
         //SECOND: CALCULATE L1 AND L2 (length of the portions of screen before and after the swipe point)
         if(myDir.equals(PinchInfo.Direction.RIGHT) || myDir.equals(PinchInfo.Direction.LEFT)){
             if(orientation == 0){
+                System.out.println("INDICE MIA CELLA: " + (int)((myYCoord/this.cellSize)+1) + " SUO INDICE CELLA: " +
+                        (int)((yCoord/this.cellSize)+1));
+                int min = Math.min((int)(myYCoord/this.cellSize), (int)(yCoord/this.cellSize));
+                this.indexFirstCell = (int)(myYCoord/this.cellSize)+1-min;
+                min = Math.min((int)((myHeight-myYCoord)/this.cellSize)+1, (int)((height - yCoord)/this.cellSize)+1);
+                this.indexLastCell = (int)(myYCoord/this.cellSize) + min;
                 this.l1 = Math.min(myYCoord,yCoord);
                 this.l2 = Math.min((myHeight-myYCoord), (height - yCoord));
             } else if (orientation == 90){
@@ -166,7 +172,7 @@ public class ConnectedDeviceInfo {
                 this.l1 = Math.min(myYCoord,xCoord);
                 this.l2 = Math.min((myHeight-myYCoord),(width-xCoord));
             }
-        } else if (myDir.equals(PinchInfo.Direction.UP) || myDir.equals(PinchInfo.Direction.DOWN)){
+        }else if (myDir.equals(PinchInfo.Direction.UP) || myDir.equals(PinchInfo.Direction.DOWN)){
             if(orientation == 0){
                 this.l1 = Math.min(myXCoord, xCoord);
                 this.l2 = Math.min((myWidth-myXCoord),(width-xCoord));
@@ -183,16 +189,34 @@ public class ConnectedDeviceInfo {
         }
 
         System.out.println("L1: " + this.l1 + " L2: " + this.l2 + " COORDINATA X " + myXCoord + " COORDINATA Y " +myYCoord +
-        " ALTEZZA: " + myHeight + " LARGHEZZA " + myWidth + " ALTEZZA SUA " + height + " LARGHEZZA SUA " +width);
+        " ALTEZZA: " + myHeight + " LARGHEZZA " + myWidth + " SUA ALTEZZA " + height + " SUA LARGHEZZA " +width);
     }
 
     //THIRD: calculate the cells to be sent.
     //reverseList is used to know how to manage the array of cells received.
     private void evaluateCells(){
 
+       /* float length = l1+l2;
+        float start = 0;
+        float end = start+this.cellSize;
+        boolean stop = false;
+        int counter = 1;
+        while(!stop){
+            if (l1 >=start && l1 < end){
+                stop = true;
+                this.indexFirstCell = counter;
+            } else {
+                counter++;
+                start = end;
+                end+=cellSize;
+            }
+
+        }*/
         if(myDir.equals(PinchInfo.Direction.RIGHT) || myDir.equals(PinchInfo.Direction.LEFT)){
-            indexFirstCell =(int) Math.ceil((double)(myYCoord - l1)/(double)this.cellSize) +1;
-            indexLastCell = (int)((myYCoord + l2)/this.cellSize);
+            //indexFirstCell =(int) Math.ceil((double)(myYCoord - l1)/(double)this.cellSize) +1;
+           // int numOfCells = (int) (length/(double)this.cellSize);
+           // indexLastCell = indexFirstCell+numOfCells;
+            //indexLastCell = (int)((myYCoord + l2)/this.cellSize);
             if(orientation == 0){
                 this.reverseList = false;
             } else if (orientation == 90){
@@ -203,8 +227,10 @@ public class ConnectedDeviceInfo {
                 this.reverseList = false;
             }
         } else if (myDir.equals(PinchInfo.Direction.UP) || myDir.equals(PinchInfo.Direction.DOWN)){
-            indexFirstCell =(int) Math.ceil((double)(myXCoord - l1)/(double)this.cellSize) +1;
-            indexLastCell = (int) ((myXCoord + l2)/this.cellSize);
+           // indexFirstCell =(int) Math.ceil((double)(myXCoord - l1)/(double)this.cellSize) +1;
+           // int numOfCells = (int) (length/(double)this.cellSize);
+            //indexLastCell = indexFirstCell+numOfCells;
+            //indexLastCell = (int) ((myXCoord + l2)/this.cellSize);
             if(orientation == 0){
                 this.reverseList = false;
             } else if (orientation == 90){
@@ -215,7 +241,15 @@ public class ConnectedDeviceInfo {
                 this.reverseList = true;
             }
         }
+
+        /*boolean[][] matrix = this.gridView.getCellMatrix();
+        int rows = matrix.length-2;
+        int columns = matrix[0].length-2;
+        if (this.indexLastCell > rows+1 || this.indexLastCell > columns+1) {
+            this.indexLastCell-=1;
+        }*/
     }
+
 
     public int getIndexFirstCell(){
         return this.indexFirstCell;
@@ -230,6 +264,7 @@ public class ConnectedDeviceInfo {
         boolean[][] matrix = this.gridView.getCellMatrix();
         int rows = matrix.length-2;
         int columns = matrix[0].length-2;
+
 
         cellsToSend.clear();
         switch(myDir){

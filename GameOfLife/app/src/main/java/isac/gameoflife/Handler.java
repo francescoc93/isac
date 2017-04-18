@@ -211,16 +211,12 @@ public class Handler implements MessageListener {
                     System.out.println("LISTA: " + json.getString("cellsList"));
                     String[] cellsString = json.getString("cellsList").replaceAll("\\[", "").replaceAll("\\]", "").split(", ");
 
-                    for (String s : cellsString) {
-                        System.out.println("LISTA DOPO IL REPLACE: " + s);
-                    }
 
                     List<Boolean> cellsToSet = new ArrayList<>();
                     for (String s : cellsString) {
                         cellsToSet.add(Boolean.parseBoolean(s));
                     }
 
-                    System.out.println("LISTA DOPO IL PARSE: " + cellsToSet.toString());
                     int firstIndex = /*connectedDevices.get(json.getString(PinchInfo.ADDRESS))*/device.getIndexFirstCell();
                     int lastIndex = /*connectedDevices.get(json.getString(PinchInfo.ADDRESS))*/device.getIndexLastCell();
                     gridView.setPairedCells(firstIndex, lastIndex, cellsToSet, /*connectedDevices.get(json.getString(PinchInfo.ADDRESS))*/device.getMyDirection());
