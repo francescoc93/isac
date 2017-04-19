@@ -27,9 +27,8 @@ public class Handler implements MessageListener {
     private String ipAddress;
     private RabbitMQ rabbitMQ;
     private HashMap<String,ConnectedDeviceInfo> connectedDevices;
-    private ReentrantLock lock,lockCounter,lockReady,lockStop;
+    private ReentrantLock lock,lockStop;
     private float cellSize;
-    private int messageReceived,genCalculated;
     private float myWidth,myHeight;
     private boolean stop;
 
@@ -44,22 +43,11 @@ public class Handler implements MessageListener {
         this.activity=activity;
         this.rabbitMQ=new RabbitMQ(Utils.getAddress(),"[user]","[user]");
         connectedDevices=new HashMap<>();
-        this.messageReceived = 0;
-        genCalculated=0;
         lock=new ReentrantLock();
-        lockCounter=new ReentrantLock();
-        lockReady=new ReentrantLock();
         lockStop=new ReentrantLock();
         stop=false;
     }
 
-    public void setMyHeight(float height){
-        this.myHeight = height;
-    }
-
-    public void setMyWidth(float width){
-        this.myWidth = width;
-    }
     public boolean connectToServer(){
         return rabbitMQ.connect();
     }
@@ -82,6 +70,7 @@ public class Handler implements MessageListener {
 
     @Override
     public void handleMessage(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, JSONObject json) {
+
         try {
             System.out.println("Messaggio ricevuto " + json.getString("type"));
         } catch (JSONException e) {
@@ -175,29 +164,55 @@ public class Handler implements MessageListener {
                     closeCommunication(deviceInfo.getNameQueueSender());
                     closeCommunication(deviceInfo.getNameQueueReceiver());
                 }
-            }else if(json.getString("type").equals("start")){ //messaggio broadcast
-                if(messageFromOther(json.getString(PinchInfo.ADDRESS)) && isConnected()) {
+            }else if(json.getString("type").equals("start")){
+                if(isConnected()) {
+
+                    boolean flag=false;
+
                     lockStop.lock();
-                    stop=false;
+                    if(stop) {
+                        stop = false;
+                        flag=true;
+                    }
                     lockStop.unlock();
 
-                    gridView.start();
+                    if(flag) {
+                        gridView.start();
+
+                        JSONObject message=new JSONObject();
+                        try {
+                            message.put("type","start");
+                            message.put(PinchInfo.ADDRESS,ipAddress);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        sendCommand(message);
+                    }
                 }
-            }else if(json.getString("type").equals("pause")){ //messaggio broadcast
-                if(messageFromOther(json.getString(PinchInfo.ADDRESS)) && isConnected()) {
+            }else if(json.getString("type").equals("pause")){
+                if(isConnected()) {
+
                     lockStop.lock();
-                    stop=true;
+
+                    if(!stop) {
+                        stop = true;
+                    }
                     lockStop.unlock();
 
-                    gridView.pause();
+
+                  //  gridView.pause();
                 }
-            }else if(json.getString("type").equals("reset")){ //messaggio broadcast
-                if(messageFromOther(json.getString(PinchInfo.ADDRESS)) && isConnected()) {
+            }else if(json.getString("type").equals("reset")){
+                if(isConnected()) {
                     lockStop.lock();
-                    stop=true;
+                    if(!stop) {
+                        stop = true;
+                    }
                     lockStop.unlock();
 
-                    gridView.clear();
+
+                   // gridView.clear();
                 }
             } else if (json.getString("type").equals("cells")){
 
@@ -217,18 +232,9 @@ public class Handler implements MessageListener {
                         cellsToSet.add(Boolean.parseBoolean(s));
                     }
 
-                    int firstIndex = /*connectedDevices.get(json.getString(PinchInfo.ADDRESS))*/device.getIndexFirstCell();
-                    int lastIndex = /*connectedDevices.get(json.getString(PinchInfo.ADDRESS))*/device.getIndexLastCell();
-                    gridView.setPairedCells(firstIndex, lastIndex, cellsToSet, /*connectedDevices.get(json.getString(PinchInfo.ADDRESS))*/device.getMyDirection());
-
-
-                   /* lockCounter.lock();
-
-                    messageReceived++;
-
-                    System.out.println("MESSAGGIO RICEVUTO; MESSAGGI TOTALI: " + messageReceived);
-
-                    lockCounter.unlock();*/
+                    int firstIndex = device.getIndexFirstCell();
+                    int lastIndex = device.getIndexLastCell();
+                    gridView.setPairedCells(firstIndex, lastIndex, cellsToSet,device.getMyDirection());
 
                     device.setCellsReceived(true);
                 }
@@ -236,11 +242,6 @@ public class Handler implements MessageListener {
                 lock.unlock();
 
             } else if(json.getString("type").equals("ready")){
-               /* lockReady.lock();
-
-                genCalculated++;
-
-                lockReady.unlock();*/
 
                 lock.lock();
 
@@ -256,24 +257,6 @@ public class Handler implements MessageListener {
     }
 
     public boolean goOn(){
-
-       /* boolean tmp;
-        lockCounter.lock();
-        lock.lock();
-
-        if (messageReceived >= connectedDevices.size()){
-            tmp= true;
-            System.out.println("POSSO ANDARE AVANTI");
-        } else {
-            tmp= false;
-        }
-
-        lock.unlock();
-        lockCounter.unlock();
-
-        return tmp;*/
-
-
         lock.lock();
 
         Set<String> set=connectedDevices.keySet();
@@ -295,32 +278,22 @@ public class Handler implements MessageListener {
 
     }
 
-    public void resetReceived(){
+    public void sendCommand(JSONObject message){
 
-        lockCounter.lock();
-
-        this.messageReceived = 0;
-
-        lockCounter.unlock();
-    }
-
-    public boolean readyToSendCells(){
-
-      /*  boolean tmp;
-
-        lockReady.lock();
         lock.lock();
 
-        if (genCalculated == connectedDevices.size()){
-            tmp= true;
-        } else {
-            tmp= false;
+        Set<String> set=connectedDevices.keySet();
+
+        for (String s : set){
+            rabbitMQ.sendMessage(connectedDevices.get(s).getNameQueueSender(), message);
         }
 
         lock.unlock();
-        lockReady.unlock();
 
-        return tmp;*/
+    }
+
+
+    public boolean readyToSendCells(){
 
         lock.lock();
 
@@ -342,15 +315,6 @@ public class Handler implements MessageListener {
         lock.unlock();
 
         return true;
-    }
-
-    public void resetReceivedReady(){
-
-        lockReady.lock();
-
-        genCalculated = 0;
-
-        lockReady.unlock();
     }
 
     public void sendCellsToOthers(){
@@ -425,9 +389,6 @@ public class Handler implements MessageListener {
                     rabbitMQ.sendMessage(device.getNameQueueSender(), message);
                     closeCommunication(device.getNameQueueSender());
                     closeCommunication(device.getNameQueueReceiver());
-
-                    System.out.println("Nome coda su cui invio che chiudo: "+device.getNameQueueSender());
-                    System.out.println("Nome coda su cui ricevo che chiudo: "+device.getNameQueueReceiver());
                 }
 
                 connectedDevices.clear();
