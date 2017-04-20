@@ -192,29 +192,46 @@ public class GridView extends View {
         //se il gioco è in esecuzione, setto a false la variabile
         lockAction.lock();
 
+        if(started.get()){
+            activity.runOnUiThread(new Runnable() {
+                public void run() {
+                    Toast.makeText(activity, "Pause", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
         started.compareAndSet(true,false);
 
         lockAction.unlock();
 
-        activity.runOnUiThread(new Runnable() {
-            public void run() {
-                Toast.makeText(activity, "Pause", Toast.LENGTH_SHORT).show();
-            }
-        });
+
 
     }
 
     public void clear(){
         lockAction.lock();
-
+/*
         if(!isStarted()){
             cellChecked=new boolean[row+2][column+2];
             postInvalidate();
         }else {
             clear.set(true);
             pause();
+        }*/
+
+        if(calculateGeneration!=null){
+            if(calculateGeneration.isAlive()){
+                pause();
+                try {
+                    calculateGeneration.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
+        cellChecked=new boolean[row+2][column+2];
+        postInvalidate();
 
         activity.runOnUiThread(new Runnable() {
             public void run() {
@@ -223,6 +240,33 @@ public class GridView extends View {
         });
 
         lockAction.unlock();
+    }
+
+    public void distributedClear(){
+
+        lockAction.lock();
+
+        if(calculateGeneration!=null){
+            if(calculateGeneration.isAlive()){
+                try {
+                    calculateGeneration.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        cellChecked=new boolean[row+2][column+2];
+        postInvalidate();
+
+        activity.runOnUiThread(new Runnable() {
+            public void run() {
+                Toast.makeText(activity, "Reset", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        lockAction.unlock();
+
     }
 
     //disegno la griglia e la popolo
@@ -340,6 +384,8 @@ public class GridView extends View {
                 lastTapTimeMs = System.currentTimeMillis();
 
                 if (numberOfTaps == 3) {
+                    handler.stopGame(true);
+                    handler.resetGame(true);
                     clear();
 
                     if(handler.isConnected()) {
@@ -352,15 +398,18 @@ public class GridView extends View {
                             e.printStackTrace();
                         }
 
-                        handler.sendCommand(message);
+                        handler.sendCommand(message,null);
                     }
 
                 } else if (numberOfTaps == 2) {
 
                     if(isStarted()){
+                        handler.stopGame(true);
+                        handler.resetGame(false);
                         pause();
                     }else{
                         handler.stopGame(false);
+                        handler.resetGame(false);
                         start();
 
                         if(handler.isConnected()){
@@ -373,7 +422,7 @@ public class GridView extends View {
                                 e.printStackTrace();
                             }
 
-                            handler.sendCommand(message);
+                            handler.sendCommand(message,null);
                         }
                     }
 
@@ -657,10 +706,9 @@ public class GridView extends View {
                                         e.printStackTrace();
                                     }
 
-                                    handler.sendCommand(message);
+                                    handler.sendCommand(message,null);
                                 }
                             }
-
                         }else{
                             postInvalidate();
                             goOn=false;
@@ -674,7 +722,7 @@ public class GridView extends View {
 
                         pause();
 
-                        if(handler.isConnected() && handler.stopGame()){
+                       /* if(handler.isConnected() && handler.stopGame()){
 
                             JSONObject message=new JSONObject();
                             try {
@@ -685,7 +733,7 @@ public class GridView extends View {
                             }
 
                             handler.sendCommand(message);
-                        }
+                        }*/
                     }
                 }else {
                     calculateNextGen();
@@ -706,9 +754,9 @@ public class GridView extends View {
                 }
             }
 
-            if(clear.compareAndSet(true,false)){
+           /* if(clear.compareAndSet(true,false)){
                 clear();
-            }
+            }*/
         }
     }
 }
