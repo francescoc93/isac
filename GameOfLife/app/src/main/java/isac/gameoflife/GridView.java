@@ -438,6 +438,14 @@ public class GridView extends View {
         }
     }
 
+    public void closeAllCommunication(){
+        handler.closeDeviceCommunication();
+    }
+
+    public void closeConnection(){
+        handler.closseConnection();
+    }
+
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);

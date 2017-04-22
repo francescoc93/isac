@@ -41,7 +41,7 @@ public class Handler implements MessageListener {
         this.gridView=gridView;
         this.cellSize = gridView.getCellSize();
         this.activity=activity;
-        this.rabbitMQ=new RabbitMQ(Utils.getAddress(),"[user]","[user]");
+        this.rabbitMQ=new RabbitMQ(Utils.getServerAddress(),"[user]","[user]");
         connectedDevices=new HashMap<>();
         lock=new ReentrantLock();
         lockStop=new ReentrantLock();
@@ -451,6 +451,10 @@ public class Handler implements MessageListener {
 
             lock.unlock();
         }
+    }
+
+    public void closseConnection(){
+        rabbitMQ.closeConnection();
     }
 
     public boolean stopGame(){

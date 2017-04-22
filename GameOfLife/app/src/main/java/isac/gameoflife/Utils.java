@@ -36,7 +36,7 @@ public class Utils {
         return pixel/dpi;
     }
 
-    public static String getAddress(){
+    public static String getServerAddress(){
         File docsFolder = new File(Environment.getExternalStorageDirectory() + "/GameOfLife");
 
         if(!docsFolder.exists()) {
@@ -50,11 +50,12 @@ public class Utils {
             try {
                 file.createNewFile();
                 FileOutputStream outputStream = new FileOutputStream(file/*, Context.MODE_PRIVATE*/);
-                outputStream.write(("192.168.43.34").getBytes());
+                String address="192.168.43.34";
+                outputStream.write((address).getBytes());
                 outputStream.flush();
                 outputStream.close();
 
-                return "192.168.43.34";
+                return address;
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -104,8 +105,6 @@ public class Utils {
             }else{
                 return "127.0.0.1";
             }
-
-
         }
         System.out.println(ipAddress);
         return ipAddress;
