@@ -54,7 +54,6 @@ public class GridView extends View {
 
     public GridView(final Context context) {
         super(context);
-
         activity=(MainActivity)context;
         //imposto il colore delle celle
         whitePaint.setStyle(Paint.Style.FILL_AND_STROKE);

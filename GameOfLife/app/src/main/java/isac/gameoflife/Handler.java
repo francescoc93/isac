@@ -39,7 +39,7 @@ public class Handler implements MessageListener {
         ipAddress=Utils.getIpAddress();
         System.out.println("Indirizzo IP " + ipAddress);
         this.gridView=gridView;
-        this.cellSize = gridView.getCellSize();
+        this.cellSize = gridView.getCellSize()/gridView.getXDpi();//gridView.getCellSize();
         this.activity=activity;
         this.rabbitMQ=new RabbitMQ(Utils.getServerAddress(),"[user]","[user]");
         connectedDevices=new HashMap<>();
@@ -129,7 +129,7 @@ public class Handler implements MessageListener {
                                     info.getDirection(),timeStampDirection.second,
                                     info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),this.myWidth,
                                     this.myHeight, coordinate.first, coordinate.second, nameSender, nameReceiver,this.gridView,
-                                    info.getXDpi(),info.getYDpi());
+                                    info.getXDpi(),info.getYDpi(),gridView.getXDpi(),gridView.getYDpi());
 
                             lock.lock();
                             System.out.println("STO METTENDO NELLA MAPPA L'IP DELL'ALTRO: " + ipAddressDevice);

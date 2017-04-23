@@ -10,7 +10,6 @@ import java.util.List;
 
 public class ConnectedDeviceInfo {
 
-    //TODO: SIZE IN POLLICI PER FARE LA DIVISIONE, POLLICI = SIZE/50 (PIXEL/DPI)
     private boolean reverseList;
     private String nameQueueSender,nameQueueReceiver;
     private int orientation; //gradi di rotazione
@@ -27,21 +26,21 @@ public class ConnectedDeviceInfo {
     public ConnectedDeviceInfo(float cellSize, PinchInfo.Direction dir, PinchInfo.Direction myDir,
                                int xCoord, int yCoord, float width, float height, float myWidth, float myHeight,
                                int myXCoord, int myYCoord, String nameQueueSender, String nameQueueReceiver,GridView gridView,
-                               float xdpi,float ydpi){
+                               float xdpi,float ydpi,float myXdpi,float myYdpi){
 
         this.gridView = gridView;
         this.scale = gridView.getScale();
         this.xCoord=Utils.pixelsToInches(xCoord,xdpi);
         this.yCoord=Utils.pixelsToInches(yCoord,ydpi);
-        this.myYCoord = Utils.pixelsToInches(myYCoord,gridView.getYDpi());
-        this.myXCoord = Utils.pixelsToInches(myXCoord,gridView.getXDpi());
+        this.myYCoord = Utils.pixelsToInches(myYCoord,myYdpi);
+        this.myXCoord = Utils.pixelsToInches(myXCoord,myXdpi);
         //this.width = Utils.pixelsToInches(width,xdpi);
         //this.height = Utils.pixelsToInches(height,ydpi);
         this.width = width;
         this.height = height;
         this.nameQueueReceiver=nameQueueReceiver;
         this.nameQueueSender=nameQueueSender;
-        this.cellSize = gridView.getCellSize()/gridView.getXDpi();
+        this.cellSize = cellSize;//gridView.getCellSize()/gridView.getXDpi();
         this.cellsToSend = new ArrayList<>();
         this.reverseList = false;
        // this.myWidth = Utils.pixelsToInches(myWidth,gridView.getXDpi());

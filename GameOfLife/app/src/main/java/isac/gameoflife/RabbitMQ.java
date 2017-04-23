@@ -171,7 +171,9 @@ public class RabbitMQ{
                 timeStampExchange.remove(tmp);
             }
 
-            connection.close();
+            if(connection!=null) {
+                connection.close();
+            }
             connected.set(false);
         }catch(IOException | TimeoutException e){
             e.printStackTrace();

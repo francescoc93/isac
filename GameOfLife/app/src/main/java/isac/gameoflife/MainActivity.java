@@ -54,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
 
         gridView.closeAllCommunication();
         gridView.closeConnection();
-
         ((ViewGroup)gridView.getParent()).removeView(gridView);
     }
 
