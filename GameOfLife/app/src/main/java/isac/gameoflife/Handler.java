@@ -45,7 +45,7 @@ public class Handler implements MessageListener {
         connectedDevices=new HashMap<>();
         lock=new ReentrantLock();
         lockStop=new ReentrantLock();
-        stop=false;
+        stop=true;
         reset=false;
     }
 
@@ -166,7 +166,6 @@ public class Handler implements MessageListener {
                     closeCommunication(deviceInfo.getNameQueueReceiver());
                 }
             }else if(json.getString("type").equals("start")){
-
                 //if(isConnected()){
                 boolean flag=false;
                 lockStop.lock();
@@ -262,7 +261,7 @@ public class Handler implements MessageListener {
               //  }
             } else if (json.getString("type").equals("cells")){
 
-                System.out.println("HO RICEVUTO LE CELLE");
+                System.out.println("HANDLER HO RICEVUTO LE CELLE");
 
                 lock.lock();
 
@@ -453,7 +452,7 @@ public class Handler implements MessageListener {
         }
     }
 
-    public void closseConnection(){
+    public void closeConnection(){
         rabbitMQ.closeConnection();
     }
 

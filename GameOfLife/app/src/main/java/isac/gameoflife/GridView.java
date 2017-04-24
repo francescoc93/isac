@@ -442,7 +442,7 @@ public class GridView extends View {
     }
 
     public void closeConnection(){
-        handler.closseConnection();
+        handler.closeConnection();
     }
 
     @Override
@@ -485,6 +485,9 @@ public class GridView extends View {
         return this.cellChecked;
     }
 
+    public Handler getGameHandler(){
+        return handler;
+    }
 
     /**
      * Sets the outer border cells, where 2 devices are in contact.
@@ -649,6 +652,7 @@ public class GridView extends View {
         public void run() {
             boolean goOn=true;
 
+            //TODO: RESETTARE LE RIGHE/COLONNE FANTASMA PRIMA DI INIZIARE LA MODALITA' SHCERMO SCOLLEGATO (SE IN PRECEDENZA LO SCHERMO ERA COLLEGATO)
             while(goOn){
 
                 if(handler.isConnected()){

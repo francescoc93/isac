@@ -140,7 +140,6 @@ public class RabbitMQ{
 
     public synchronized void sendMessage(String name,JSONObject message){
         try {
-
             message.put("timestamp",System.currentTimeMillis());
 
             lock.lock();
