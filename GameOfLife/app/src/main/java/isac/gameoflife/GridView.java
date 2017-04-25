@@ -406,7 +406,7 @@ public class GridView extends View {
                     }else{
                         /*handler.stopGame(false);
                         handler.resetGame(false);*/
-                        start();
+                        //start();
 
                         if(handler.isConnected()){
 
@@ -420,6 +420,7 @@ public class GridView extends View {
 
                             handler.sendCommand(message,null);
                         }
+                        start();
                     }
 
                 }

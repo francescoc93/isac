@@ -364,7 +364,11 @@ public class Handler implements MessageListener {
             }
 
             for (String s : set) {
-                System.out.println("Sono il primo e invio il messaggio a " + s);
+                try {
+                    System.out.println("Sono il primo e invio il messaggio "+ message.getString("type")+" a " + s);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
                 rabbitMQ.sendMessage(connectedDevices.get(s).getNameQueueSender(), message);
             }
         }else{
