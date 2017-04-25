@@ -325,17 +325,22 @@ public class Handler implements MessageListener {
 
     public void sendCommand(JSONObject message,String ip){
 
+
+
         lock.lock();
 
         Set<String> set=connectedDevices.keySet();
 
         if(ip==null) {
+
             for (String s : set) {
+                System.out.println("Sono il primo e invio il messaggio a " + s);
                 rabbitMQ.sendMessage(connectedDevices.get(s).getNameQueueSender(), message);
             }
         }else{
             for (String s : set) {
                 if(!ip.equals(s)) {
+                    System.out.println("Sono uno degli altri e invio il messaggio a tutti");
                     rabbitMQ.sendMessage(connectedDevices.get(s).getNameQueueSender(), message);
                 }
             }

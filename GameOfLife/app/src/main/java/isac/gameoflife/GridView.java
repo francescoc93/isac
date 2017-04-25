@@ -403,8 +403,8 @@ public class GridView extends View {
                 } else if (numberOfTaps == 2) {
 
                     if(isStarted()){
-                        handler.stopGame(true);
-                        handler.resetGame(false);
+                        /*handler.stopGame(true);
+                        handler.resetGame(false);*/
                         pause();
                     }else{
                         handler.stopGame(false);
@@ -704,6 +704,7 @@ public class GridView extends View {
                                 }
                             }else{
                                 //altrimenti fermo il calcolo delle generazione successiva
+                                System.out.println("Devo fermare il calcolo");
                                 goOn=false;
                                 pause();
 
@@ -716,8 +717,11 @@ public class GridView extends View {
                                     } catch (JSONException e) {
                                         e.printStackTrace();
                                     }
+                                    System.out.println("Invio il messaggio di stop a tutti");
 
                                     handler.sendCommand(message,null);
+                                    handler.stopGame(true);
+                                    handler.resetGame(false);
                                 }
                             }
                         }else{
