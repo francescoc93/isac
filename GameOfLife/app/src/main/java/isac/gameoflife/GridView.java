@@ -202,9 +202,6 @@ public class GridView extends View {
         started.compareAndSet(true,false);
 
         lockAction.unlock();
-
-
-
     }
 
     public void clear(){
@@ -383,8 +380,8 @@ public class GridView extends View {
                 lastTapTimeMs = System.currentTimeMillis();
 
                 if (numberOfTaps == 3) {
-                    handler.stopGame(true);
-                    handler.resetGame(true);
+                    /*handler.stopGame(true);
+                    handler.resetGame(true);*/
                     clear();
 
                     if(handler.isConnected()) {
@@ -407,8 +404,8 @@ public class GridView extends View {
                         handler.resetGame(false);*/
                         pause();
                     }else{
-                        handler.stopGame(false);
-                        handler.resetGame(false);
+                        /*handler.stopGame(false);
+                        handler.resetGame(false);*/
                         start();
 
                         if(handler.isConnected()){
@@ -543,6 +540,19 @@ public class GridView extends View {
         handler.sendBroadcastMessage(new PinchInfo(ipAddress, direction,x,y,timeStamp, width, height,getXDpi(),getYDpi()).toJSON());
     }
 
+    private void resetGhostCells(){
+        for(int i=0;i<column+2;i++){
+            cellChecked[0][i]=false;
+            cellChecked[row+1][i]=false;
+        }
+
+        for(int i=0;i<row+2;i++){
+            cellChecked[i][0]=false;
+            cellChecked[i][column+1]=false;
+        }
+    }
+
+
     private class CalculateGeneration extends Thread {
 
         private int neighboursAlive(int i,int j){
@@ -636,23 +646,10 @@ public class GridView extends View {
             cellChecked=tmp;
         }
 
-        private void resetGhostCells(){
-            for(int i=0;i<column+2;i++){
-                cellChecked[0][i]=false;
-                cellChecked[row+1][i]=false;
-            }
-
-            for(int i=0;i<row+2;i++){
-                cellChecked[i][0]=false;
-                cellChecked[i][column+1]=false;
-            }
-        }
-
         @Override
         public void run() {
             boolean goOn=true;
 
-            //TODO: RESETTARE LE RIGHE/COLONNE FANTASMA PRIMA DI INIZIARE LA MODALITA' SHCERMO SCOLLEGATO (SE IN PRECEDENZA LO SCHERMO ERA COLLEGATO)
             while(goOn){
 
                 if(handler.isConnected()){
@@ -720,19 +717,20 @@ public class GridView extends View {
                                     System.out.println("Invio il messaggio di stop a tutti");
 
                                     handler.sendCommand(message,null);
-                                    handler.stopGame(true);
-                                    handler.resetGame(false);
+                                    resetGhostCells();
+                                    handler.resetInfoConnectedDevice();
                                 }
                             }
                         }else{
                             postInvalidate();
+                            resetGhostCells();
                             goOn=false;
                             pause();
                         }
                     }else{
                         //altrimenti resetto le celle fantasma e calcolo la generazione successiva
                         resetGhostCells();
-
+                        handler.resetInfoConnectedDevice();
                         goOn=false;
 
                         pause();

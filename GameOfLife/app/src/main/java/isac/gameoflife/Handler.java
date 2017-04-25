@@ -264,8 +264,11 @@ public class Handler implements MessageListener {
                 System.out.println("HANDLER HO RICEVUTO LE CELLE");
 
                 lock.lock();
+                lockStop.lock();
 
-                if(connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))){
+                if(connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))&&!stop){
+
+                    lockStop.unlock();
                     ConnectedDeviceInfo device=connectedDevices.get(json.getString(PinchInfo.ADDRESS));
 
                     System.out.println("LISTA: " + json.getString("cellsList"));
@@ -282,6 +285,8 @@ public class Handler implements MessageListener {
                     gridView.setPairedCells(firstIndex, lastIndex, cellsToSet,device.getMyDirection());
 
                     device.setCellsReceived(true);
+                }else{
+                    lockStop.unlock();
                 }
 
                 lock.unlock();
@@ -289,9 +294,13 @@ public class Handler implements MessageListener {
             } else if(json.getString("type").equals("ready")){
 
                 lock.lock();
+                lockStop.lock();
 
-                if(connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))){
+                if(connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))&&!stop){
+                    lockStop.unlock();
                     connectedDevices.get(json.getString(PinchInfo.ADDRESS)).setReadyReceived(true);
+                }else{
+                    lockStop.unlock();
                 }
 
                 lock.unlock();
@@ -323,15 +332,36 @@ public class Handler implements MessageListener {
 
     }
 
+    public void resetInfoConnectedDevice(){
+
+        lock.lock();
+
+        for (String s : connectedDevices.keySet()){
+            connectedDevices.get(s).setCellsReceived(false);
+            connectedDevices.get(s).setReadyReceived(false);
+        }
+
+        lock.unlock();
+    }
+
     public void sendCommand(JSONObject message,String ip){
-
-
 
         lock.lock();
 
         Set<String> set=connectedDevices.keySet();
 
         if(ip==null) {
+
+            try {
+                switch(message.getString("type")){
+                    case "start":reset=false;stop=false;break;
+                    case "pause":reset=false;stop=true;break;
+                    case "reset":reset=true;stop=true;break;
+                    default: break;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
 
             for (String s : set) {
                 System.out.println("Sono il primo e invio il messaggio a " + s);
