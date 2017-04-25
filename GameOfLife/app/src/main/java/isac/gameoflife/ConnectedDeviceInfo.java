@@ -230,11 +230,11 @@ public class ConnectedDeviceInfo {
             if(orientation == 0){
                 this.reverseList = false;
             } else if (orientation == 90){
-                this.reverseList = true;
+                this.reverseList = false;
             } else if (orientation == 180){
                 this.reverseList = true;
             } else if (orientation == 270){
-                this.reverseList = false;
+                this.reverseList = true;
             }
         } else if (myDir.equals(PinchInfo.Direction.UP) || myDir.equals(PinchInfo.Direction.DOWN)){
            // indexFirstCell =(int) Math.ceil((double)(myXCoord - l1)/(double)this.cellSize) +1;
@@ -244,11 +244,11 @@ public class ConnectedDeviceInfo {
             if(orientation == 0){
                 this.reverseList = false;
             } else if (orientation == 90){
-                this.reverseList = false;
+                this.reverseList = true;
             } else if (orientation == 180){
                 this.reverseList = true;
             } else if (orientation == 270){
-                this.reverseList = true;
+                this.reverseList = false;
             }
         }
     }
