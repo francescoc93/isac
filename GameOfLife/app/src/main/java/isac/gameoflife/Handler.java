@@ -268,7 +268,6 @@ public class Handler implements MessageListener {
 
                 if(connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))&&!stop){
 
-                    lockStop.unlock();
                     ConnectedDeviceInfo device=connectedDevices.get(json.getString(PinchInfo.ADDRESS));
 
                     System.out.println("LISTA: " + json.getString("cellsList"));
@@ -285,10 +284,9 @@ public class Handler implements MessageListener {
                     gridView.setPairedCells(firstIndex, lastIndex, cellsToSet,device.getMyDirection());
 
                     device.setCellsReceived(true);
-                }else{
-                    lockStop.unlock();
                 }
 
+                lockStop.unlock();
                 lock.unlock();
 
             } else if(json.getString("type").equals("ready")){
