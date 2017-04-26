@@ -400,14 +400,8 @@ public class GridView extends View {
                 } else if (numberOfTaps == 2) {
 
                     if(isStarted()){
-                        /*handler.stopGame(true);
-                        handler.resetGame(false);*/
                         pause();
                     }else{
-                        /*handler.stopGame(false);
-                        handler.resetGame(false);*/
-                        //start();
-
                         if(handler.isConnected()){
 
                             JSONObject message=new JSONObject();
@@ -541,18 +535,6 @@ public class GridView extends View {
         handler.sendBroadcastMessage(new PinchInfo(ipAddress, direction,x,y,timeStamp, width, height,getXDpi(),getYDpi()).toJSON());
     }
 
-    private void resetGhostCells(){
-        for(int i=0;i<column+2;i++){
-            cellChecked[0][i]=false;
-            cellChecked[row+1][i]=false;
-        }
-
-        for(int i=0;i<row+2;i++){
-            cellChecked[i][0]=false;
-            cellChecked[i][column+1]=false;
-        }
-    }
-
 
     private class CalculateGeneration extends Thread {
 
@@ -609,6 +591,18 @@ public class GridView extends View {
             }
 
             return neighbours;
+        }
+
+        private void resetGhostCells(){
+            for(int i=0;i<column+2;i++){
+                cellChecked[0][i]=false;
+                cellChecked[row+1][i]=false;
+            }
+
+            for(int i=0;i<row+2;i++){
+                cellChecked[i][0]=false;
+                cellChecked[i][column+1]=false;
+            }
         }
 
         private void calculateNextGen(){
@@ -673,6 +667,7 @@ public class GridView extends View {
 
                     //se il while termina perchè ho ricevuto le celle da tutti i device, calcolo la generazione successiva
                     if(handler.isConnected() && !handler.stopGame()) {
+                        handler.resetCellsReceived();
                         calculateNextGen(); //calcolo la generazione
                         System.out.println("Generazione numero " + numGen++);
                         System.out.println("HO CALCOLATO LA GENERAZIONE SUCCESSIVA");
@@ -691,6 +686,7 @@ public class GridView extends View {
                         System.out.println("GLI ALTRI SONO PRONTI A INVIARE");
 
                         if(handler.isConnected()){
+                            handler.resetReadyReceived();
                             postInvalidate();
 
                             //se l'utente non ha messo in pausa il gioco
@@ -704,7 +700,6 @@ public class GridView extends View {
                                 //altrimenti fermo il calcolo delle generazione successiva
                                 System.out.println("Devo fermare il calcolo");
                                 goOn=false;
-                                pause();
 
                                 if(handler.isConnected()){
 
@@ -712,15 +707,27 @@ public class GridView extends View {
                                     try {
                                         message.put("type","pause");
                                         message.put(PinchInfo.ADDRESS,ipAddress);
+                                        message.put("sender",ipAddress);
                                     } catch (JSONException e) {
                                         e.printStackTrace();
                                     }
                                     System.out.println("Invio il messaggio di stop a tutti");
 
                                     handler.sendCommand(message,null);
+
+                                    while(handler.isConnected() && !handler.cellsReceived()){
+                                        // sleep per non tenere di continuo il lock ed evitare una possibile starvation
+                                        try {
+                                            Thread.sleep(20);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                    handler.resetCellsReceived();
                                     resetGhostCells();
-                                    handler.resetInfoConnectedDevice();
                                 }
+
+                                pause();
                             }
                         }else{
                             postInvalidate();
@@ -729,25 +736,19 @@ public class GridView extends View {
                             pause();
                         }
                     }else{
-                        //altrimenti resetto le celle fantasma e calcolo la generazione successiva
-                        resetGhostCells();
-                        handler.resetInfoConnectedDevice();
                         goOn=false;
 
-                        pause();
-
-                       /* if(handler.isConnected() && handler.stopGame()){
-
-                            JSONObject message=new JSONObject();
+                        while(handler.isConnected() && !handler.cellsReceived()){
+                            // sleep per non tenere di continuo il lock ed evitare una possibile starvation
                             try {
-                                message.put("type","pause");
-                                message.put(PinchInfo.ADDRESS,ipAddress);
-                            } catch (JSONException e) {
+                                Thread.sleep(20);
+                            } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-
-                            handler.sendCommand(message);
-                        }*/
+                        }
+                        handler.resetCellsReceived();
+                        resetGhostCells();
+                        pause();
                     }
                 }else {
                     calculateNextGen();
@@ -767,10 +768,6 @@ public class GridView extends View {
                     }
                 }
             }
-
-           /* if(clear.compareAndSet(true,false)){
-                clear();
-            }*/
         }
     }
 }

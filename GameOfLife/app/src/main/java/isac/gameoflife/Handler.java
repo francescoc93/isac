@@ -24,7 +24,7 @@ public class Handler implements MessageListener {
 
     private GridView gridView;
     private MainActivity activity;
-    private String ipAddress;
+    private String ipAddress,senderCommand;
     private RabbitMQ rabbitMQ;
     private HashMap<String,ConnectedDeviceInfo> connectedDevices;
     private ReentrantLock lock,lockStop;
@@ -47,6 +47,7 @@ public class Handler implements MessageListener {
         lockStop=new ReentrantLock();
         stop=true;
         reset=false;
+        senderCommand="";
     }
 
     public boolean connectToServer(){
@@ -197,6 +198,8 @@ public class Handler implements MessageListener {
             }else if(json.getString("type").equals("pause")){
               //  if(isConnected()) {
 
+                senderCommand=json.getString("sender");
+
                 lockStop.lock();
 
                 boolean flag=false;
@@ -214,6 +217,7 @@ public class Handler implements MessageListener {
                     try {
                         message.put("type","pause");
                         message.put(PinchInfo.ADDRESS,ipAddress);
+                        message.put("sender",json.getString("sender"));
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -264,9 +268,8 @@ public class Handler implements MessageListener {
                 System.out.println("HANDLER HO RICEVUTO LE CELLE");
 
                 lock.lock();
-                lockStop.lock();
 
-                if(connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))&&!stop){
+                if(connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))){
 
                     ConnectedDeviceInfo device=connectedDevices.get(json.getString(PinchInfo.ADDRESS));
 
@@ -286,7 +289,6 @@ public class Handler implements MessageListener {
                     device.setCellsReceived(true);
                 }
 
-                lockStop.unlock();
                 lock.unlock();
 
             } else if(json.getString("type").equals("ready")){
@@ -320,22 +322,50 @@ public class Handler implements MessageListener {
             }
         }
 
-        for (String s : connectedDevices.keySet()){
-            connectedDevices.get(s).setCellsReceived(false);
-        }
-
         lock.unlock();
 
         return true;
 
     }
 
-    public void resetInfoConnectedDevice(){
+    public boolean cellsReceived(){
+        lock.lock();
+
+        Set<String> set=connectedDevices.keySet();
+        ArrayList<String> list=new ArrayList<>();
+
+        for (String s : set){
+            if(!connectedDevices.get(s).isCellsReceived()){
+                list.add(s);
+            }
+        }
+
+        lock.unlock();
+
+        if(list.size()==0||(list.size()==1&&list.contains(senderCommand))){
+            senderCommand="";
+            return true;
+        }
+
+        return false;
+    }
+
+    public void resetCellsReceived(){
 
         lock.lock();
 
         for (String s : connectedDevices.keySet()){
             connectedDevices.get(s).setCellsReceived(false);
+        }
+
+        lock.unlock();
+    }
+
+    public void resetReadyReceived(){
+
+        lock.lock();
+
+        for (String s : connectedDevices.keySet()){
             connectedDevices.get(s).setReadyReceived(false);
         }
 
@@ -390,16 +420,10 @@ public class Handler implements MessageListener {
         Set<String> set=connectedDevices.keySet();
 
         for (String s : set){
-
             if(!connectedDevices.get(s).isReadyReceived()){
                 lock.unlock();
                 return false;
             }
-        }
-
-
-        for (String s : connectedDevices.keySet()){
-            connectedDevices.get(s).setReadyReceived(false);
         }
 
         lock.unlock();
