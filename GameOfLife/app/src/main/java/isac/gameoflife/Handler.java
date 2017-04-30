@@ -107,8 +107,8 @@ public class Handler implements MessageListener {
                         System.out.println("TIMESTAMP DEVICE: "+info.getTimestamp());
                         System.out.println("DIFFERENZA TIMESTAMP: "+Math.abs(timeStampDirection.first-info.getTimestamp()));
 
-                        if ((info.getTimestamp() > (timeStampDirection.first - /*20*/5000)) &&
-                                (info.getTimestamp() < (timeStampDirection.first + /*20*/5000))/* && info.oppositeDirection(timeStampDirection.second)*/) {
+                        if ((info.getTimestamp() > (timeStampDirection.first - 2000)) &&
+                                (info.getTimestamp() < (timeStampDirection.first + 2000))) {
                             System.out.println("DEVICE PAIRED WITH " + info.getAddress());
 
                             activity.runOnUiThread(new Runnable() {

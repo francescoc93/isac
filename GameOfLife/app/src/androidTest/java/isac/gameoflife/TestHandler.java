@@ -202,6 +202,7 @@ public class TestHandler {
         try {
             message.put(PinchInfo.ADDRESS,"127.0.0.1");
             message.put("type","pause");
+            message.put("sender","goofy");
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -210,24 +211,12 @@ public class TestHandler {
         device.sendMessage(message);
 
         try {
-            Thread.sleep(1000);
+            Thread.sleep(10000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
         assertTrue(gridView.getGameHandler().stopGame());
-
-        message=new JSONObject();
-
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","reset");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        //il device fake invia il comando di reset
-        device.sendMessage(message);
 
         try {
             Thread.sleep(1000);

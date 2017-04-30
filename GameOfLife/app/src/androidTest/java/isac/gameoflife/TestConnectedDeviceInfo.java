@@ -55,16 +55,35 @@ public class TestConnectedDeviceInfo {
 
         //TODO: DA COMPLETARE
 
-        //CASO 0 GRADI
+        //CASO 0
         ConnectedDeviceInfo device=new ConnectedDeviceInfo(0.5f,PinchInfo.Direction.LEFT,
+                PinchInfo.Direction.RIGHT,1200,400,2.71f,4.76f,2.44f,4.37f,1200,800,"Device1Device2",
+                "Device2Device1",gridView,240,240,240,240);
+
+        ConnectedDeviceInfo device1 = new ConnectedDeviceInfo(0.5f,PinchInfo.Direction.RIGHT,
+                PinchInfo.Direction.LEFT,1200,800,2.44f,4.37f,2.71f,4.76f,1200,400,"Device1Device2",
+                "Device2Device1",gridView,240,240,240,240);
+        assertTrue(device.getCellsValues().size() == device1.getCellsValues().size());
+
+
+        //CASO 90
+        device = new ConnectedDeviceInfo(0.5f,PinchInfo.Direction.LEFT,
+                PinchInfo.Direction.DOWN,1200,400,2.71f,4.76f,2.44f,4.37f,1200,800,"Device1Device2",
+                "Device2Device1",gridView,240,240,240,240);
+
+        device1 = new ConnectedDeviceInfo(0.5f,PinchInfo.Direction.DOWN,
+                PinchInfo.Direction.LEFT,1200,800,2.44f,4.37f,2.71f,4.76f,1200,400,"Device1Device2",
+                "Device2Device1",gridView,240,240,240,240);
+        assertTrue(device.getCellsValues().size() == device1.getCellsValues().size());
+       /* ConnectedDeviceInfo device=new ConnectedDeviceInfo(0.5f,PinchInfo.Direction.LEFT,
                 PinchInfo.Direction.RIGHT,1200,400,5,5,5,5,1200,400,"Device1Device2",
                 "Device2Device1",gridView,240,240,240,240);
 
         device.calculateInfo();
         int firstIndex=device.getIndexFirstCell();
         int lastIndex=device.getIndexLastCell();
-
-        assertTrue(firstIndex==1);
+*/
+        /*assertTrue(firstIndex==1);
         assertTrue(lastIndex==10);
         assertTrue(device.getCellsValues().size()==(lastIndex-firstIndex)+1);
 
@@ -107,6 +126,8 @@ public class TestConnectedDeviceInfo {
 
         assertTrue(firstIndex==1);
         assertTrue(lastIndex==10);
-        assertTrue(device.getCellsValues().size()==(lastIndex-firstIndex)+1);
+        assertTrue(device.getCellsValues().size()==(lastIndex-firstIndex)+1);*/
+
+
     }
 }

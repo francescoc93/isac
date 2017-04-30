@@ -345,7 +345,7 @@ public class GridView extends View {
                         long timeStamp = System.currentTimeMillis();
                         PinchInfo.Direction direction=null;
 
-                        if (Math.abs(startX - stopX) >=10 && Math.abs(startY - stopY) <= 50){//se mi sono mosso sulle X
+                        if (Math.abs(startX - stopX) >=10 && Math.abs(startY - stopY) <= 80){//se mi sono mosso sulle X
                             if((stopX - startX) > 0){
                                 direction=PinchInfo.Direction.RIGHT;
                             } else if ((stopX - startX)<0){
@@ -354,7 +354,7 @@ public class GridView extends View {
 
                             sendBroadcastMessage(timeStamp,direction,stopX,stopY);
 
-                        } else if (Math.abs(startX - stopX) <=50 && Math.abs(startY - stopY) >= 10){//mi sono mosso sulle Y
+                        } else if (Math.abs(startX - stopX) <=80 && Math.abs(startY - stopY) >= 10){//mi sono mosso sulle Y
                             if((stopY - startY) > 0){
                                 direction=PinchInfo.Direction.DOWN;
                             } else if ((stopY - startY)<0){
@@ -379,25 +379,7 @@ public class GridView extends View {
 
                 lastTapTimeMs = System.currentTimeMillis();
 
-                if (numberOfTaps == 3) {
-                    /*handler.stopGame(true);
-                    handler.resetGame(true);*/
-                    clear();
-
-                    if(handler.isConnected()) {
-
-                        JSONObject message = new JSONObject();
-                        try {
-                            message.put("type", "reset");
-                            message.put(PinchInfo.ADDRESS,ipAddress);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-
-                        handler.sendCommand(message,null);
-                    }
-
-                } else if (numberOfTaps == 2) {
+                if (numberOfTaps == 2) {
 
                     if(isStarted()){
                         pause();
