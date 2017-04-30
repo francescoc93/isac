@@ -22,9 +22,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Created by Francesco on 07/03/2017.
- */
 
 public class GridView extends View {
 
@@ -55,7 +52,6 @@ public class GridView extends View {
     public GridView(final Context context) {
         super(context);
         activity=(MainActivity)context;
-        //imposto il colore delle celle
         whitePaint.setStyle(Paint.Style.FILL_AND_STROKE);
         whitePaint.setColor(Color.WHITE);
         ipAddress=Utils.getIpAddress();
@@ -67,9 +63,6 @@ public class GridView extends View {
         calculateGeneration=null;
         scale = getResources().getDisplayMetrics().density;
         SIZE=(DESIRED_DP_VALUE * scale);
-
-        System.out.println("Altezza in pixel " + getResources().getDisplayMetrics().widthPixels + " Larghezza in pixel " +
-                getResources().getDisplayMetrics().heightPixels + "densità: " +scale);
 
         lockInfoSwipe=new ReentrantLock();
         lockAction=new ReentrantLock();
@@ -126,9 +119,6 @@ public class GridView extends View {
         }, sensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
-    public float getScale(){
-        return this.scale;
-    }
     public float getCellSize(){
         return this.SIZE;
     }
@@ -473,31 +463,24 @@ public class GridView extends View {
      * @param direction the direction of the CURRENT device swipe
      */
     public void setPairedCells(int firstIndex, int lastIndex, List<Boolean> cells, PinchInfo.Direction direction){
-        System.out.println("PRIMO INDICE: " + firstIndex + " LAST INDEX: " + lastIndex );
         switch(direction){
             case RIGHT:
                 for(int i = firstIndex,j=0; i<=lastIndex; i++,j++){
-                    System.out.println("SWIPE A DESTRA, LISTA RICEVUTA: "+cells.toString());
                     cellChecked[i][column+1] = cells.get(j);
                 };
                 break;
             case LEFT:
                 for(int i = firstIndex,j=0; i<=lastIndex; i++,j++){
-                    System.out.println("SWIPE A SINISTRA, LISTA RICEVUTA: "+cells.toString());
-                    //cellChecked[0][i] = cells.get(j);
-                    //cellChecked[row+1][i] = cells.get(j);
                     cellChecked[i][0] = cells.get(j);
                 };
                 break;
             case UP:
                 for(int i = firstIndex,j=0; i<=lastIndex; i++,j++){
-                    System.out.println("SWIPE IN ALTO, LISTA RICEVUTA: "+cells.toString());
                     cellChecked[0][i] = cells.get(j);
                 };
                 break;
             case DOWN:
                 for(int i = firstIndex,j=0; i<=lastIndex; i++,j++){
-                    System.out.println("SWIPE IN BASSO, LISTA RICEVUTA: "+cells.toString());
                     cellChecked[row+1][i] = cells.get(j);
                 };
                 break;
@@ -521,7 +504,6 @@ public class GridView extends View {
     private class CalculateGeneration extends Thread {
 
         private int neighboursAlive(int i,int j){
-            //calcolo il numero di vicini vivi
             int neighbours=0;
             if((i-1)>=0){
                 if((j-1)>=0){
@@ -590,16 +572,6 @@ public class GridView extends View {
         private void calculateNextGen(){
             boolean [][] tmp=new boolean[row+2][column+2];
 
-            for(int i=0;i<column+2;i++){
-                System.out.println("RIGA 0 " + cellChecked[0][i]);
-                System.out.println("ULTIMA RIGA "+  cellChecked[row+1][i]);
-            }
-
-            for(int i=0;i<row+2;i++){
-                System.out.println("COLONNA 0 " + cellChecked[i][0] );
-                System.out.println("UTLIMA COLONNA " + cellChecked[i][column+1] );
-            }
-
             for(int i=1;i<row+1;i++){
                 for(int j=1;j<column+1;j++){
                     int neighbours=neighboursAlive(i,j);
@@ -629,12 +601,10 @@ public class GridView extends View {
 
             while(goOn){
 
+                long initTime = System.currentTimeMillis();
                 if(handler.isConnected()){
                     //invio ai miei vicini le celle
                     handler.sendCellsToOthers();
-
-                    System.out.println("INVIATE LE CELLE ");
-
                     //controllo se posso proseguire (ovvero ho ricevuto le celle da tutti i vicini)
                     while(!handler.goOn() && handler.isConnected() && !handler.stopGame()){
                         // sleep per non tenere di continuo il lock ed evitare una possibile starvation
@@ -645,16 +615,11 @@ public class GridView extends View {
                         }
                     }
 
-                    System.out.println("HO RICEVUTO LE CELLE");
-
                     //se il while termina perchè ho ricevuto le celle da tutti i device, calcolo la generazione successiva
                     if(handler.isConnected() && !handler.stopGame()) {
                         handler.resetCellsReceived();
                         calculateNextGen(); //calcolo la generazione
-                        System.out.println("Generazione numero " + numGen++);
-                        System.out.println("HO CALCOLATO LA GENERAZIONE SUCCESSIVA");
                         handler.readyToContinue(); //invio un messaggio ai miei vicini con lo scopo di avvisarli che sono pronto a inviare le mie celle
-                        System.out.println("HO COMUNICATO CHE SON PRONTO A CONTINUARE");
                         // faccio il while fino a quando tutti i miei vicini
                         // non hanno terminato di calcolare la propria generazione
                         while (!handler.readyToSendCells() && handler.isConnected()) {
@@ -665,7 +630,6 @@ public class GridView extends View {
                                 e.printStackTrace();
                             }
                         }
-                        System.out.println("GLI ALTRI SONO PRONTI A INVIARE");
 
                         if(handler.isConnected()){
                             handler.resetReadyReceived();
@@ -680,7 +644,7 @@ public class GridView extends View {
                                 }
                             }else{
                                 //altrimenti fermo il calcolo delle generazione successiva
-                                System.out.println("Devo fermare il calcolo");
+
                                 goOn=false;
 
                                 if(handler.isConnected()){
@@ -693,7 +657,6 @@ public class GridView extends View {
                                     } catch (JSONException e) {
                                         e.printStackTrace();
                                     }
-                                    System.out.println("Invio il messaggio di stop a tutti");
 
                                     handler.sendCommand(message,null);
 
@@ -749,7 +712,11 @@ public class GridView extends View {
                         goOn=false;
                     }
                 }
+                long endTime = System.currentTimeMillis();
+
+                System.out.println("Elapsed time from previous generation: " + (endTime-initTime));
             }
+
         }
     }
 }

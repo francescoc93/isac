@@ -19,10 +19,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Created by Francesco on 11/03/2017.
- */
-
 public class RabbitMQ{
 
     private ConnectionFactory factory;

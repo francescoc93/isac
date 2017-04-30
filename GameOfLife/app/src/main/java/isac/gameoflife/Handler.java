@@ -16,9 +16,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Created by Francesco on 16/03/2017.
- */
 
 public class Handler implements MessageListener {
 
@@ -30,23 +27,21 @@ public class Handler implements MessageListener {
     private ReentrantLock lock,lockStop;
     private float cellSize;
     private float myWidth,myHeight;
-    private boolean stop,reset;
+    private boolean stop;
 
     public Handler(GridView gridView,final MainActivity activity, float myWidth,float myHeight){
 
         this.myHeight = myHeight;
         this.myWidth = myWidth;
         ipAddress=Utils.getIpAddress();
-        System.out.println("Indirizzo IP " + ipAddress);
         this.gridView=gridView;
-        this.cellSize = gridView.getCellSize()/gridView.getXDpi();//gridView.getCellSize();
+        this.cellSize = gridView.getCellSize()/gridView.getXDpi();
         this.activity=activity;
         this.rabbitMQ=new RabbitMQ(Utils.getServerAddress(),"[user]","[user]");
         connectedDevices=new HashMap<>();
         lock=new ReentrantLock();
         lockStop=new ReentrantLock();
         stop=true;
-        reset=false;
         senderCommand="";
     }
 
@@ -74,15 +69,9 @@ public class Handler implements MessageListener {
     public void handleMessage(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, JSONObject json) {
 
         try {
-            System.out.println("Messaggio ricevuto " + json.getString("type"));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        try {
 
             //info è dell'altro device, infoSwipe sono i miei
-            if(json.getString("type").equals("pinch")) { //messaggio broadcast
+            if(json.getString("type").equals("pinch")) {
                 PinchInfo info = new PinchInfo(json.getString(PinchInfo.ADDRESS),PinchInfo.Direction.valueOf(json.getString(PinchInfo.DIRECTION)),
                         json.getInt(PinchInfo.X_COORDINATE),
                         json.getInt(PinchInfo.Y_COORDINATE), json.getLong(PinchInfo.TIMESTAMP),
@@ -103,13 +92,9 @@ public class Handler implements MessageListener {
 
                         lock.unlock();
 
-                        System.out.println("MIO TIMESTAMP: "+timeStampDirection.first);
-                        System.out.println("TIMESTAMP DEVICE: "+info.getTimestamp());
-                        System.out.println("DIFFERENZA TIMESTAMP: "+Math.abs(timeStampDirection.first-info.getTimestamp()));
 
                         if ((info.getTimestamp() > (timeStampDirection.first - 2000)) &&
                                 (info.getTimestamp() < (timeStampDirection.first + 2000))) {
-                            System.out.println("DEVICE PAIRED WITH " + info.getAddress());
 
                             activity.runOnUiThread(new Runnable() {
                                 public void run() {
@@ -124,13 +109,9 @@ public class Handler implements MessageListener {
                             nameSender = ipAddress + ipAddressDevice;
                             nameReceiver = ipAddressDevice + ipAddress;
 
-                            System.out.println("Nome coda per inviare: " + nameSender);
-                            System.out.println("Nome coda su cui ricevo: " + nameReceiver);
-
                             rabbitMQ.addQueue(nameSender);
                             rabbitMQ.addQueue(nameReceiver, this);
 
-                            System.out.println("ALTEZZA: " +this.myHeight + "LARGHEZZA: " + this.myWidth);
                             ConnectedDeviceInfo connectionInfo = new ConnectedDeviceInfo(this.cellSize,
                                     info.getDirection(),timeStampDirection.second,
                                     info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),this.myWidth,
@@ -138,7 +119,6 @@ public class Handler implements MessageListener {
                                     info.getXDpi(),info.getYDpi(),gridView.getXDpi(),gridView.getYDpi());
 
                             lock.lock();
-                            System.out.println("STO METTENDO NELLA MAPPA L'IP DELL'ALTRO: " + ipAddressDevice);
                             connectedDevices.put(ipAddressDevice, connectionInfo);
                             lock.unlock();
                             connectionInfo.calculateInfo();
@@ -147,7 +127,7 @@ public class Handler implements MessageListener {
                         lock.unlock();
                     }
                 }
-            }else if(json.getString("type").equals("close")){ //messaggio al singolo device
+            }else if(json.getString("type").equals("close")){
 
                 ConnectedDeviceInfo deviceInfo=null;
 
@@ -172,13 +152,11 @@ public class Handler implements MessageListener {
                     closeCommunication(deviceInfo.getNameQueueReceiver());
                 }
             }else if(json.getString("type").equals("start")){
-                //if(isConnected()){
                 boolean flag=false;
                 lockStop.lock();
 
                 if(stop) {
                     stop = false;
-                    reset=false;
                     flag=true;
 
                 }
@@ -201,7 +179,6 @@ public class Handler implements MessageListener {
                 }
                 //}
             }else if(json.getString("type").equals("pause")){
-              //  if(isConnected()) {
 
                 senderCommand=json.getString("sender");
 
@@ -230,47 +207,7 @@ public class Handler implements MessageListener {
                     sendCommand(message,json.getString(PinchInfo.ADDRESS));
                 }
 
-
-                  //  gridView.pause();
-              //  }
-            }else if(json.getString("type").equals("reset")){
-               // if(isConnected()) {
-
-                lockStop.lock();
-
-                if(!stop) {
-                    stop = true;
-                }
-
-                boolean flag=false;
-
-                if(!reset){
-                  reset=true;
-                  flag=true;
-                }
-
-                lockStop.unlock();
-
-
-                if(flag && isConnected()) {
-                    JSONObject message=new JSONObject();
-
-                    try {
-                        message.put("type","reset");
-                        message.put(PinchInfo.ADDRESS,ipAddress);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-
-                    sendCommand(message,json.getString(PinchInfo.ADDRESS));
-                    gridView.distributedClear();
-                }
-
-                   // gridView.clear();
-              //  }
-            } else if (json.getString("type").equals("cells")){
-
-                System.out.println("HANDLER HO RICEVUTO LE CELLE");
+            }else if (json.getString("type").equals("cells")){
 
                 lock.lock();
 
@@ -278,7 +215,6 @@ public class Handler implements MessageListener {
 
                     ConnectedDeviceInfo device=connectedDevices.get(json.getString(PinchInfo.ADDRESS));
 
-                    System.out.println("LISTA: " + json.getString("cellsList"));
                     String[] cellsString = json.getString("cellsList").replaceAll("\\[", "").replaceAll("\\]", "").split(", ");
 
 
@@ -387,9 +323,8 @@ public class Handler implements MessageListener {
 
             try {
                 switch(message.getString("type")){
-                    case "start":reset=false;stop=false;break;
-                    case "pause":reset=false;stop=true;break;
-                    case "reset":reset=true;stop=true;break;
+                    case "start":stop=false;break;
+                    case "pause":stop=true;break;
                     default: break;
                 }
             } catch (JSONException e) {
@@ -397,17 +332,11 @@ public class Handler implements MessageListener {
             }
 
             for (String s : set) {
-                try {
-                    System.out.println("Sono il primo e invio il messaggio "+ message.getString("type")+" a " + s);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
                 rabbitMQ.sendMessage(connectedDevices.get(s).getNameQueueSender(), message);
             }
         }else{
             for (String s : set) {
                 if(!ip.equals(s)) {
-                    System.out.println("Sono uno degli altri e invio il messaggio a tutti");
                     rabbitMQ.sendMessage(connectedDevices.get(s).getNameQueueSender(), message);
                 }
             }
@@ -448,14 +377,11 @@ public class Handler implements MessageListener {
             String queueSender = infoConn.getNameQueueSender();
             try {
                 obj.put("type","cells");
-                System.out.println("INDIRIZZO CHE METTO NEL JASON MIO: " + ipAddress);
                 obj.put(PinchInfo.ADDRESS,ipAddress);
-                System.out.println("LISTA PRIMA DI INVIARE " + infoConn.getCellsValues().toString());
                 obj.put("cellsList",infoConn.getCellsValues());
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            System.out.println("CODA SU CUI STO INVIANDO: " + queueSender);
             rabbitMQ.sendMessage(queueSender, obj);
         }
 
@@ -531,17 +457,7 @@ public class Handler implements MessageListener {
         return tmp;
     }
 
-    public void stopGame(boolean value){
-        lockStop.lock();
-        stop=value;
-        lockStop.unlock();
-    }
 
-    public void resetGame(boolean value){
-        lockStop.lock();
-        reset=value;
-        lockStop.unlock();
-    }
 
     public boolean isConnected(){
         lock.lock();

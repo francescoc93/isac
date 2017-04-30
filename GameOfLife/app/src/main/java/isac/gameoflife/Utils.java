@@ -106,7 +106,6 @@ public class Utils {
                 return "127.0.0.1";
             }
         }
-        System.out.println(ipAddress);
         return ipAddress;
     }
 }
