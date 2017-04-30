@@ -78,6 +78,7 @@ public class Handler implements MessageListener {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
         try {
 
             //info è dell'altro device, infoSwipe sono i miei
@@ -101,6 +102,10 @@ public class Handler implements MessageListener {
                     if(!connectedDevices.containsKey(info.getAddress())) {
 
                         lock.unlock();
+
+                        System.out.println("MIO TIMESTAMP: "+timeStampDirection.first);
+                        System.out.println("TIMESTAMP DEVICE: "+info.getTimestamp());
+                        System.out.println("DIFFERENZA TIMESTAMP: "+Math.abs(timeStampDirection.first-info.getTimestamp()));
 
                         if ((info.getTimestamp() > (timeStampDirection.first - /*20*/5000)) &&
                                 (info.getTimestamp() < (timeStampDirection.first + /*20*/5000))/* && info.oppositeDirection(timeStampDirection.second)*/) {
