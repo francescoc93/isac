@@ -194,66 +194,6 @@ public class GridView extends View {
         lockAction.unlock();
     }
 
-    public void clear(){
-        lockAction.lock();
-/*
-        if(!isStarted()){
-            cellChecked=new boolean[row+2][column+2];
-            postInvalidate();
-        }else {
-            clear.set(true);
-            pause();
-        }*/
-
-        if(calculateGeneration!=null){
-            if(calculateGeneration.isAlive()){
-                pause();
-                try {
-                    calculateGeneration.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        cellChecked=new boolean[row+2][column+2];
-        postInvalidate();
-
-        activity.runOnUiThread(new Runnable() {
-            public void run() {
-                Toast.makeText(activity, "Reset", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        lockAction.unlock();
-    }
-
-    public void distributedClear(){
-
-        lockAction.lock();
-
-        if(calculateGeneration!=null){
-            if(calculateGeneration.isAlive()){
-                try {
-                    calculateGeneration.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        cellChecked=new boolean[row+2][column+2];
-        postInvalidate();
-
-        activity.runOnUiThread(new Runnable() {
-            public void run() {
-                Toast.makeText(activity, "Reset", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        lockAction.unlock();
-
-    }
 
     //disegno la griglia e la popolo
     @Override
@@ -599,6 +539,130 @@ public class GridView extends View {
         public void run() {
             boolean goOn=true;
 
+            if(handler.isConnected()){
+                while(goOn){
+                    long initTime = System.currentTimeMillis();
+
+                    //invio ai miei vicini le celle
+                    handler.sendCellsToOthers();
+                    //controllo se posso proseguire (ovvero ho ricevuto le celle da tutti i vicini)
+                    while(!handler.goOn() && handler.isConnected() && !handler.stopGame()){
+                        // sleep per non tenere di continuo il lock ed evitare una possibile starvation
+                        try {
+                            Thread.sleep(20);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    //se il while termina perchè ho ricevuto le celle da tutti i device, calcolo la generazione successiva
+                    if(handler.isConnected() && !handler.stopGame()) {
+                        handler.resetCellsReceived();
+                        calculateNextGen(); //calcolo la generazione
+                        handler.readyToContinue(); //invio un messaggio ai miei vicini con lo scopo di avvisarli che sono pronto a inviare le mie celle
+                        // faccio il while fino a quando tutti i miei vicini
+                        // non hanno terminato di calcolare la propria generazione
+                        while (!handler.readyToSendCells() && handler.isConnected()) {
+                            // sleep per non tenere di continuo il lock ed evitare una possibile starvation
+                            try {
+                                Thread.sleep(20);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        if(handler.isConnected()){
+                            handler.resetReadyReceived();
+                            postInvalidate();
+
+                            //se l'utente non ha messo in pausa il gioco
+                            if(started.get()){
+                                try {
+                                    Thread.sleep(500);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }else{
+                                //altrimenti fermo il calcolo delle generazione successiva
+
+                                goOn=false;
+
+                                if(handler.isConnected()){
+
+                                    JSONObject message=new JSONObject();
+                                    try {
+                                        message.put("type","pause");
+                                        message.put(PinchInfo.ADDRESS,ipAddress);
+                                        message.put("sender",ipAddress);
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+
+                                    handler.sendCommand(message,null);
+
+                                    while(handler.isConnected() && !handler.cellsReceived()){
+                                        // sleep per non tenere di continuo il lock ed evitare una possibile starvation
+                                        try {
+                                            Thread.sleep(20);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                    handler.resetCellsReceived();
+                                    resetGhostCells();
+                                }
+
+                                pause();
+                            }
+                        }else{
+                            postInvalidate();
+                            resetGhostCells();
+                            goOn=false;
+                            pause();
+                        }
+                    }else{
+                        goOn=false;
+
+                        while(handler.isConnected() && !handler.cellsReceived()){
+                            // sleep per non tenere di continuo il lock ed evitare una possibile starvation
+                            try {
+                                Thread.sleep(20);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        handler.resetCellsReceived();
+                        resetGhostCells();
+                        pause();
+                    }
+
+                    long endTime = System.currentTimeMillis();
+                    System.out.println("Elapsed time from previous generation: " + (endTime-initTime));
+                }
+
+
+            }else{
+                while(goOn){
+                    calculateNextGen();
+                    postInvalidate();
+
+                    //se l'utente non ha messo in pausa il gioco
+                    if(started.get()){
+                        try {
+
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }else{
+                        //altrimenti fermo il calcolo delle generazione successiva
+                        goOn=false;
+                    }
+                }
+            }
+
+          /*
+
             while(goOn){
 
                 long initTime = System.currentTimeMillis();
@@ -716,7 +780,7 @@ public class GridView extends View {
 
                 System.out.println("Elapsed time from previous generation: " + (endTime-initTime));
             }
-
+*/
         }
     }
 }

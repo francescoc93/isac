@@ -113,21 +113,8 @@ public class TestGridView {
             e.printStackTrace();
         }
 
-        //ci vuole troppo tempo per il triplo tap e non lo rileva, per fare clear faccio double tap e
-        // poi chiamo il metodo clear
-        onView(withId(android.R.id.content)).perform(new GeneralClickAction(Tap.DOUBLE, new CoordinatesProvider() {
-            @Override
-            public float[] calculateCoordinates(View view) {
-                return new float[]{100,600};
-            }
-        }, Press.FINGER));
-
-        gridView.clear();
-
-        assertFalse(gridView.isStarted());
-
         try {
-            Thread.sleep(3000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

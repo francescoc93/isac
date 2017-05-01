@@ -137,6 +137,13 @@ public class Handler implements MessageListener {
                     deviceInfo = connectedDevices.remove(json.getString(PinchInfo.ADDRESS));
 
                     if(connectedDevices.size()==0){
+
+                        lockStop.lock();
+
+                        stop = true;
+
+                        lockStop.unlock();
+
                         activity.runOnUiThread(new Runnable() {
                             public void run() {
                                 Toast.makeText(activity, "Schermo scollegato", Toast.LENGTH_SHORT).show();
