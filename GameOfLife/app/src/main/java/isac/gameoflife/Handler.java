@@ -29,13 +29,13 @@ public class Handler implements MessageListener {
     private float myWidth,myHeight;
     private boolean stop;
 
-    public Handler(GridView gridView,final MainActivity activity, float myWidth,float myHeight){
+    public Handler(GridView gridView,final MainActivity activity, float myWidth,float myHeight,float cellSize){
 
         this.myHeight = myHeight;
         this.myWidth = myWidth;
         ipAddress=Utils.getIpAddress();
         this.gridView=gridView;
-        this.cellSize = gridView.getCellSize()/gridView.getXDpi();
+        this.cellSize = cellSize;
         this.activity=activity;
         this.rabbitMQ=new RabbitMQ(Utils.getServerAddress(),"[user]","[user]");
         connectedDevices=new HashMap<>();
@@ -67,191 +67,15 @@ public class Handler implements MessageListener {
 
     @Override
     public void handleMessage(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, JSONObject json) {
-
         try {
-
-            //info è dell'altro device, infoSwipe sono i miei
-            if(json.getString("type").equals("pinch")) {
-                PinchInfo info = new PinchInfo(json.getString(PinchInfo.ADDRESS),PinchInfo.Direction.valueOf(json.getString(PinchInfo.DIRECTION)),
-                        json.getInt(PinchInfo.X_COORDINATE),
-                        json.getInt(PinchInfo.Y_COORDINATE), json.getLong(PinchInfo.TIMESTAMP),
-                        Float.parseFloat(json.getString(PinchInfo.SCREEN_WIDTH)), Float.parseFloat(json.getString(PinchInfo.SCREEN_HEIGHT)),
-                        Float.parseFloat(json.getString(PinchInfo.XDPI)),Float.parseFloat(json.getString(PinchInfo.YDPI)));
-
-                Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> infoSwipe=gridView.getInfoSwipe();
-
-
-                if(infoSwipe!=null && messageFromOther(info.getAddress())) {
-
-                    Pair<Long,PinchInfo.Direction> timeStampDirection=infoSwipe.first;
-                    Pair<Integer,Integer> coordinate=infoSwipe.second;
-
-                    lock.lock();
-
-                    if(!connectedDevices.containsKey(info.getAddress())) {
-
-                        lock.unlock();
-
-
-                        if ((info.getTimestamp() > (timeStampDirection.first - 2000)) &&
-                                (info.getTimestamp() < (timeStampDirection.first + 2000))) {
-
-                            activity.runOnUiThread(new Runnable() {
-                                public void run() {
-                                    Toast.makeText(activity, "Schermo collegato", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-
-
-                            String nameSender = "", nameReceiver = "";
-                            String ipAddressDevice = info.getAddress();
-
-                            nameSender = ipAddress + ipAddressDevice;
-                            nameReceiver = ipAddressDevice + ipAddress;
-
-                            rabbitMQ.addQueue(nameSender);
-                            rabbitMQ.addQueue(nameReceiver, this);
-
-                            ConnectedDeviceInfo connectionInfo = new ConnectedDeviceInfo(this.cellSize,
-                                    info.getDirection(),timeStampDirection.second,
-                                    info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(),this.myWidth,
-                                    this.myHeight, coordinate.first, coordinate.second, nameSender, nameReceiver,this.gridView,
-                                    info.getXDpi(),info.getYDpi(),gridView.getXDpi(),gridView.getYDpi());
-
-                            lock.lock();
-                            connectedDevices.put(ipAddressDevice, connectionInfo);
-                            lock.unlock();
-                            connectionInfo.calculateInfo();
-                        }
-                    }else{
-                        lock.unlock();
-                    }
-                }
-            }else if(json.getString("type").equals("close")){
-
-                ConnectedDeviceInfo deviceInfo=null;
-
-                lock.lock();
-
-                if (connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))) {
-                    deviceInfo = connectedDevices.remove(json.getString(PinchInfo.ADDRESS));
-
-                    if(connectedDevices.size()==0){
-
-                        lockStop.lock();
-
-                        stop = true;
-
-                        lockStop.unlock();
-
-                        activity.runOnUiThread(new Runnable() {
-                            public void run() {
-                                Toast.makeText(activity, "Schermo scollegato", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
-                }
-
-                lock.unlock();
-
-                if(deviceInfo!=null && rabbitMQ.isConnected()){
-                    closeCommunication(deviceInfo.getNameQueueSender());
-                    closeCommunication(deviceInfo.getNameQueueReceiver());
-                }
-            }else if(json.getString("type").equals("start")){
-                boolean flag=false;
-                lockStop.lock();
-
-                if(stop) {
-                    stop = false;
-                    flag=true;
-
-                }
-
-                lockStop.unlock();
-
-                if(flag && isConnected()) {
-                    gridView.start();
-
-                    JSONObject message=new JSONObject();
-
-                    try {
-                        message.put("type","start");
-                        message.put(PinchInfo.ADDRESS,ipAddress);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-
-                    sendCommand(message,json.getString(PinchInfo.ADDRESS));
-                }
-                //}
-            }else if(json.getString("type").equals("pause")){
-
-                senderCommand=json.getString("sender");
-
-                lockStop.lock();
-
-                boolean flag=false;
-
-                if(!stop) {
-                    stop = true;
-                    flag=true;
-                }
-
-                lockStop.unlock();
-
-                if(flag && isConnected()){
-
-                    JSONObject message=new JSONObject();
-                    try {
-                        message.put("type","pause");
-                        message.put(PinchInfo.ADDRESS,ipAddress);
-                        message.put("sender",json.getString("sender"));
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-
-                    sendCommand(message,json.getString(PinchInfo.ADDRESS));
-                }
-
-            }else if (json.getString("type").equals("cells")){
-
-                lock.lock();
-
-                if(connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))){
-
-                    ConnectedDeviceInfo device=connectedDevices.get(json.getString(PinchInfo.ADDRESS));
-
-                    String[] cellsString = json.getString("cellsList").replaceAll("\\[", "").replaceAll("\\]", "").split(", ");
-
-
-                    List<Boolean> cellsToSet = new ArrayList<>();
-                    for (String s : cellsString) {
-                        cellsToSet.add(Boolean.parseBoolean(s));
-                    }
-
-                    int firstIndex = device.getIndexFirstCell();
-                    int lastIndex = device.getIndexLastCell();
-                    gridView.setPairedCells(firstIndex, lastIndex, cellsToSet,device.getMyDirection());
-
-                    device.setCellsReceived(true);
-                }
-
-                lock.unlock();
-
-            } else if(json.getString("type").equals("ready")){
-
-                lock.lock();
-                lockStop.lock();
-
-                if(connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))&&!stop){
-                    lockStop.unlock();
-                    connectedDevices.get(json.getString(PinchInfo.ADDRESS)).setReadyReceived(true);
-                }else{
-                    lockStop.unlock();
-                }
-
-                lock.unlock();
+            switch(json.getString("type")){
+                case "pinch":handlePinch(json);break;
+                case "close":handleClose(json);break;
+                case "start":handleStart(json);break;
+                case "pause":handlePause(json);break;
+                case "cells":handleCells(json);break;
+                case "ready":handleReady(json);break;
+                default:break;
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -273,7 +97,6 @@ public class Handler implements MessageListener {
         lock.unlock();
 
         return true;
-
     }
 
     public boolean cellsReceived(){
@@ -405,8 +228,7 @@ public class Handler implements MessageListener {
 
         for (String s : set){
             JSONObject obj = new JSONObject();
-            ConnectedDeviceInfo infoConn = connectedDevices.get(s);
-            String queueSender = infoConn.getNameQueueSender();
+            String queueSender = connectedDevices.get(s).getNameQueueSender();
             try {
                 obj.put("type","ready");
                 obj.put(PinchInfo.ADDRESS,ipAddress);
@@ -464,8 +286,6 @@ public class Handler implements MessageListener {
         return tmp;
     }
 
-
-
     public boolean isConnected(){
         lock.lock();
 
@@ -482,5 +302,214 @@ public class Handler implements MessageListener {
 
     private void closeCommunication(String name){
         rabbitMQ.close(name);
+    }
+
+    private void handlePinch(JSONObject json){
+
+        try {
+            PinchInfo info = new PinchInfo(json.getString(PinchInfo.ADDRESS), PinchInfo.Direction.valueOf(json.getString(PinchInfo.DIRECTION)),
+                    json.getInt(PinchInfo.X_COORDINATE),
+                    json.getInt(PinchInfo.Y_COORDINATE), json.getLong(PinchInfo.TIMESTAMP),
+                    Float.parseFloat(json.getString(PinchInfo.SCREEN_WIDTH)), Float.parseFloat(json.getString(PinchInfo.SCREEN_HEIGHT)),
+                    Float.parseFloat(json.getString(PinchInfo.XDPI)), Float.parseFloat(json.getString(PinchInfo.YDPI)));
+
+            Pair<Pair<Long, PinchInfo.Direction>, Pair<Integer, Integer>> infoSwipe = gridView.getInfoSwipe();
+
+
+            if (infoSwipe != null && messageFromOther(info.getAddress())) {
+
+                Pair<Long, PinchInfo.Direction> timeStampDirection = infoSwipe.first;
+                Pair<Integer, Integer> coordinate = infoSwipe.second;
+
+                lock.lock();
+
+                if (!connectedDevices.containsKey(info.getAddress())) {
+
+                    lock.unlock();
+
+
+                    if (Math.abs(info.getTimestamp()-timeStampDirection.first)<=2000) {
+
+                        activity.runOnUiThread(new Runnable() {
+                            public void run() {
+                                Toast.makeText(activity, "Schermo collegato", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+
+                        String nameSender = "", nameReceiver = "";
+                        String ipAddressDevice = info.getAddress();
+
+                        nameSender = ipAddress + ipAddressDevice;
+                        nameReceiver = ipAddressDevice + ipAddress;
+
+                        rabbitMQ.addQueue(nameSender);
+                        rabbitMQ.addQueue(nameReceiver, this);
+
+                        ConnectedDeviceInfo connectionInfo = new ConnectedDeviceInfo(this.cellSize,
+                                info.getDirection(), timeStampDirection.second,
+                                info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(), this.myWidth,
+                                this.myHeight, coordinate.first, coordinate.second, nameSender, nameReceiver, this.gridView,
+                                info.getXDpi(), info.getYDpi(), gridView.getXDpi(), gridView.getYDpi());
+
+                        lock.lock();
+                        connectedDevices.put(ipAddressDevice, connectionInfo);
+                        lock.unlock();
+                        connectionInfo.calculateInfo();
+                    }
+                } else {
+                    lock.unlock();
+                }
+            }
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+    }
+
+    private void handleClose(JSONObject json){
+        try{
+            ConnectedDeviceInfo deviceInfo=null;
+
+            lock.lock();
+
+            if (connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))) {
+                deviceInfo = connectedDevices.remove(json.getString(PinchInfo.ADDRESS));
+
+                if(connectedDevices.size()==0){
+
+                    lockStop.lock();
+
+                    stop = true;
+
+                    lockStop.unlock();
+
+                    activity.runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(activity, "Schermo scollegato", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            }
+
+            lock.unlock();
+
+            if(deviceInfo!=null && rabbitMQ.isConnected()){
+                closeCommunication(deviceInfo.getNameQueueSender());
+                closeCommunication(deviceInfo.getNameQueueReceiver());
+            }
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+    }
+
+    private void handleStart(JSONObject json){
+        try{
+            boolean flag=false;
+            lockStop.lock();
+
+            if(stop) {
+                stop = false;
+                flag=true;
+            }
+
+            lockStop.unlock();
+
+            if(flag && isConnected()) {
+                gridView.start();
+
+                JSONObject message=new JSONObject();
+
+                try {
+                    message.put("type","start");
+                    message.put(PinchInfo.ADDRESS,ipAddress);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                sendCommand(message,json.getString(PinchInfo.ADDRESS));
+            }
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+    }
+
+    private void handlePause(JSONObject json){
+        try{
+            senderCommand=json.getString("sender");
+
+            lockStop.lock();
+
+            boolean flag=false;
+
+            if(!stop) {
+                stop = true;
+                flag=true;
+            }
+
+            lockStop.unlock();
+
+            if(flag && isConnected()){
+
+                JSONObject message=new JSONObject();
+                try {
+                    message.put("type","pause");
+                    message.put(PinchInfo.ADDRESS,ipAddress);
+                    message.put("sender",json.getString("sender"));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                sendCommand(message,json.getString(PinchInfo.ADDRESS));
+            }
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+    }
+
+    private void handleCells(JSONObject json){
+        try{
+            lock.lock();
+
+            if(connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))){
+
+                ConnectedDeviceInfo device=connectedDevices.get(json.getString(PinchInfo.ADDRESS));
+
+                String[] cellsString = json.getString("cellsList").replaceAll("\\[", "").replaceAll("\\]", "").split(", ");
+
+
+                List<Boolean> cellsToSet = new ArrayList<>();
+                for (String s : cellsString) {
+                    cellsToSet.add(Boolean.parseBoolean(s));
+                }
+
+                int firstIndex = device.getIndexFirstCell();
+                int lastIndex = device.getIndexLastCell();
+                gridView.setPairedCells(firstIndex, lastIndex, cellsToSet,device.getMyDirection());
+
+                device.setCellsReceived(true);
+            }
+
+            lock.unlock();
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+    }
+
+    private void handleReady(JSONObject json){
+        try{
+            lock.lock();
+            lockStop.lock();
+
+            if(connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))&&!stop){
+                lockStop.unlock();
+                connectedDevices.get(json.getString(PinchInfo.ADDRESS)).setReadyReceived(true);
+            }else{
+                lockStop.unlock();
+            }
+
+            lock.unlock();
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
     }
 }

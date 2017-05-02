@@ -68,8 +68,9 @@ public class ConnectedDeviceInfo {
      */
     private void setRelativeOrientation(){
 
-            if(myDir.equals(PinchInfo.Direction.RIGHT)){
-                if(dir.equals(PinchInfo.Direction.LEFT)){
+
+        if(myDir.equals(PinchInfo.Direction.RIGHT)){
+            if(dir.equals(PinchInfo.Direction.LEFT)){
                 this.orientation = 0;
             } else if(dir.equals(PinchInfo.Direction.RIGHT)){
                 this.orientation = 180;
@@ -78,7 +79,6 @@ public class ConnectedDeviceInfo {
             } else if(dir.equals(PinchInfo.Direction.UP)){
                 this.orientation = 270;
             }
-
         } else if(myDir.equals(PinchInfo.Direction.LEFT)){
             if(dir.equals(PinchInfo.Direction.LEFT)){
                 this.orientation = 180;
@@ -89,7 +89,6 @@ public class ConnectedDeviceInfo {
             } else if(dir.equals(PinchInfo.Direction.UP)){
                 this.orientation = 90;
             }
-
         } else if (myDir.equals(PinchInfo.Direction.UP)){
             if(dir.equals(PinchInfo.Direction.LEFT)){
                 this.orientation = 270;
@@ -100,7 +99,6 @@ public class ConnectedDeviceInfo {
             } else if(dir.equals(PinchInfo.Direction.UP)){
                 this.orientation = 180;
             }
-
         } else if(myDir.equals(PinchInfo.Direction.DOWN)){
             if(dir.equals(PinchInfo.Direction.LEFT)){
                 this.orientation = 90;
