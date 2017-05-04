@@ -41,9 +41,30 @@ public class TestGridView {
 
         assertTrue(gridView.getInfoSwipe()==null);
 
-        doSwipe();
+        onView(withId(android.R.id.content)).perform(new GeneralSwipeAction(Swipe.FAST,
+                GeneralLocation.TOP_LEFT,GeneralLocation.BOTTOM_RIGHT, Press.FINGER));
+
+        assertTrue(gridView.getInfoSwipe()==null);
+
+        onView(withId(android.R.id.content)).perform(new GeneralSwipeAction(Swipe.FAST,
+                GeneralLocation.CENTER,GeneralLocation.CENTER_RIGHT, Press.FINGER));
 
         assertTrue(gridView.getInfoSwipe().first.second==PinchInfo.Direction.RIGHT);
+
+        onView(withId(android.R.id.content)).perform(new GeneralSwipeAction(Swipe.FAST,
+                GeneralLocation.CENTER,GeneralLocation.TOP_CENTER, Press.FINGER));
+
+        assertTrue(gridView.getInfoSwipe().first.second==PinchInfo.Direction.UP);
+
+        onView(withId(android.R.id.content)).perform(new GeneralSwipeAction(Swipe.FAST,
+                GeneralLocation.CENTER,GeneralLocation.CENTER_LEFT, Press.FINGER));
+
+        assertTrue(gridView.getInfoSwipe().first.second==PinchInfo.Direction.LEFT);
+
+        onView(withId(android.R.id.content)).perform(new GeneralSwipeAction(Swipe.FAST,
+                GeneralLocation.CENTER,GeneralLocation.BOTTOM_CENTER, Press.FINGER));
+
+        assertTrue(gridView.getInfoSwipe().first.second==PinchInfo.Direction.DOWN);
 
     }
 
@@ -141,10 +162,5 @@ public class TestGridView {
                 return new float[]{450,600};
             }
         }, Press.FINGER));
-    }
-
-    private void doSwipe(){
-        onView(withId(android.R.id.content)).perform(new GeneralSwipeAction(Swipe.FAST,
-                GeneralLocation.CENTER,GeneralLocation.CENTER_RIGHT, Press.FINGER));
     }
 }
