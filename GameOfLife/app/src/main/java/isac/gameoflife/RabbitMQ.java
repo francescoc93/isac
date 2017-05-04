@@ -157,20 +157,22 @@ public class RabbitMQ{
 
         try {
             for(String tmp : setQueue) {
-                queue.remove(tmp).close();
-                timeStampQueue.remove(tmp);
+                /*queue.remove(tmp).close();
+                timeStampQueue.remove(tmp);*/
+                close(tmp);
             }
 
             for(String tmp:setExchange){
-                exchange.remove(tmp).close();
-                timeStampExchange.remove(tmp);
+                /*exchange.remove(tmp).close();
+                timeStampExchange.remove(tmp);*/
+                close(tmp);
             }
 
             if(connection!=null) {
                 connection.close();
             }
             connected.set(false);
-        }catch(IOException | TimeoutException e){
+        }catch(IOException e){
             e.printStackTrace();
         }
 

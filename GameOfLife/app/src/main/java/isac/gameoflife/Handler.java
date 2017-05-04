@@ -51,7 +51,7 @@ public class Handler implements MessageListener {
 
     public void bindToBroadcastQueue(){
         if(rabbitMQ.isConnected()){
-            rabbitMQ.addPublishExchange("broadcast", "fanout");
+            //rabbitMQ.addPublishExchange("broadcast", "fanout");
             rabbitMQ.addSubscribeQueue("broadcast", "fanout",this);
         }
     }
@@ -327,6 +327,7 @@ public class Handler implements MessageListener {
 
                     lock.unlock();
 
+                    System.out.println("Elapsed time from swipe: "+(System.currentTimeMillis()-timeStampDirection.first));
 
                     if (Math.abs(info.getTimestamp()-timeStampDirection.first)<=2000) {
 

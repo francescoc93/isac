@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 
 public class RabbitMQTest {
 
-    private static final int NUMBER_OF_TEST=3;
+    private static final int NUMBER_OF_TEST=4;
     private static boolean flag=true;
     private static RabbitMQ rabbitMQ;
     private static int counter=0;
@@ -77,6 +77,23 @@ public class RabbitMQTest {
         publish.addExchange();
         subscribe.addSubscribe();
         publish.sendMessage();
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        rabbitMQ.close("broadcast");
+
+        counter++;
+    }
+
+    @Test
+    public void testPublishSubscribe2(){
+        TestPublishSubscribe tmp=new TestPublishSubscribe("John","John");
+        tmp.addSubscribe();
+        tmp.sendMessage();
 
         try {
             Thread.sleep(1000);
