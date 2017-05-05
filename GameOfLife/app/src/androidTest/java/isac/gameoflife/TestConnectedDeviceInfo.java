@@ -96,58 +96,6 @@ public class TestConnectedDeviceInfo {
                 PinchInfo.Direction.LEFT,0,700,2.44f,4.37f,2.71f,4.76f,300,0,"Device1Device2",
                 "Device2Device1",gridView,240,240,240,240);
         assertTrue(device.getCellsValues().size() == device1.getCellsValues().size());
-       /* ConnectedDeviceInfo device=new ConnectedDeviceInfo(0.5f,PinchInfo.Direction.LEFT,
-                PinchInfo.Direction.RIGHT,1200,400,5,5,5,5,1200,400,"Device1Device2",
-                "Device2Device1",gridView,240,240,240,240);
-
-        device.calculateInfo();
-        int firstIndex=device.getIndexFirstCell();
-        int lastIndex=device.getIndexLastCell();
-*/
-        /*assertTrue(firstIndex==1);
-        assertTrue(lastIndex==10);
-        assertTrue(device.getCellsValues().size()==(lastIndex-firstIndex)+1);
-
-        //CASO 90 GRADI
-        device=new ConnectedDeviceInfo(0.5f,PinchInfo.Direction.RIGHT,
-                PinchInfo.Direction.RIGHT,1200,800,5,5,5,5,1200,400,"Device1Device2",
-                "Device2Device1",gridView,240,240,240,240);
-
-        device.calculateInfo();
-        firstIndex=device.getIndexFirstCell();
-        lastIndex=device.getIndexLastCell();
-
-        assertTrue(firstIndex==1);
-        assertTrue(lastIndex==10);
-        assertTrue(device.getCellsValues().size()==(lastIndex-firstIndex)+1);
-
-
-        //CASO 180 GRADI
-        device=new ConnectedDeviceInfo(0.5f,PinchInfo.Direction.DOWN,
-                PinchInfo.Direction.RIGHT,400,1200,5,5,5,5,1200,400,"Device1Device2",
-                "Device2Device1",gridView,240,240,240,240);
-
-        device.calculateInfo();
-        firstIndex=device.getIndexFirstCell();
-        lastIndex=device.getIndexLastCell();
-
-        assertTrue(firstIndex==1);
-        assertTrue(lastIndex==10);
-        assertTrue(device.getCellsValues().size()==(lastIndex-firstIndex)+1);
-
-
-        //CASO 270 GRADI
-        device=new ConnectedDeviceInfo(0.5f,PinchInfo.Direction.UP,
-                PinchInfo.Direction.RIGHT,800,1200,5,5,5,5,1200,400,"Device1Device2",
-                "Device2Device1",gridView,240,240,240,240);
-
-        device.calculateInfo();
-        firstIndex=device.getIndexFirstCell();
-        lastIndex=device.getIndexLastCell();
-
-        assertTrue(firstIndex==1);
-        assertTrue(lastIndex==10);
-        assertTrue(device.getCellsValues().size()==(lastIndex-firstIndex)+1);*/
 
 
     }
