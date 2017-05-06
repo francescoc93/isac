@@ -59,9 +59,22 @@ public class GridView extends View {
         lockHandler=new ReentrantLock();
     }
 
+    /**
+     *
+     * @return the exact physical pixels per inch of the screen in the X dimension
+     */
     public float getXDpi() {return getResources().getDisplayMetrics().xdpi; }
+
+    /**
+     *
+     * @return the exact physical pixels per inch of the screen in the Y dimension
+     */
     public float getYDpi() {return getResources().getDisplayMetrics().ydpi; }
 
+    /**
+     *
+     * @return the info about the last swipe performed
+     */
     public Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> getInfoSwipe(){
         lockInfoSwipe.lock();
 
@@ -79,20 +92,25 @@ public class GridView extends View {
         return tmp;
     }
 
+    /**
+     *
+     * @return if the game is running
+     */
     public boolean isStarted(){
         return started.get();
     }
 
+    /**
+     * Start the game
+     */
     public void start(){
-        //se il gioco non è stato già avviato, lo avvio eseguendo
-        //un async task (necessario in quanto il thread UI non si deve bloccare)
-        //se l'espressione booleana è false (primo parametro), imposto a true la variabile e proseguo
         lockAction.lock();
 
         if(started.compareAndSet(false,true)){
 
             if(calculateGeneration!=null){
                 if(calculateGeneration.isAlive()){
+                    //before start a new game, i wait the ending of the previously game
                     try {
                         calculateGeneration.join();
                     } catch (InterruptedException e) {
@@ -114,14 +132,16 @@ public class GridView extends View {
         lockAction.unlock();
     }
 
+    /**
+     * Stop the game
+     */
     public void pause(){
-        //se il gioco è in esecuzione, setto a false la variabile
         lockAction.lock();
 
         if(started.get()){
             activity.runOnUiThread(new Runnable() {
                 public void run() {
-                    Toast.makeText(activity, "Pausa", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(activity, "Pause", Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -132,13 +152,13 @@ public class GridView extends View {
     }
 
 
-    //disegno la griglia e la popolo
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.drawColor(Color.BLACK);
         int count=0;
-        //System.out.println(" CELLA " + SIZE);
-        //disegno delle righe per formare la griglia
+
+        //draw the grid
+
         while(count<=column){
             float coordinate=count*SIZE;
             canvas.drawLine(coordinate,0,coordinate,row*SIZE,whitePaint);
@@ -154,11 +174,10 @@ public class GridView extends View {
             count++;
         }
 
-        //setto le cellule vive
+        //set the alive cells
         for (int i = 0; i < row; i++) {
             for (int j = 0; j < column; j++) {
                 if (cellChecked[i+1][j+1]) {
-                    //disegno un rettangolo in corrispondenza della cellula viva
                     canvas.drawRect(j * SIZE, i * SIZE,(j + 1) * SIZE, (i + 1) * SIZE,whitePaint);
                 }
             }
@@ -166,42 +185,43 @@ public class GridView extends View {
 
     }
 
-    //metodo che rileva i tocchi sullo schermo
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int action = MotionEventCompat.getActionMasked(event);
 
         switch(action) {
-            //l'utente ha il dito appoggiato sullo schermo
+            //the finger of the user is on the screen
             case (MotionEvent.ACTION_DOWN) :
                 touchDownMs = System.currentTimeMillis();
+                //get the coordinates
                 startX=(int)event.getX();
                 startY=(int)event.getY();
                 return true;
-            //l'utente sta muovendo il dito
             case (MotionEvent.ACTION_MOVE) :
                 return true;
-            //l'utente ha rilasciato il dito
+            //the user has just released the finger from the screen
             case (MotionEvent.ACTION_UP) :
+                //get the coordinates
                 int stopX=(int)event.getX();
                 int stopY=(int)event.getY();
 
 
+                /*if the duration of the pressure on the screen is greater than TIME_DOUBLE_TAP, so
+                it may be a double tap (start/pause the game) or the user has just set the state of
+                one cell
+                */
                 if ((System.currentTimeMillis() - touchDownMs) > TIME_DOUBLE_TAP) {
                     numberOfTaps = 0;
                     lastTapTimeMs = 0L;
 
-                    //se la differenza delle coordinate di inizio e fine del movimento è minore di 3, allora
-                    //l'utente vuole "attivare" una cella della griglia. altrimenti, potrebbe essere uno swipe
-                    //per lo swipe controllare che il movimento sia lungo solo uno dei due assi e non entrambi
-                    // (altrimenti mi sto muovendo in diagonale)
                     if (Math.abs(startX - stopX) < 10 && Math.abs(startY - stopY) < 10 && !started.get()) {
                         setCell(event.getX(),event.getY());
-                    } else { //valuto lo swipe
+                    } else {
                         evaluateSwipe(stopX,stopY);
                     }
                 }
 
+                //evaluate if the user has just performed a swipe
                 evaluateAction();
 
                 return true;
@@ -218,6 +238,7 @@ public class GridView extends View {
             height = getHeight();
             column =(int) (width /SIZE) ;
             row = (int)(height /SIZE);
+            //get the width and the height of the grid in inches
             width = column*Utils.pixelsToInches(SIZE,getResources().getDisplayMetrics().xdpi);
             height = row*Utils.pixelsToInches(SIZE,getResources().getDisplayMetrics().ydpi);
 
@@ -241,16 +262,24 @@ public class GridView extends View {
 
             }.execute();
 
+            //create the matrix of cells
             cellChecked = new boolean[row+2][column+2];
         }
 
     }
 
-
+    /**
+     *
+     * @return the matrix of cells
+     */
     public boolean[][] getCellMatrix(){
         return this.cellChecked;
     }
 
+    /**
+     *
+     * @return the handler
+     */
     public Handler getGameHandler(){
 
         lockHandler.lock();
@@ -297,6 +326,13 @@ public class GridView extends View {
 
     }
 
+    /**
+     * Send the message of swipe to all device that running the application
+     * @param timeStamp time when the swipe was performed
+     * @param direction direction of the swipe
+     * @param x X coordinate where the swipe is ended
+     * @param y Y coordinate where the swipe is ended
+     */
     private void sendBroadcastMessage(Long timeStamp,PinchInfo.Direction direction,int x,int y){
         lockInfoSwipe.lock();
 
@@ -307,6 +343,11 @@ public class GridView extends View {
         handler.sendBroadcastMessage(new PinchInfo(ipAddress, direction,x,y,timeStamp, width, height,getXDpi(),getYDpi()).toJSON());
     }
 
+    /**
+     * Set the state of the cell
+     * @param x X coordinate where the user pressed
+     * @param y Y coordinate where the user pressed
+     */
     private void setCell(float x,float y){
         int column = (int) (x / SIZE);
         int row = (int) (y / SIZE);
@@ -316,16 +357,23 @@ public class GridView extends View {
             row+=1;
 
             cellChecked[row][column] = !cellChecked[row][column];
-            //chiamo il metodo invalidate così forzo la chiamata del metodo onDraw
+
+            //force the redraw of the grid
             invalidate();
         }
     }
 
+    /**
+     * Evaluate if the movement of the finger of the user is a swipe
+     * @param stopX X coordinate where the movement is ended
+     * @param stopY Y coordinate where the movement is ended
+     */
     private void evaluateSwipe(int stopX,int stopY){
         long timeStamp = System.currentTimeMillis();
         PinchInfo.Direction direction=null;
 
-        if (Math.abs(startX - stopX) >=10 && Math.abs(startY - stopY) <= 80){//se mi sono mosso sulle X
+        if (Math.abs(startX - stopX) >=10 && Math.abs(startY - stopY) <= 80){
+            //swipe on X axis
             if((stopX - startX) > 0){
                 direction=PinchInfo.Direction.RIGHT;
             } else if ((stopX - startX)<0){
@@ -334,7 +382,8 @@ public class GridView extends View {
 
             sendBroadcastMessage(timeStamp,direction,stopX,stopY);
 
-        } else if (Math.abs(startX - stopX) <=80 && Math.abs(startY - stopY) >= 10){//mi sono mosso sulle Y
+        } else if (Math.abs(startX - stopX) <=80 && Math.abs(startY - stopY) >= 10){
+            //swipe on Y axis
             if((stopY - startY) > 0){
                 direction=PinchInfo.Direction.DOWN;
             } else if ((stopY - startY)<0){
@@ -345,6 +394,9 @@ public class GridView extends View {
         }
     }
 
+    /**
+     * Evaluate if the user has performed a double tap
+     */
     private void evaluateAction(){
         if (numberOfTaps > 0
                 && (System.currentTimeMillis() - lastTapTimeMs) < TIME_DOUBLE_TAP) {
@@ -357,9 +409,13 @@ public class GridView extends View {
 
         if (numberOfTaps == 2) {
             if(isStarted()){
+                //stop the game
                 pause();
             }else{
+                //begin a new game
+                //if the device is connected with someone else
                 if(handler.isConnected()){
+                    //send the message of start
                     JSONObject message=new JSONObject();
                     try {
                         message.put("type","start");
@@ -375,8 +431,17 @@ public class GridView extends View {
         }
     }
 
+    /**
+     * Inner class that calculate the generations of the game
+     */
     private class CalculateGeneration extends Thread {
 
+        /**
+         * Count how many neighbors are alive
+         * @param i Row of the matrix
+         * @param j Column of the matrix
+         * @return the number of live neighbors
+         */
         private int neighboursAlive(int i,int j){
             int neighbours=0;
 
@@ -415,6 +480,9 @@ public class GridView extends View {
             return neighbours;
         }
 
+        /**
+         * Reset the state of the cells sent by the neighbors
+         */
         private void resetGhostCells(){
             for(int i=0;i<column+2;i++){
                 cellChecked[0][i]=false;
@@ -427,6 +495,9 @@ public class GridView extends View {
             }
         }
 
+        /**
+         * Calculate the next generation of cells
+         */
         private void calculateNextGen(){
             boolean [][] tmp=new boolean[row+2][column+2];
 
@@ -434,15 +505,11 @@ public class GridView extends View {
                 for(int j=1;j<column+1;j++){
                     int neighbours=neighboursAlive(i,j);
 
-                    //se attualmente la cellula è viva
                     if(cellChecked[i][j]) {
-                        //e ha 2 o 3 vicini, continua a vivere
                         if (neighbours==2 || neighbours==3) {
                             tmp[i][j] = true;
                         }
                     }else{
-                        //se la cellula è morta e ha esattamente 3 vicini
-                        //nella generazione successiva prende vita
                         if(neighbours==3){
                             tmp[i][j]=true;
                         }
@@ -453,12 +520,14 @@ public class GridView extends View {
             cellChecked=tmp;
         }
 
+        /**
+         * Send the cells to the neighbors and i wait to receive the cells from they're
+         */
         private void sendAndWaitCells(){
-            //invio ai miei vicini le celle
+            //send the cells
             handler.sendCellsToOthers();
-            //controllo se posso proseguire (ovvero ho ricevuto le celle da tutti i vicini)
+            //wait until i receive all the cells or i receive a "pause" command or i'm not connected with someone anymore
             while(!handler.goOn() && handler.isConnected() && !handler.stopGame()){
-                // sleep per non tenere di continuo il lock ed evitare una possibile starvation
                 try {
                     Thread.sleep(20);
                 } catch (InterruptedException e) {
@@ -467,12 +536,16 @@ public class GridView extends View {
             }
         }
 
+        /**
+         * Send a message that indicate the application is ready to continue and waits to receive the same
+         * message from his neighbors
+         */
         private void sendAndWaitOthers(){
-            handler.readyToContinue(); //invio un messaggio ai miei vicini con lo scopo di avvisarli che sono pronto a inviare le mie celle
-            // faccio il while fino a quando tutti i miei vicini
-            // non hanno terminato di calcolare la propria generazione
+            //send the message
+            handler.readyToContinue();
+
+            //wait until i receive all the message or i receive a "pause" command or i'm not connected with someone anymore
             while (!handler.readyToSendCells() && handler.isConnected() && !handler.stopGame()) {
-                // sleep per non tenere di continuo il lock ed evitare una possibile starvation
                 try {
                     Thread.sleep(20);
                 } catch (InterruptedException e) {
@@ -481,9 +554,14 @@ public class GridView extends View {
             }
 
             handler.resetReadyReceived();
+
+            //force redraw of the grid
             postInvalidate();
         }
 
+        /**
+         * Send to the neighbors a message that indicate to stop the game
+         */
         private void stopGame(){
             if(handler.isConnected()){
 
@@ -503,9 +581,11 @@ public class GridView extends View {
             pause();
         }
 
+        /**
+         * Wait (if is necessary) to receive all the cells from the neighbors and reset their flag
+         */
         private void receiveCellsAndReset(){
             while(handler.isConnected() && !handler.cellsReceived()){
-                // sleep per non tenere di continuo il lock ed evitare una possibile starvation
                 try {
                     Thread.sleep(20);
                 } catch (InterruptedException e) {
@@ -527,14 +607,20 @@ public class GridView extends View {
 
                     sendAndWaitCells();
 
-                    //se il while termina perchè ho ricevuto le celle da tutti i device, calcolo la generazione successiva
                     if(handler.isConnected() && !handler.stopGame()) {
+                        //i receive the cells from all the neighbors and i don't receive the command of stop
+                        //reset the flag of sent cells
                         handler.resetCellsReceived();
-                        calculateNextGen(); //calcolo la generazione
+                        //calculate the next generation
+                        calculateNextGen();
+                        //send to the neighbors the will to continue with the next generation and i wait
+                        //to receive from all of them the same message
                         sendAndWaitOthers();
 
                         if(handler.isConnected() && !handler.stopGame()){
-                            //se l'utente non ha messo in pausa il gioco
+                            //i receive the message from all the neighbors and i don't receive the command of stop
+
+                            //check if the user stop the game
                             if(started.get()){
                                 try {
                                     Thread.sleep(500);
@@ -542,7 +628,6 @@ public class GridView extends View {
                                     e.printStackTrace();
                                 }
                             }else{
-                                //altrimenti fermo il calcolo delle generazione successiva
                                 goOn=false;
                                 stopGame();
                             }
@@ -563,10 +648,12 @@ public class GridView extends View {
                 }
             }else{
                 while(goOn){
+                    //calculate the next generation of cells
                     calculateNextGen();
+                    //force redraw of the grid
                     postInvalidate();
 
-                    //se l'utente non ha messo in pausa il gioco
+                    //check if is necessary stop the game
                     if(started.get()){
                         try {
 
@@ -575,7 +662,6 @@ public class GridView extends View {
                             e.printStackTrace();
                         }
                     }else{
-                        //altrimenti fermo il calcolo delle generazione successiva
                         goOn=false;
                     }
                 }

@@ -11,5 +11,14 @@ import org.json.JSONObject;
 
 public interface MessageListener {
 
+    /**
+     *
+     * Callback for handle the incoming message from RabbitMQ's server
+     *
+     * @param consumerTag
+     * @param envelope
+     * @param properties
+     * @param json incoming message
+     */
     void handleMessage(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, JSONObject json);
 }

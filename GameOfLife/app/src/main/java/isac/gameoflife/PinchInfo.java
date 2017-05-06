@@ -34,6 +34,18 @@ public class PinchInfo implements Serializable {
     private float screenHeight;
     private float myXDpi, myYDpi;
 
+    /**
+     *
+     * @param address device's IP address
+     * @param direction swipe direction
+     * @param xcoordinate coordinate of X axis when the swipe is ended
+     * @param ycoordinate coordinate of Y axis when the swipe is ended
+     * @param timestamp time of when the swipe is occurred
+     * @param screenWidth width of the grid in inches
+     * @param screenHeight height of the grid in inches
+     * @param xDpi the exact physical pixels per inch of the screen in the X dimension
+     * @param yDpi the exact physical pixels per inch of the screen in the Y dimension
+     */
     public PinchInfo(String address, Direction direction,Integer xcoordinate, Integer ycoordinate, Long timestamp, float screenWidth,
                      float screenHeight,float xDpi, float yDpi) {
         this.address = address;
@@ -48,48 +60,78 @@ public class PinchInfo implements Serializable {
 
     }
 
+    /**
+     *
+     * @return device's IP address
+     */
     public String getAddress() {
         return address;
     }
 
+    /**
+     *
+     * @return coordinate of X axis when the swipe is ended
+     */
     public Integer getXcoordinate() {
         return xcoordinate;
     }
 
+    /**
+     *
+     * @return coordinate of Y axis when the swipe is ended
+     */
     public Integer getYcoordinate() {
         return ycoordinate;
     }
 
+    /**
+     *
+     * @return time of when the swipe is occurred
+     */
     public Long getTimestamp() {
         return timestamp;
     }
 
+    /**
+     *
+     * @return width of the screen in inches
+     */
     public float getScreenWidth() {
         return screenWidth;
     }
 
+    /**
+     *
+     * @return height of the screen in inches
+     */
     public float getScreenHeight() {
         return screenHeight;
     }
 
+    /**
+     *
+     * @return swipe direction (UP, DOWN, LEFT, RIGHT)
+     */
     public Direction getDirection(){
         return direction;
     }
 
+    /**
+     *
+     * @return the exact physical pixels per inch of the screen in the X dimension
+     */
     public float getXDpi() {return this.myXDpi; }
 
+    /**
+     *
+     * @return the exact physical pixels per inch of the screen in the Y dimension
+     */
     public float getYDpi() {return this.myYDpi; }
 
-    public boolean oppositeDirection(Direction direction){
-        switch (direction){
-            case UP:return this.direction==Direction.DOWN;
-            case DOWN:return this.direction==Direction.UP;
-            case LEFT:return this.direction==Direction.RIGHT;
-            case RIGHT:return this.direction==Direction.LEFT;
-            default:return false;
-        }
-    }
-
+    /**
+     *
+     * @return JSON of all parameters
+     */
     public JSONObject toJSON() {
 
         JSONObject jo = new JSONObject();

@@ -32,21 +32,34 @@ public class Utils {
     private Utils(){
     }
 
+    /**
+     *
+     * Convert pixels into inches
+     *
+     * @param pixel
+     * @param dpi
+     * @return
+     */
     public static float pixelsToInches(float pixel, float dpi){
         return pixel/dpi;
     }
 
+    /**
+     *
+     * @return server's IP address
+     */
     public static String getServerAddress(){
         File docsFolder = new File(Environment.getExternalStorageDirectory() + "/GameOfLife");
 
         if(!docsFolder.exists()) {
+            //create the folder if doesn't exist
             docsFolder.mkdir();
         }
 
         File file=new File(docsFolder.getAbsolutePath(),"address.txt");
 
         if(!file.exists()){
-
+            //create the file if doesn't exist
             try {
                 file.createNewFile();
                 FileOutputStream outputStream = new FileOutputStream(file/*, Context.MODE_PRIVATE*/);
@@ -63,6 +76,7 @@ public class Utils {
 
         String ret = "";
 
+        //read the IP address from the file
         try {
             FileInputStream inputStream=new FileInputStream(file);
 
@@ -85,6 +99,10 @@ public class Utils {
         context=ctx;
     }
 
+    /**
+     *
+     * @return The device's IP address
+     */
     public static String getIpAddress() {
         if (ipAddress == null) {
             if(context!=null) {

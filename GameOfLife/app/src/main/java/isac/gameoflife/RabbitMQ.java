@@ -29,6 +29,12 @@ public class RabbitMQ{
     private String address,username,password;
     private ReentrantLock lock;
 
+    /**
+     *
+     * @param address server's IP address
+     * @param username
+     * @param password
+     */
     public RabbitMQ(String address,String username,String password){
         this.address=address;
         this.username=username;
@@ -41,6 +47,10 @@ public class RabbitMQ{
         lock=new ReentrantLock();
     }
 
+    /**
+     * Establish a connection with the server
+     * @return
+     */
     public boolean connect(){
         factory = new ConnectionFactory();
         factory.setHost(address);
@@ -56,7 +66,12 @@ public class RabbitMQ{
         }
     }
 
-    public synchronized boolean addQueue(String name){
+    /**
+     * Add a queue
+     * @param name queue's name
+     * @return true if the queue was added with successful or is already exist. False otherwise
+     */
+    public boolean addQueue(String name){
 
         lock.lock();
         if(!queue.containsKey(name) && !exchange.containsKey(name)){
@@ -80,7 +95,14 @@ public class RabbitMQ{
         return false;
     }
 
-    public synchronized boolean addQueue(String name, final MessageListener listener){
+    /**
+     * Add a queue with listener for incoming messages
+     *
+     * @param name queue's name
+     * @param listener a MessageListener object.
+     * @return true if the queue was added with successful or is already exist. False otherwise
+     */
+    public boolean addQueue(String name, final MessageListener listener){
         if(addQueue(name)) {
             lock.lock();
             addListener(listener, queue.get(name), name);
@@ -91,7 +113,15 @@ public class RabbitMQ{
         return false;
     }
 
-    public synchronized boolean addPublishExchange(String name,String mode){
+    /**
+     *
+     * Add an exchange to broadcast the messages
+     *
+     * @param name exchange's name
+     * @param mode working mode of the exchange (direct, topic, headers and fanout)
+     * @return true if the exchange was added with successful or is already exist. False otherwise
+     */
+    public boolean addPublishExchange(String name,String mode){
 
         lock.lock();
         if(!exchange.containsKey(name) && !queue.containsKey(name)){
@@ -115,7 +145,16 @@ public class RabbitMQ{
         return false;
     }
 
-    public synchronized boolean addSubscribeQueue(String name,String mode,MessageListener listener){
+    /**
+     *
+     * Bind a queue to an exchange
+     *
+     * @param name exchange's name
+     * @param mode working mode of the exchange (direct, topic, headers and fanout)
+     * @param listener a MessageListener object.
+     * @return true if the queue was binded with successful or is already exist. False otherwise
+     */
+    public boolean addSubscribeQueue(String name,String mode,MessageListener listener){
         if(addPublishExchange(name,mode)) {
             try {
                 lock.lock();
@@ -134,7 +173,14 @@ public class RabbitMQ{
         return false;
     }
 
-    public synchronized void sendMessage(String name,JSONObject message){
+    /**
+     *
+     * Send a message
+     *
+     * @param name name of the exchange or the queue
+     * @param message message to send
+     */
+    public void sendMessage(String name,JSONObject message){
         try {
             message.put("timestamp",System.currentTimeMillis());
 
@@ -150,21 +196,23 @@ public class RabbitMQ{
         }
     }
 
-    public synchronized void closeConnection() {
+    /**
+     *
+     * Close connection with the RabbitMQ's server. If there's some channels opened,
+     * will be closed
+     *
+     */
+    public void closeConnection() {
         lock.lock();
         Set<String> setQueue = queue.keySet();
         Set<String> setExchange = exchange.keySet();
 
         try {
             for(String tmp : setQueue) {
-                /*queue.remove(tmp).close();
-                timeStampQueue.remove(tmp);*/
                 close(tmp);
             }
 
             for(String tmp:setExchange){
-                /*exchange.remove(tmp).close();
-                timeStampExchange.remove(tmp);*/
                 close(tmp);
             }
 
@@ -179,7 +227,13 @@ public class RabbitMQ{
         lock.unlock();
     }
 
-    public synchronized void close(String name){
+    /**
+     *
+     * Close the channel
+     *
+     * @param name name of the exchange or the queue
+     */
+    public void close(String name){
 
         lock.lock();
         try {
@@ -197,10 +251,18 @@ public class RabbitMQ{
         lock.unlock();
     }
 
+    /**
+     *
+     * @return True if the device is connected to the server. False otherwise
+     */
     public boolean isConnected(){
         return connected.get();
     }
 
+    /**
+     *
+     * @return a new channel
+     */
     private Channel createChannel(){
         try {
             return connection.createChannel();
@@ -211,6 +273,14 @@ public class RabbitMQ{
         return null;
     }
 
+    /**
+     *
+     * Add a listener for incoming messages from the server
+     *
+     * @param listener a MessageListener object
+     * @param channel channel where add the listener
+     * @param name name of the queue or the exchange
+     */
     private void addListener(final MessageListener listener,Channel channel,final String name){
 
         Consumer consumer = new DefaultConsumer(channel) {
@@ -219,7 +289,7 @@ public class RabbitMQ{
                     throws IOException {
                 try {
 
-                    Long millis=-1L;
+                    Long millis=Long.MAX_VALUE;
 
                     lock.lock();
 
@@ -233,6 +303,7 @@ public class RabbitMQ{
 
                     JSONObject message=new JSONObject(new String(body,"UTF-8"));
 
+                    //check if the message was sent before channel creation
                     if(message.getLong("timestamp")>=millis) {
                         listener.handleMessage(consumerTag, envelope, properties,message);
                     }

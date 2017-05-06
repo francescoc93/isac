@@ -43,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
         ((ViewGroup)gridView.getParent()).removeView(gridView);
     }
 
+    /**
+     * initialize the View and the listener of accelerometer
+     */
     private void initialize(){
 
         gridView=new GridView(this);
@@ -58,16 +61,19 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSensorChanged(SensorEvent event) {
+                //get the values of pitch, roll and yaw
                 float x = event.values[0];
                 float y = event.values[1];
                 float z = event.values[2];
 
+                //normalize the accelerometer vector.
                 double g=Math.sqrt(x * x + y * y + z * z);
 
                 x/=g;
                 y/=g;
                 z/=g;
 
+                //get degree of tilt
                 int inclination = (int) Math.round(Math.toDegrees(Math.acos(z)));
 
                 if((inclination<=15)&&x>=(oldX-0.5)&&x<=(oldX+0.5)
@@ -82,7 +88,8 @@ public class MainActivity extends AppCompatActivity {
                         Handler handler=gridView.getGameHandler();
 
                         if(handler!=null&&handler.isConnected()){
-                            Toast.makeText(getApplicationContext(), "Schermo scollegato", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Screen detached", Toast.LENGTH_SHORT).show();
+                            //close the communication channel of all neighbors
                             handler.closeDeviceCommunication();
                         }
                     }
