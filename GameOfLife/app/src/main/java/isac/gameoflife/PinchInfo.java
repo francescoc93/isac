@@ -5,9 +5,6 @@ import org.json.JSONObject;
 
 import java.io.Serializable;
 
-/**
- * Created by luca on 13/03/17.
- */
 
 public class PinchInfo implements Serializable {
 

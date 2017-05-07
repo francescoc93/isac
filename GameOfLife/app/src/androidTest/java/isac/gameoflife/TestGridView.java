@@ -22,9 +22,6 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
-/**
- * Created by Francesco on 24/04/2017.
- */
 
 @RunWith(AndroidJUnit4.class)
 public class TestGridView {

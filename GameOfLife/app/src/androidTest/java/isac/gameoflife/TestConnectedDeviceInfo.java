@@ -13,11 +13,6 @@ import android.view.ViewGroup;
 
 import static junit.framework.Assert.assertTrue;
 
-
-/**
- * Created by Francesco on 23/04/2017.
- */
-
 @RunWith(AndroidJUnit4.class)
 public class TestConnectedDeviceInfo {
 
@@ -53,9 +48,7 @@ public class TestConnectedDeviceInfo {
     @Test
     public void calculateIndex(){
 
-        //TODO: DA COMPLETARE
-
-        //CASO 0
+        //0°
         ConnectedDeviceInfo device=new ConnectedDeviceInfo(0.5f,PinchInfo.Direction.LEFT,
                 PinchInfo.Direction.RIGHT,0,400,2.71f,4.76f,2.44f,4.37f,1080,800,"Device1Device2",
                 "Device2Device1",gridView,240,240,240,240);
@@ -66,7 +59,7 @@ public class TestConnectedDeviceInfo {
         assertTrue(device.getCellsValues().size() == device1.getCellsValues().size());
 
 
-        //CASO 270
+        //270°
         device = new ConnectedDeviceInfo(0.5f,PinchInfo.Direction.LEFT,
                 PinchInfo.Direction.DOWN,0,400,2.71f,4.76f,2.44f,4.37f,500,1800,"Device1Device2",
                 "Device2Device1",gridView,240,240,240,240);
@@ -76,7 +69,7 @@ public class TestConnectedDeviceInfo {
                 "Device2Device1",gridView,240,240,240,240);
         assertTrue(device.getCellsValues().size() == device1.getCellsValues().size());
 
-        //CASO 180
+        //180°
         device = new ConnectedDeviceInfo(0.5f,PinchInfo.Direction.LEFT,
                 PinchInfo.Direction.LEFT,0,400,2.71f,4.76f,2.44f,4.37f,0,700,"Device1Device2",
                 "Device2Device1",gridView,240,240,240,240);
@@ -87,7 +80,7 @@ public class TestConnectedDeviceInfo {
         assertTrue(device.getCellsValues().size() == device1.getCellsValues().size());
 
 
-        //CASO 90
+        //90°
         device = new ConnectedDeviceInfo(0.5f,PinchInfo.Direction.LEFT,
                 PinchInfo.Direction.UP,300,0,2.71f,4.76f,2.44f,4.37f,0,700,"Device1Device2",
                 "Device2Device1",gridView,240,240,240,240);

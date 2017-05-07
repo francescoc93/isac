@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * initialize the View and the listener of accelerometer
+     * initialize the View and the listener for the accelerometer
      */
     private void initialize(){
 

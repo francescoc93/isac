@@ -38,7 +38,7 @@ public class GridView extends View {
     private MainActivity activity;
     private AtomicBoolean started=new AtomicBoolean(false);
     private Long lastTapTimeMs,touchDownMs;
-    //il primo pair sono il timestamp e la direzione, il secondo le coordinate x e y
+    //First pair is timestamp and direction, second is x and y coordinates
     private Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> infoSwipe;
     private ReentrantLock lockInfoSwipe,lockAction,lockHandler;
     private CalculateGeneration calculateGeneration;
@@ -73,7 +73,7 @@ public class GridView extends View {
 
     /**
      *
-     * @return the info about the last swipe performed
+     * @return  infos about the last swipe performed
      */
     public Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> getInfoSwipe(){
         lockInfoSwipe.lock();
@@ -101,7 +101,7 @@ public class GridView extends View {
     }
 
     /**
-     * Start the game
+     * Starts the game
      */
     public void start(){
         lockAction.lock();
@@ -110,7 +110,7 @@ public class GridView extends View {
 
             if(calculateGeneration!=null){
                 if(calculateGeneration.isAlive()){
-                    //before start a new game, i wait the ending of the previously game
+                    //before starting a new generation, waits the end of the previous one
                     try {
                         calculateGeneration.join();
                     } catch (InterruptedException e) {
@@ -133,7 +133,7 @@ public class GridView extends View {
     }
 
     /**
-     * Stop the game
+     * Pauses the game
      */
     public void pause(){
         lockAction.lock();
@@ -157,7 +157,7 @@ public class GridView extends View {
         canvas.drawColor(Color.BLACK);
         int count=0;
 
-        //draw the grid
+        //draws the grid
 
         while(count<=column){
             float coordinate=count*SIZE;
@@ -174,7 +174,7 @@ public class GridView extends View {
             count++;
         }
 
-        //set the alive cells
+        //sets the alive cells
         for (int i = 0; i < row; i++) {
             for (int j = 0; j < column; j++) {
                 if (cellChecked[i+1][j+1]) {
@@ -206,8 +206,8 @@ public class GridView extends View {
                 int stopY=(int)event.getY();
 
 
-                /*if the duration of the pressure on the screen is greater than TIME_DOUBLE_TAP, so
-                it may be a double tap (start/pause the game) or the user has just set the state of
+                /*if the duration of the pressure on the screen is greater than TIME_DOUBLE_TAP
+                it may be a double tap (start/pause the game), otherwise the user has just set the state of
                 one cell
                 */
                 if ((System.currentTimeMillis() - touchDownMs) > TIME_DOUBLE_TAP) {
@@ -327,7 +327,7 @@ public class GridView extends View {
     }
 
     /**
-     * Send the message of swipe to all device that running the application
+     * Send the message of swipe to all device that are running the application
      * @param timeStamp time when the swipe was performed
      * @param direction direction of the swipe
      * @param x X coordinate where the swipe is ended
@@ -345,8 +345,8 @@ public class GridView extends View {
 
     /**
      * Set the state of the cell
-     * @param x X coordinate where the user pressed
-     * @param y Y coordinate where the user pressed
+     * @param x X coordinate where the user has pressed
+     * @param y Y coordinate where the user has pressed
      */
     private void setCell(float x,float y){
         int column = (int) (x / SIZE);
@@ -432,7 +432,7 @@ public class GridView extends View {
     }
 
     /**
-     * Inner class that calculate the generations of the game
+     * Inner class that calculates the generations of the game
      */
     private class CalculateGeneration extends Thread {
 
@@ -526,7 +526,7 @@ public class GridView extends View {
         private void sendAndWaitCells(){
             //send the cells
             handler.sendCellsToOthers();
-            //wait until i receive all the cells or i receive a "pause" command or i'm not connected with someone anymore
+            //waits until receiving all the cells or receiving a "pause" command or the device is not connected with another one anymore
             while(!handler.goOn() && handler.isConnected() && !handler.stopGame()){
                 try {
                     Thread.sleep(20);
@@ -537,14 +537,14 @@ public class GridView extends View {
         }
 
         /**
-         * Send a message that indicate the application is ready to continue and waits to receive the same
-         * message from his neighbors
+         * Sends a message that indicates that the application is ready to continue and waits to receive the same
+         * message from his neighbours
          */
         private void sendAndWaitOthers(){
             //send the message
             handler.readyToContinue();
 
-            //wait until i receive all the message or i receive a "pause" command or i'm not connected with someone anymore
+            //wait until receiving all the messages or receiving a "pause" command or the device is not connected with another one anymore
             while (!handler.readyToSendCells() && handler.isConnected() && !handler.stopGame()) {
                 try {
                     Thread.sleep(20);
@@ -560,7 +560,7 @@ public class GridView extends View {
         }
 
         /**
-         * Send to the neighbors a message that indicate to stop the game
+         * Sends to the neighbours a message that tells to stop the game
          */
         private void stopGame(){
             if(handler.isConnected()){
@@ -582,7 +582,7 @@ public class GridView extends View {
         }
 
         /**
-         * Wait (if is necessary) to receive all the cells from the neighbors and reset their flag
+         * Wait (if necessary) to receive all the cells from the neighbours and reset their flag
          */
         private void receiveCellsAndReset(){
             while(handler.isConnected() && !handler.cellsReceived()){
@@ -608,19 +608,19 @@ public class GridView extends View {
                     sendAndWaitCells();
 
                     if(handler.isConnected() && !handler.stopGame()) {
-                        //i receive the cells from all the neighbors and i don't receive the command of stop
+                        //if the device receives the cells from all the neighbours and it doesn't receive the command of stop
                         //reset the flag of sent cells
                         handler.resetCellsReceived();
                         //calculate the next generation
                         calculateNextGen();
-                        //send to the neighbors the will to continue with the next generation and i wait
-                        //to receive from all of them the same message
+                        //send to the neighbours the will to continue with the next generation and waits
+                        //to receive from all the neighbours the same message
                         sendAndWaitOthers();
 
                         if(handler.isConnected() && !handler.stopGame()){
-                            //i receive the message from all the neighbors and i don't receive the command of stop
+                            //the device receives the messages from all the neighbours and it doesn't receive the command of stop
 
-                            //check if the user stop the game
+                            //check if the user has stopped the game
                             if(started.get()){
                                 try {
                                     Thread.sleep(500);
@@ -653,7 +653,7 @@ public class GridView extends View {
                     //force redraw of the grid
                     postInvalidate();
 
-                    //check if is necessary stop the game
+                    //check if it is necessary to stop the game
                     if(started.get()){
                         try {
 

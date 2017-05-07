@@ -20,10 +20,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 
-/**
- * Created by Francesco on 14/03/2017.
- */
-
 public class Utils {
 
     private static String ipAddress=null;
@@ -52,14 +48,14 @@ public class Utils {
         File docsFolder = new File(Environment.getExternalStorageDirectory() + "/GameOfLife");
 
         if(!docsFolder.exists()) {
-            //create the folder if doesn't exist
+            //create the folder if it doesn't exist
             docsFolder.mkdir();
         }
 
         File file=new File(docsFolder.getAbsolutePath(),"address.txt");
 
         if(!file.exists()){
-            //create the file if doesn't exist
+            //create the file if it doesn't exist
             try {
                 file.createNewFile();
                 FileOutputStream outputStream = new FileOutputStream(file/*, Context.MODE_PRIVATE*/);
@@ -76,7 +72,7 @@ public class Utils {
 
         String ret = "";
 
-        //read the IP address from the file
+        //read the IP address from file
         try {
             FileInputStream inputStream=new FileInputStream(file);
 

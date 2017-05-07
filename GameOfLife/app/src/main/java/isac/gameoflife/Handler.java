@@ -54,7 +54,7 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Connect to RabbitMQ's server
+     * Connects to RabbitMQ's server
      * @return true if connection was established. False otherwise
      */
     public boolean connectToServer(){
@@ -62,7 +62,7 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Bind the queue to an exchange
+     * Binds the queue to an exchange
      */
     public void bindToBroadcastQueue(){
         if(rabbitMQ.isConnected()){
@@ -71,7 +71,7 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Send a broadcast message to all devices who are running this application
+     * Sends a broadcast message to all devices who are running this application
      * @param message message to send
      * @return true if message was sent. False otherwise
      */
@@ -102,13 +102,13 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Check if all the neighbors have sent the cells.
-     * @return true if the cells from all the neighbors was received. False otherwise
+     * Checks if all the neighbours have sent the cells.
+     * @return true if the cells from all the neighbours were received. False otherwise
      */
     public boolean goOn(){
         lock.lock();
 
-        //get the list of neighbors
+        //get the list of neighbours
         Set<String> set=connectedDevices.keySet();
 
         for (String s : set){
@@ -125,9 +125,9 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Check if all the neighbors (eventually all the neighbors except the sender of "pause" command)
+     * Checks if all the neighbours (eventually all the neighbours except the sender of "pause" command)
      * have sent the cells.
-     * @return true if the cells from all the neighbors was received. False otherwise
+     * @return true if the cells from all the neighbours was received. False otherwise
      */
     public boolean cellsReceived(){
         lock.lock();
@@ -154,7 +154,7 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Reset the flag that check who sent the cells
+     * Resets the flag that checks who sent the cells
      */
     public void resetCellsReceived(){
 
@@ -168,7 +168,7 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Reset the flag that check who was ready for beginning another generation
+     * Resets the flag that checks who was ready to begin another generation
      */
     public void resetReadyReceived(){
 
@@ -184,8 +184,8 @@ public class Handler implements MessageListener {
     /**
      * Send a command of pause/start to all neighbors
      * @param message message of pause/start
-     * @param ip if is null, the message will be send to all neighbors. Otherwise, the message will
-     *           be send to all neighbors except for that one (if is present in the neighbors list)
+     * @param ip if it is null, the message will be sent to all the neighbours. Otherwise, the message will
+     *           be sent to all neighbours except that one (if it is present in the neighbours list)
      */
     public void sendCommand(JSONObject message,String ip){
 
@@ -196,7 +196,7 @@ public class Handler implements MessageListener {
         if(ip==null) {
 
             try {
-                //set state of the game
+                //sets state of the game
                 switch(message.getString("type")){
                     case "start":stop=false;break;
                     case "pause":stop=true;break;
@@ -222,17 +222,17 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Check if all the neighbors are ready for beginning another generation.
+     * Checks if all the neighbours are ready to begin another generation.
      * @return true if they're ready. False otherwise
      */
     public boolean readyToSendCells(){
 
         lock.lock();
 
-        //get the list of neighbors
+        //gets the list of neighbors
         Set<String> set=connectedDevices.keySet();
 
-        //check if someone isn't ready
+        //checks if someone isn't ready
         for (String s : set){
             if(!connectedDevices.get(s).isReadyReceived()){
                 lock.unlock();
@@ -246,21 +246,21 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Send the cells to all neighbors
+     * Sends the cells to all neighbors
      */
     public void sendCellsToOthers(){
 
         lock.lock();
 
-        //get list of neighbors
+        //gets list of neighbors
         Set<String> set=connectedDevices.keySet();
 
         for (String s : set){
             JSONObject obj = new JSONObject();
             ConnectedDeviceInfo infoConn = connectedDevices.get(s);
-            //get the name of queue to send the message
+            //gets the name of queue to send the message to
             String queueSender = infoConn.getNameQueueSender();
-            //create the message and add the list of cells to send
+            //creates the message and adds the list of cells to send
             try {
                 obj.put("type","cells");
                 obj.put(PinchInfo.ADDRESS,ipAddress);
@@ -275,7 +275,7 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Send to all neighbors the will of beginning a new generation
+     * Sends to all neighbours the will to begin a new generation
      */
     public void readyToContinue(){
 
@@ -299,7 +299,7 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Close the channels with all the neighbors
+     * Closes the channels with all the neighbours
      */
     public void closeDeviceCommunication() {
         if(rabbitMQ.isConnected()) {
@@ -320,9 +320,9 @@ public class Handler implements MessageListener {
                 }
 
                 for (ConnectedDeviceInfo device : devices) {
-                    //send a message that inform the shutting down of the channel
+                    //sends a message that informs the shut down of the channel
                     rabbitMQ.sendMessage(device.getNameQueueSender(), message);
-                    //close the channels
+                    //closes the channels
                     closeCommunication(device.getNameQueueSender());
                     closeCommunication(device.getNameQueueReceiver());
                 }
@@ -336,14 +336,14 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Close connection with RabbitMQ's server
+     * Closes connection with RabbitMQ's server
      */
     public void closeConnection(){
         rabbitMQ.closeConnection();
     }
 
     /**
-     * Check if is necessary stop the game
+     * Checks if it is necessary to stop the game
      * @return true if is necessary stop the game. False otherwise
      */
     public boolean stopGame(){
@@ -356,7 +356,7 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Check if the device is connected with someone else
+     * Checks if the device is connected with someone else
      *
      * @return true if is connected. False otherwise
      */
@@ -371,16 +371,16 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Check if message incoming from itself
+     * Checks if the message incoming is from itself
      * @param ipAddressDevice IP address
-     * @return true if message incoming from another one. False otherwise
+     * @return true if message incoming is from another device. False otherwise
      */
     private boolean messageFromOther (String ipAddressDevice){
         return !ipAddress.equals(ipAddressDevice);
     }
 
     /**
-     * Close the channel
+     * Closes the channel
      * @param name name of the queue or the exchange
      */
     private void closeCommunication(String name){
@@ -388,24 +388,24 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Handle the message of pinch. When this method is invoked, a swipe was performed
+     * Handles the message of pinch. Whenever a swipe is performed, this method is invoked
      * @param json incoming message
      */
     private void handlePinch(JSONObject json){
 
         try {
-            //get all info of the swipe of other device that sent the message
+            //gets all infos of the swipe of other device that sent the message
             PinchInfo info = new PinchInfo(json.getString(PinchInfo.ADDRESS), PinchInfo.Direction.valueOf(json.getString(PinchInfo.DIRECTION)),
                     json.getInt(PinchInfo.X_COORDINATE),
                     json.getInt(PinchInfo.Y_COORDINATE), json.getLong(PinchInfo.TIMESTAMP),
                     Float.parseFloat(json.getString(PinchInfo.SCREEN_WIDTH)), Float.parseFloat(json.getString(PinchInfo.SCREEN_HEIGHT)),
                     Float.parseFloat(json.getString(PinchInfo.XDPI)), Float.parseFloat(json.getString(PinchInfo.YDPI)));
 
-            //get the info of my last swipe
+            //gets the infos of my last swipe
             Pair<Pair<Long, PinchInfo.Direction>, Pair<Integer, Integer>> infoSwipe = gridView.getInfoSwipe();
 
 
-            //if i performed a swipe and the message is has arrived from another one
+            //if the device has performed a swipe and the message has arrived from another one
             if (infoSwipe != null && messageFromOther(info.getAddress())) {
 
                 Pair<Long, PinchInfo.Direction> timeStampDirection = infoSwipe.first;
@@ -413,14 +413,14 @@ public class Handler implements MessageListener {
 
                 lock.lock();
 
-                //if that device isn't yet my neighbor
+                //if that device isn't my neighbour yet
                 if (!connectedDevices.containsKey(info.getAddress())) {
 
                     lock.unlock();
 
                     System.out.println("Elapsed time from swipe: "+(System.currentTimeMillis()-timeStampDirection.first));
 
-                    //check how many time has elapsed between the two swipes
+                    //checks how much time has elapsed between the two swipes
                     if (Math.abs(info.getTimestamp()-timeStampDirection.first)<=2000) {
 
                         activity.runOnUiThread(new Runnable() {
@@ -436,11 +436,11 @@ public class Handler implements MessageListener {
                         nameSender = ipAddress + ipAddressDevice;
                         nameReceiver = ipAddressDevice + ipAddress;
 
-                        //add the queues for send and receive messages to/from that device
+                        //adds the queues for sending and receiving messages to/from that device
                         rabbitMQ.addQueue(nameSender);
                         rabbitMQ.addQueue(nameReceiver, this);
 
-                        //create the info about that device
+                        //creates the info about that device
                         ConnectedDeviceInfo connectionInfo = new ConnectedDeviceInfo(this.cellSize,
                                 info.getDirection(), timeStampDirection.second,
                                 info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(), this.myWidth,
@@ -448,10 +448,10 @@ public class Handler implements MessageListener {
                                 info.getXDpi(), info.getYDpi(), gridView.getXDpi(), gridView.getYDpi());
 
                         lock.lock();
-                        //add the device to neighbor's map
+                        //add the device to neighbour's map
                         connectedDevices.put(ipAddressDevice, connectionInfo);
                         lock.unlock();
-                        //calculate how many and which cells sends/receives from/to that device
+                        //calculates how many and which cells sends/receives from/to that device
                         connectionInfo.calculateInfo();
                     }
                 } else {
@@ -464,7 +464,7 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Handle the message of closing. When this method is invoked, a neighbor was detached
+     * Handles the message of closing. Whenever a neighbours detached, this method is invoked.
      * @param json incoming message
      */
     private void handleClose(JSONObject json){
@@ -475,10 +475,10 @@ public class Handler implements MessageListener {
 
             if (connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))) {
                 deviceInfo = connectedDevices.remove(json.getString(PinchInfo.ADDRESS));
-                //remove the device from neighbors
+                //removes the device from neighbours
 
                 if(connectedDevices.size()==0){
-                    //if there are no neighbors anymore, stop the game (if is running)
+                    //if there are no neighbors anymore, stops the game (if it is running)
                     lockStop.lock();
 
                     stop = true;
@@ -496,7 +496,7 @@ public class Handler implements MessageListener {
             lock.unlock();
 
             if(deviceInfo!=null && rabbitMQ.isConnected()){
-                //close the channels
+                //closes the channels
                 closeCommunication(deviceInfo.getNameQueueSender());
                 closeCommunication(deviceInfo.getNameQueueReceiver());
             }
@@ -506,7 +506,7 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Handle the message of start. When this method is invoked, a neighbor has just started the game
+     * Handles the message of start. Whenever a neighbour starts the game, this method is invoked.
      * @param json incoming message
      */
     private void handleStart(JSONObject json){
@@ -514,7 +514,7 @@ public class Handler implements MessageListener {
             boolean flag=false;
             lockStop.lock();
 
-            //check if i already started the game
+            //checks if the device has already started the game
             if(stop) {
                 stop = false;
                 flag=true;
@@ -522,9 +522,9 @@ public class Handler implements MessageListener {
 
             lockStop.unlock();
 
-            //if i didn't yet start the game and i'm connected with someone
+            //If the device hasn't started the game yet and it is connected with some others devices
             if(flag && isConnected()) {
-                //start the game
+                //starts the game
                 gridView.start();
 
                 JSONObject message=new JSONObject();
@@ -535,7 +535,7 @@ public class Handler implements MessageListener {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                //forward the message of start to the other neighbors (except the sender)
+                //forwards the message of start to the other neighbours (except the sender)
                 sendCommand(message,json.getString(PinchInfo.ADDRESS));
             }
         }catch(JSONException e){
@@ -544,19 +544,19 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * Handle the message of pause. When this method is invoked, a neighbor has just stopped the game
+     * Handles the message of pause. Whenever a neighbours stops the game, this method is invoked.
      * @param json incoming message
      */
     private void handlePause(JSONObject json){
         try{
-            //get who performed the pause command
+            //gets which device performed the pause command
             senderCommand=json.getString("sender");
 
             lockStop.lock();
 
             boolean flag=false;
 
-            //check if i already stopped the game
+            //checks if the device has already stopped the game
             if(!stop) {
                 stop = true;
                 flag=true;
@@ -564,7 +564,7 @@ public class Handler implements MessageListener {
 
             lockStop.unlock();
 
-            //if i didn't yet stop the game and i'm connected with someone
+            //If the device hasn't stopped the game yet and it is connected to some other device
             if(flag && isConnected()){
 
                 JSONObject message=new JSONObject();
@@ -576,7 +576,7 @@ public class Handler implements MessageListener {
                     e.printStackTrace();
                 }
 
-                //forward the message of pause to the other neighbors (except the sender)
+                //forwards the message of pause to the other neighbours (except the sender)
                 sendCommand(message,json.getString(PinchInfo.ADDRESS));
             }
         }catch(JSONException e){
@@ -585,7 +585,7 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * when this method is invoked, a neighbor has just sent the cells for calculate of the next generation
+     * This method is invoked whenever a neihbours has sent the cells to calculate the next generation
      * @param json incoming message
      */
     private void handleCells(JSONObject json){
@@ -596,17 +596,17 @@ public class Handler implements MessageListener {
 
                 ConnectedDeviceInfo device=connectedDevices.get(json.getString(PinchInfo.ADDRESS));
 
-                //get the list of cells
+                //gets the list of cells
                 String[] cellsString = json.getString("cellsList").replaceAll("\\[", "").replaceAll("\\]", "").split(", ");
 
 
-                //parse the value of the cells
+                //parses the value of the cells
                 List<Boolean> cellsToSet = new ArrayList<>();
                 for (String s : cellsString) {
                     cellsToSet.add(Boolean.parseBoolean(s));
                 }
 
-                //get the first and last index of the cells to set
+                //gets the first and last indices of the cells to set
                 int firstIndex = device.getIndexFirstCell();
                 int lastIndex = device.getIndexLastCell();
                 //set the cell's value
@@ -623,7 +623,7 @@ public class Handler implements MessageListener {
     }
 
     /**
-     * when this method is invoked, a neighbor is ready to beginning the next generation
+     * This method is invoked whenever a neighbour is read to begin the calculus of the next generation
      * @param json incoming message
      */
     private void handleReady(JSONObject json){
@@ -633,10 +633,10 @@ public class Handler implements MessageListener {
 
             if(connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))&&!stop){
                 lockStop.unlock();
-                //set the flag that indicate that device is ready to continue
+                //sets the flag that indicates that the device is ready to continue
                 connectedDevices.get(json.getString(PinchInfo.ADDRESS)).setReadyReceived(true);
             }else{
-                //if i receive the message when the game is stopped i ignored it
+                //If the device has received the message when the game was stopped, it is just ignored.
                 lockStop.unlock();
             }
 

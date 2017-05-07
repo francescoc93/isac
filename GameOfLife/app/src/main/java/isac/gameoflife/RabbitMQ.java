@@ -48,8 +48,8 @@ public class RabbitMQ{
     }
 
     /**
-     * Establish a connection with the server
-     * @return
+     * Establishes a connection with the server
+     * @return if the connection has established
      */
     public boolean connect(){
         factory = new ConnectionFactory();
@@ -67,9 +67,9 @@ public class RabbitMQ{
     }
 
     /**
-     * Add a queue
+     * Adds a queue
      * @param name queue's name
-     * @return true if the queue was added with successful or is already exist. False otherwise
+     * @return true if the queue was successfully added or it already exists. False otherwise
      */
     public boolean addQueue(String name){
 
@@ -96,11 +96,11 @@ public class RabbitMQ{
     }
 
     /**
-     * Add a queue with listener for incoming messages
+     * Adds a queue with listener for incoming messages
      *
      * @param name queue's name
      * @param listener a MessageListener object.
-     * @return true if the queue was added with successful or is already exist. False otherwise
+     * @return true if the queue was successfully or it already exists. False otherwise
      */
     public boolean addQueue(String name, final MessageListener listener){
         if(addQueue(name)) {
@@ -115,11 +115,11 @@ public class RabbitMQ{
 
     /**
      *
-     * Add an exchange to broadcast the messages
+     * Adds an exchange to broadcast the messages
      *
      * @param name exchange's name
      * @param mode working mode of the exchange (direct, topic, headers and fanout)
-     * @return true if the exchange was added with successful or is already exist. False otherwise
+     * @return true if the exchange was successfully added or it already exists. False otherwise
      */
     public boolean addPublishExchange(String name,String mode){
 
@@ -147,12 +147,12 @@ public class RabbitMQ{
 
     /**
      *
-     * Bind a queue to an exchange
+     * Binds a queue to an exchange
      *
      * @param name exchange's name
      * @param mode working mode of the exchange (direct, topic, headers and fanout)
      * @param listener a MessageListener object.
-     * @return true if the queue was binded with successful or is already exist. False otherwise
+     * @return true if the queue was successfully bind or it already exists. False otherwise
      */
     public boolean addSubscribeQueue(String name,String mode,MessageListener listener){
         if(addPublishExchange(name,mode)) {
@@ -175,10 +175,10 @@ public class RabbitMQ{
 
     /**
      *
-     * Send a message
+     * Sends a message
      *
      * @param name name of the exchange or the queue
-     * @param message message to send
+     * @param message message to be sent
      */
     public void sendMessage(String name,JSONObject message){
         try {
@@ -198,8 +198,8 @@ public class RabbitMQ{
 
     /**
      *
-     * Close connection with the RabbitMQ's server. If there's some channels opened,
-     * will be closed
+     * Closes connection with the RabbitMQ's server. If there's any channel opened,
+     * it will be closed
      *
      */
     public void closeConnection() {
@@ -229,7 +229,7 @@ public class RabbitMQ{
 
     /**
      *
-     * Close the channel
+     * Closes the channel
      *
      * @param name name of the exchange or the queue
      */
@@ -260,8 +260,8 @@ public class RabbitMQ{
     }
 
     /**
-     *
-     * @return a new channel
+     * Creates a new channel
+     * @return the channel that was created
      */
     private Channel createChannel(){
         try {
@@ -275,10 +275,10 @@ public class RabbitMQ{
 
     /**
      *
-     * Add a listener for incoming messages from the server
+     * Adds a listener for incoming messages from the server
      *
      * @param listener a MessageListener object
-     * @param channel channel where add the listener
+     * @param channel channel where to add the listener to
      * @param name name of the queue or the exchange
      */
     private void addListener(final MessageListener listener,Channel channel,final String name){

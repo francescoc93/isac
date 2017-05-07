@@ -31,10 +31,6 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
-/**
- * Created by Francesco on 24/04/2017.
- */
-
 @RunWith(AndroidJUnit4.class)
 public class TestHandler {
 
@@ -324,12 +320,12 @@ public class TestHandler {
         gridView=(GridView) ((ViewGroup) mActivityRule.getActivity()
                 .findViewById(android.R.id.content)).getChildAt(0);
 
-        //setto le celle vive
+
         setCell();
-        //simulo lo swipe
+
         doSwipe();
 
-        //il device fake invia lo swipe
+
         device.sendSwipe();
 
         try {
@@ -338,11 +334,10 @@ public class TestHandler {
             e.printStackTrace();
         }
 
-        //controllo che i device siano connessi
         assertTrue(gridView.getGameHandler().isConnected());
         assertTrue(gridView.getGameHandler().stopGame());
 
-        //creo le code per il device fake
+
         device.addQueue();
 
         JSONObject message=new JSONObject();
@@ -360,7 +355,7 @@ public class TestHandler {
             e.printStackTrace();
         }
 
-        //il device fake invia al device reale il comando per iniziare il gioco
+
         device.sendMessage(message);
 
         try {
@@ -391,7 +386,6 @@ public class TestHandler {
             e.printStackTrace();
         }
 
-        //il device fake invia i valori delle celle connesse
         device.sendMessage(message);
 
         try {
@@ -409,7 +403,6 @@ public class TestHandler {
             e.printStackTrace();
         }
 
-        //il device fake comunica che è pronto per la generazione successiva
         device.sendMessage(message);
 
         try {

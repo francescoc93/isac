@@ -5,15 +5,12 @@ import com.rabbitmq.client.Envelope;
 
 import org.json.JSONObject;
 
-/**
- * Created by Francesco on 13/03/2017.
- */
 
 public interface MessageListener {
 
     /**
      *
-     * Callback for handle the incoming message from RabbitMQ's server
+     * Callback to handle the incoming messages from RabbitMQ's server
      *
      * @param consumerTag
      * @param envelope

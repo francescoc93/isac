@@ -59,11 +59,12 @@ public class ConnectedDeviceInfo {
 
     public void calculateInfo(){
         setRelativeOrientation();
-        calculateL1L2();
-        evaluateCells();
+        calculateIndices();
+        evaluateReverseList();
     }
     /**
-     * The orientation is calculated considering yourself(the device) as in the middle of the origin
+     * Sets the relative orientation of the devices.
+     * The orientation is calculated considering the current device as in the middle of the origin
      * with its center (0,0). We have then 16 cases, 4 for each border(4).
      */
     private void setRelativeOrientation(){
@@ -114,9 +115,9 @@ public class ConnectedDeviceInfo {
     }
 
     /**
-     * After evaluating the orientation of the device, this method calculates the lengths of the parts splitted by the swipe points
+     * Calculates the first and last index of the cells that will have to be sent to the other device.
      */
-    private void calculateL1L2(){ //16 casi (TRIMMED TO 8)
+    private void calculateIndices(){
 
         int min;
         if(myDir.equals(PinchInfo.Direction.RIGHT) || myDir.equals(PinchInfo.Direction.LEFT)){
@@ -166,9 +167,10 @@ public class ConnectedDeviceInfo {
         }
     }
 
-    //THIRD: calculate the cells to be sent.
-    //reverseList is used to know how to manage the array of cells received.
-    private void evaluateCells(){
+    /**
+     * Checks if the list of cells to be sent has to ve reversed in order to correspond to the indices of the other device.
+     */
+    private void evaluateReverseList(){
 
         if(myDir.equals(PinchInfo.Direction.RIGHT) || myDir.equals(PinchInfo.Direction.LEFT)){
 
@@ -196,14 +198,26 @@ public class ConnectedDeviceInfo {
     }
 
 
+    /**
+     *
+     * @return the index of the first cell
+     */
     public int getIndexFirstCell(){
         return this.indexFirstCell;
     }
 
+    /**
+     *
+     * @return the index of the last cell
+     */
     public int getIndexLastCell(){
         return this.indexLastCell;
     }
 
+    /**
+     *
+     * @return the list of values of the cells to be sent
+     */
     public List<Boolean> getCellsValues(){
 
         boolean[][] matrix = this.gridView.getCellMatrix();
@@ -243,18 +257,34 @@ public class ConnectedDeviceInfo {
     }
 
 
+    /**
+     *
+     * @return if the cells were received
+     */
     public boolean isCellsReceived() {
         return cellsReceived;
     }
 
+    /**
+     * Sets if the cells were received
+     * @param cellsReceived
+     */
     public void setCellsReceived(boolean cellsReceived) {
         this.cellsReceived = cellsReceived;
     }
 
+    /**
+     *
+     * @return if the device is ready to receive cells
+     */
     public boolean isReadyReceived() {
         return readyReceived;
     }
 
+    /**
+     * Sets if the device is ready to receive cells
+     * @param readyReceived
+     */
     public void setReadyReceived(boolean readyReceived) {
         this.readyReceived = readyReceived;
     }
