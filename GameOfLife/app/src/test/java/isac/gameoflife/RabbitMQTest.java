@@ -24,7 +24,7 @@ public class RabbitMQTest {
     public void setup(){
         if(flag){
             flag=false;
-            rabbitMQ=new RabbitMQ("192.168.1.100","[user]","[user]");
+            rabbitMQ=new RabbitMQ("192.168.43.125","[user]","[user]");
             rabbitMQ.connect();
         }
     }

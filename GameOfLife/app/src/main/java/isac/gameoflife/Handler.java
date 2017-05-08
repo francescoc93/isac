@@ -21,13 +21,14 @@ public class Handler implements MessageListener {
 
     private GridView gridView;
     private MainActivity activity;
-    private String ipAddress,senderCommand;
+    private String ipAddress;
     private RabbitMQ rabbitMQ;
     private HashMap<String,ConnectedDeviceInfo> connectedDevices;
     private ReentrantLock lock,lockStop;
     private float cellSize;
     private float myWidth,myHeight;
     private boolean stop;
+    private long generation;
 
     /**
      *
@@ -50,7 +51,7 @@ public class Handler implements MessageListener {
         lock=new ReentrantLock();
         lockStop=new ReentrantLock();
         stop=true;
-        senderCommand="";
+        generation=0;
     }
 
     /**
@@ -86,6 +87,7 @@ public class Handler implements MessageListener {
 
     @Override
     public void handleMessage(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, JSONObject json) {
+
         try {
             switch(json.getString("type")){
                 case "pinch":handlePinch(json);break;
@@ -124,34 +126,6 @@ public class Handler implements MessageListener {
         return true;
     }
 
-    /**
-     * Checks if all the neighbours (eventually all the neighbours except the sender of "pause" command)
-     * have sent the cells.
-     * @return true if the cells from all the neighbours was received. False otherwise
-     */
-    public boolean cellsReceived(){
-        lock.lock();
-
-        Set<String> set=connectedDevices.keySet();
-        ArrayList<String> list=new ArrayList<>();
-
-        //add to the list which devices didn't send the cells
-        for (String s : set){
-            if(!connectedDevices.get(s).isCellsReceived()){
-                list.add(s);
-            }
-        }
-
-        lock.unlock();
-
-        //if list have size 0 or contain only the sender of "pause" command
-        if(list.size()==0||(list.size()==1&&list.contains(senderCommand))){
-            senderCommand="";
-            return true;
-        }
-
-        return false;
-    }
 
     /**
      * Resets the flag that checks who sent the cells
@@ -198,7 +172,7 @@ public class Handler implements MessageListener {
             try {
                 //sets state of the game
                 switch(message.getString("type")){
-                    case "start":stop=false;break;
+                    case "start":generation=0;stop=false;break;
                     case "pause":stop=true;break;
                     default: break;
                 }
@@ -370,6 +344,10 @@ public class Handler implements MessageListener {
         return tmp;
     }
 
+
+    public long getGeneration(){
+        return generation;
+    }
     /**
      * Checks if the message incoming is from itself
      * @param ipAddressDevice IP address
@@ -392,7 +370,6 @@ public class Handler implements MessageListener {
      * @param json incoming message
      */
     private void handlePinch(JSONObject json){
-
         try {
             //gets all infos of the swipe of other device that sent the message
             PinchInfo info = new PinchInfo(json.getString(PinchInfo.ADDRESS), PinchInfo.Direction.valueOf(json.getString(PinchInfo.DIRECTION)),
@@ -516,6 +493,7 @@ public class Handler implements MessageListener {
 
             //checks if the device has already started the game
             if(stop) {
+                generation=0;
                 stop = false;
                 flag=true;
             }
@@ -550,14 +528,14 @@ public class Handler implements MessageListener {
     private void handlePause(JSONObject json){
         try{
             //gets which device performed the pause command
-            senderCommand=json.getString("sender");
-
+            //senderCommand=json.getString("sender");
             lockStop.lock();
 
             boolean flag=false;
 
             //checks if the device has already stopped the game
             if(!stop) {
+                generation=json.getLong("generation");
                 stop = true;
                 flag=true;
             }
@@ -571,7 +549,8 @@ public class Handler implements MessageListener {
                 try {
                     message.put("type","pause");
                     message.put(PinchInfo.ADDRESS,ipAddress);
-                    message.put("sender",json.getString("sender"));
+                    message.put("generation",json.getLong("generation"));
+                    //message.put("sender",json.getString("sender"));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

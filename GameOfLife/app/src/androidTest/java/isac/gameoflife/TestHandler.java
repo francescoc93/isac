@@ -67,7 +67,7 @@ public class TestHandler {
         device.sendSwipe();
 
         try {
-            Thread.sleep(1000);
+            Thread.sleep(5000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -91,7 +91,7 @@ public class TestHandler {
         assertFalse(gridView.getGameHandler().isConnected());
     }
 
-
+/*
 
     @Test
     public void testCommunicationBetweenDevice(){
@@ -108,7 +108,7 @@ public class TestHandler {
         device.sendSwipe();
 
         try {
-            Thread.sleep(1000);
+            Thread.sleep(100000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -198,7 +198,7 @@ public class TestHandler {
         try {
             message.put(PinchInfo.ADDRESS,"127.0.0.1");
             message.put("type","pause");
-            message.put("sender","goofy");
+            //message.put("sender","goofy");
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -246,7 +246,7 @@ public class TestHandler {
         device.sendSwipe();
 
         try {
-            Thread.sleep(1000);
+            Thread.sleep(100000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -329,7 +329,7 @@ public class TestHandler {
         device.sendSwipe();
 
         try {
-            Thread.sleep(1000);
+            Thread.sleep(100000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -421,7 +421,7 @@ public class TestHandler {
             e.printStackTrace();
         }
 
-    }
+    }*/
 
     private void setCell(){
         onView(withId(android.R.id.content)).perform(new GeneralClickAction(Tap.LONG, new CoordinatesProvider() {
@@ -461,7 +461,6 @@ public class TestHandler {
             this.ipAddress="127.0.0.1";
             rabbitMQ=new RabbitMQ(Utils.getServerAddress(),"[user]","[user]");
             rabbitMQ.connect();
-            rabbitMQ.addPublishExchange("broadcast","fanout");
             rabbitMQ.addSubscribeQueue("broadcast","fanout",this);
         }
 

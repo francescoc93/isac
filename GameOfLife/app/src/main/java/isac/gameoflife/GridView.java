@@ -436,6 +436,8 @@ public class GridView extends View {
      */
     private class CalculateGeneration extends Thread {
 
+        private long count=0;
+
         /**
          * Count how many neighbors are alive
          * @param i Row of the matrix
@@ -526,14 +528,17 @@ public class GridView extends View {
         private void sendAndWaitCells(){
             //send the cells
             handler.sendCellsToOthers();
-            //waits until receiving all the cells or receiving a "pause" command or the device is not connected with another one anymore
-            while(!handler.goOn() && handler.isConnected() && !handler.stopGame()){
+
+            //waits until receiving all the cells or the device is not connected with another one anymore
+            while(handler.isConnected() && !handler.goOn()){
                 try {
                     Thread.sleep(20);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
+
+            handler.resetCellsReceived();
         }
 
         /**
@@ -545,7 +550,7 @@ public class GridView extends View {
             handler.readyToContinue();
 
             //wait until receiving all the messages or receiving a "pause" command or the device is not connected with another one anymore
-            while (!handler.readyToSendCells() && handler.isConnected() && !handler.stopGame()) {
+            while(handler.isConnected() && !handler.readyToSendCells() && !handler.stopGame()){
                 try {
                     Thread.sleep(20);
                 } catch (InterruptedException e) {
@@ -554,8 +559,7 @@ public class GridView extends View {
             }
 
             handler.resetReadyReceived();
-
-            //force redraw of the grid
+            //redraw of the grid
             postInvalidate();
         }
 
@@ -569,32 +573,31 @@ public class GridView extends View {
                 try {
                     message.put("type","pause");
                     message.put(PinchInfo.ADDRESS,ipAddress);
-                    message.put("sender",ipAddress);
+                    message.put("generation",count);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
 
+                //send pause message
                 handler.sendCommand(message,null);
-                receiveCellsAndReset();
-            }
 
-            pause();
-        }
-
-        /**
-         * Wait (if necessary) to receive all the cells from the neighbours and reset their flag
-         */
-        private void receiveCellsAndReset(){
-            while(handler.isConnected() && !handler.cellsReceived()){
                 try {
-                    Thread.sleep(20);
+                    Thread.sleep(500);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
+                sendAndWaitCells();
+
+                //redraw of the grid
+                if(handler.isConnected()) {
+                    calculateNextGen();
+                    postInvalidate();
+                }
             }
 
-            handler.resetCellsReceived();
             resetGhostCells();
+            pause();
         }
 
         @Override
@@ -603,14 +606,12 @@ public class GridView extends View {
 
             if(handler.isConnected()){
                 while(goOn){
+
                     long initTime = System.currentTimeMillis();
 
                     sendAndWaitCells();
 
-                    if(handler.isConnected() && !handler.stopGame()) {
-                        //if the device receives the cells from all the neighbours and it doesn't receive the command of stop
-                        //reset the flag of sent cells
-                        handler.resetCellsReceived();
+                    if(handler.isConnected() && !handler.stopGame()){
                         //calculate the next generation
                         calculateNextGen();
                         //send to the neighbours the will to continue with the next generation and waits
@@ -619,6 +620,8 @@ public class GridView extends View {
 
                         if(handler.isConnected() && !handler.stopGame()){
                             //the device receives the messages from all the neighbours and it doesn't receive the command of stop
+
+                            count++;
 
                             //check if the user has stopped the game
                             if(started.get()){
@@ -631,15 +634,27 @@ public class GridView extends View {
                                 goOn=false;
                                 stopGame();
                             }
+
                         }else{
-                            resetGhostCells();
-                            goOn=false;
-                            pause();
+                            //if the number of generation is not equal to the device's number of generations
+                            //that origin the pause, calculate one more generation. if the device is
+                            //disconnected or the generations are equal to the device's number of generations
+                            //stop the game
+                            if(!handler.isConnected() || handler.getGeneration()-count==0){
+                                goOn=false;
+                                resetGhostCells();
+                                pause();
+                            }
                         }
                     }else{
                         goOn=false;
-                        receiveCellsAndReset();
-                        handler.resetReadyReceived();
+
+                        if(handler.isConnected()){
+                            calculateNextGen();
+                            postInvalidate();
+                        }
+
+                        resetGhostCells();
                         pause();
                     }
 
