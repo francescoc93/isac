@@ -87,7 +87,6 @@ public class Handler implements MessageListener {
 
     @Override
     public void handleMessage(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, JSONObject json) {
-
         try {
             switch(json.getString("type")){
                 case "pinch":handlePinch(json);break;

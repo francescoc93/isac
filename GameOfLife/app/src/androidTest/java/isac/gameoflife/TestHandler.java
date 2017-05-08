@@ -67,7 +67,7 @@ public class TestHandler {
         device.sendSwipe();
 
         try {
-            Thread.sleep(5000);
+            Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -90,7 +90,6 @@ public class TestHandler {
         //i device non sono più collegati
         assertFalse(gridView.getGameHandler().isConnected());
     }
-
 /*
 
     @Test
@@ -108,7 +107,7 @@ public class TestHandler {
         device.sendSwipe();
 
         try {
-            Thread.sleep(100000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -230,6 +229,7 @@ public class TestHandler {
         }
     }
 
+    */
 
     @Test
     public void testCloseCommunication(){
@@ -246,7 +246,7 @@ public class TestHandler {
         device.sendSwipe();
 
         try {
-            Thread.sleep(100000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -329,7 +329,7 @@ public class TestHandler {
         device.sendSwipe();
 
         try {
-            Thread.sleep(100000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -421,7 +421,7 @@ public class TestHandler {
             e.printStackTrace();
         }
 
-    }*/
+    }
 
     private void setCell(){
         onView(withId(android.R.id.content)).perform(new GeneralClickAction(Tap.LONG, new CoordinatesProvider() {

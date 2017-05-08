@@ -105,7 +105,7 @@ public class RabbitMQ{
     public boolean addQueue(String name, final MessageListener listener){
         if(addQueue(name)) {
             lock.lock();
-            addListener(listener, queue.get(name), name);
+            addListener(listener, queue.get(name), name,name);
             lock.unlock();
             return true;
         }
@@ -161,7 +161,7 @@ public class RabbitMQ{
                 Channel tmp = exchange.get(name);
                 String queueName = tmp.queueDeclare().getQueue();
                 tmp.queueBind(queueName, name, "");
-                addListener(listener, tmp, queueName);
+                addListener(listener, tmp, queueName,name);
                 lock.unlock();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -281,7 +281,7 @@ public class RabbitMQ{
      * @param channel channel where to add the listener to
      * @param name name of the queue or the exchange
      */
-    private void addListener(final MessageListener listener,Channel channel,final String name){
+    private void addListener(final MessageListener listener,Channel channel,String name,final String key){
 
         Consumer consumer = new DefaultConsumer(channel) {
             @Override
@@ -293,10 +293,10 @@ public class RabbitMQ{
 
                     lock.lock();
 
-                    if(timeStampQueue.containsKey(name)){
-                        millis=timeStampQueue.get(name);
-                    }else if(timeStampExchange.containsKey(name)){
-                        millis=timeStampExchange.get(name);
+                    if(timeStampQueue.containsKey(key)){
+                        millis=timeStampQueue.get(key);
+                    }else if(timeStampExchange.containsKey(key)){
+                        millis=timeStampExchange.get(key);
                     }
 
                     lock.unlock();
