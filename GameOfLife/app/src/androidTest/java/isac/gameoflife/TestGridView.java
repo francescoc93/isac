@@ -109,7 +109,6 @@ public class TestGridView {
             e.printStackTrace();
         }
 
-        //double tap metto in pausa il gioco
         onView(withId(android.R.id.content)).perform(new GeneralClickAction(Tap.DOUBLE, new CoordinatesProvider() {
             @Override
             public float[] calculateCoordinates(View view) {

@@ -40,7 +40,7 @@ public class GridView extends View {
     private Long lastTapTimeMs,touchDownMs;
     //First pair is timestamp and direction, second is x and y coordinates
     private Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> infoSwipe;
-    private ReentrantLock lockInfoSwipe,lockAction,lockHandler;
+    private ReentrantLock lockInfoSwipe,lockAction,lockHandler,lockGridView;
     private CalculateGeneration calculateGeneration;
 
     public GridView(final Context context) {
@@ -57,6 +57,7 @@ public class GridView extends View {
         lockInfoSwipe=new ReentrantLock();
         lockAction=new ReentrantLock();
         lockHandler=new ReentrantLock();
+        lockGridView=new ReentrantLock();
     }
 
     /**
@@ -299,6 +300,8 @@ public class GridView extends View {
      * @param direction the direction of the CURRENT device swipe
      */
     public void setPairedCells(int firstIndex, int lastIndex, List<Boolean> cells, PinchInfo.Direction direction){
+        lockGridView.lock();
+
         switch(direction){
             case RIGHT:
                 for(int i = firstIndex,j=0; i<=lastIndex; i++,j++){
@@ -322,7 +325,7 @@ public class GridView extends View {
                 break;
         }
 
-
+        lockGridView.unlock();
 
     }
 
@@ -501,6 +504,9 @@ public class GridView extends View {
          * Calculate the next generation of cells
          */
         private void calculateNextGen(){
+
+            lockGridView.lock();
+
             boolean [][] tmp=new boolean[row+2][column+2];
 
             for(int i=1;i<row+1;i++){
@@ -520,6 +526,8 @@ public class GridView extends View {
             }
 
             cellChecked=tmp;
+
+            lockGridView.unlock();
         }
 
         /**
@@ -531,11 +539,7 @@ public class GridView extends View {
 
             //waits until receiving all the cells or the device is not connected with another one anymore
             while(handler.isConnected() && !handler.goOn()){
-                try {
-                    Thread.sleep(20);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                delay(20);
             }
 
             handler.resetCellsReceived();
@@ -551,11 +555,7 @@ public class GridView extends View {
 
             //wait until receiving all the messages or receiving a "pause" command or the device is not connected with another one anymore
             while(handler.isConnected() && !handler.readyToSendCells() && !handler.stopGame()){
-                try {
-                    Thread.sleep(20);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                delay(20);
             }
 
             handler.resetReadyReceived();
@@ -581,11 +581,7 @@ public class GridView extends View {
                 //send pause message
                 handler.sendCommand(message,null);
 
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                delay(500);
 
                 sendAndWaitCells();
 
@@ -596,8 +592,16 @@ public class GridView extends View {
                 }
             }
 
-            resetGhostCells();
+            //resetGhostCells();
             pause();
+        }
+
+        private void delay(long millis){
+            try {
+                Thread.sleep(millis);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         @Override
@@ -614,22 +618,18 @@ public class GridView extends View {
                     if(handler.isConnected() && !handler.stopGame()){
                         //calculate the next generation
                         calculateNextGen();
+
                         //send to the neighbours the will to continue with the next generation and waits
                         //to receive from all the neighbours the same message
                         sendAndWaitOthers();
 
                         if(handler.isConnected() && !handler.stopGame()){
                             //the device receives the messages from all the neighbours and it doesn't receive the command of stop
-
                             count++;
 
                             //check if the user has stopped the game
                             if(started.get()){
-                                try {
-                                    Thread.sleep(500);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
+                                delay(500);
                             }else{
                                 goOn=false;
                                 stopGame();
@@ -640,10 +640,13 @@ public class GridView extends View {
                             //that origin the pause, calculate one more generation. if the device is
                             //disconnected or the generations are equal to the device's number of generations
                             //stop the game
-                            if(!handler.isConnected() || handler.getGeneration()-count==0){
+                            if(!handler.isConnected() || handler.getGeneration()==count){
                                 goOn=false;
-                                resetGhostCells();
+                                //resetGhostCells();
                                 pause();
+                            }else if(handler.isConnected()){
+                                count++;
+                                delay(500);
                             }
                         }
                     }else{
@@ -654,7 +657,7 @@ public class GridView extends View {
                             postInvalidate();
                         }
 
-                        resetGhostCells();
+                        //resetGhostCells();
                         pause();
                     }
 
@@ -662,6 +665,9 @@ public class GridView extends View {
                     System.out.println("Elapsed time from previous generation: " + (endTime-initTime));
                 }
             }else{
+
+                resetGhostCells();
+
                 while(goOn){
                     //calculate the next generation of cells
                     calculateNextGen();
@@ -670,12 +676,7 @@ public class GridView extends View {
 
                     //check if it is necessary to stop the game
                     if(started.get()){
-                        try {
-
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+                        delay(500);
                     }else{
                         goOn=false;
                     }
