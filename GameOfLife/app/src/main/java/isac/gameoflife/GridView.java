@@ -558,9 +558,9 @@ public class GridView extends View {
                 delay(20);
             }
 
-            handler.resetReadyReceived();
+            //handler.resetReadyReceived();
             //redraw of the grid
-            postInvalidate();
+            //postInvalidate();
         }
 
         /**
@@ -613,50 +613,84 @@ public class GridView extends View {
 
                     long initTime = System.currentTimeMillis();
 
+                    //resetto i ready. questo punto è ideale per farlo, in quanto, non ho ancora
+                    //inviato le celle ai miei avicini e di sicuro non riceverò dei ready, rischiando
+                    //di annullare quelli "buoni"
+                    handler.resetReadyReceived();
+                    //invio e aspetto la ricezione delle celle
+                    // (in questa fase ignoro se mi arriva un messaggio di pausa)
+                    // esco dal while solo se non ho più vicini
                     sendAndWaitCells();
 
-                    if(handler.isConnected() && !handler.stopGame()){
+                    if(handler.isConnected()/* && !handler.stopGame()*/){
+                        handler.clearGhostCells();
+                        //se ho ancora dei vicini
                         //calculate the next generation
                         calculateNextGen();
 
                         //send to the neighbours the will to continue with the next generation and waits
                         //to receive from all the neighbours the same message
+                        //invio il messagio di ready ai miei vicini e aspetto di riceverli tutti
+                        //esco dal while se non sono più connesso o se ricevo un messaggio di stop
                         sendAndWaitOthers();
 
                         if(handler.isConnected() && !handler.stopGame()){
+                            //se sono connesso e non ho ricevuto un messaggio di stop
+                            //ridisegno la griglia
+                            postInvalidate();
                             //the device receives the messages from all the neighbours and it doesn't receive the command of stop
                             count++;
 
                             //check if the user has stopped the game
+                            //contorllo se su questo device è stato effettuato uno stop da parte dell'utente
                             if(started.get()){
                                 delay(500);
                             }else{
                                 goOn=false;
+                                //se mi devo fermare, prima, invio le celle ai miei vicini, attendo
+                                //di riceverli da tutti e una volta ricevuti ridisegno e mi fermo
                                 stopGame();
                             }
-
                         }else{
                             //if the number of generation is not equal to the device's number of generations
                             //that origin the pause, calculate one more generation. if the device is
                             //disconnected or the generations are equal to the device's number of generations
                             //stop the game
+                            //se non sono connesso mi fermo. se il numero di generazioni è uguale
+                            //vuol dire che sono sincronizzato con il device che ha emesso la pausa
                             if(!handler.isConnected() || handler.getGeneration()==count){
+                                postInvalidate();
                                 goOn=false;
                                 //resetGhostCells();
                                 pause();
                             }else if(handler.isConnected()){
                                 count++;
-                                delay(500);
+                                //ho ricevuto il messaggio di pausa ma devo ancora completare la mia
+                                // generazione e iniziare la successiva per mettermi in pari.
+                                // se sono qui vuol dire che sono uscito dal ciclo per l'attesa dei ready
+                                // e non ho ancora ricevuto il ready da tutti i miei vicini
+
+                                //attendo di ricevere il ready da tutti
+                                while(handler.isConnected() && !handler.readyToSendCells()){
+                                    delay(20);
+                                }
+
+                                //ridisegno
+                                postInvalidate();
+
+                                //se sono connesso, aspetto mezzo secondo prima di iniziare la generazione
+                                //successiva
+                                if(handler.isConnected()) {
+                                    delay(500);
+                                }else{
+                                    //altrimenti, mi fermo
+                                    goOn=false;
+                                    pause();
+                                }
                             }
                         }
                     }else{
                         goOn=false;
-
-                        if(handler.isConnected()){
-                            calculateNextGen();
-                            postInvalidate();
-                        }
-
                         //resetGhostCells();
                         pause();
                     }
@@ -664,10 +698,9 @@ public class GridView extends View {
                     long endTime = System.currentTimeMillis();
                     System.out.println("Elapsed time from previous generation: " + (endTime-initTime));
                 }
-            }else{
 
                 resetGhostCells();
-
+            }else{
                 while(goOn){
                     //calculate the next generation of cells
                     calculateNextGen();

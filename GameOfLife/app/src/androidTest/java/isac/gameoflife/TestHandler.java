@@ -246,6 +246,9 @@ public class TestHandler {
     }
 
 
+
+
+
     @Test
     public void testCommunicationBetweenDevice2(){
 
@@ -585,7 +588,6 @@ public class TestHandler {
         }
 
     }
-
 
     @Test
     public void testCommunicationBetweenDevice3(){
