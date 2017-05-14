@@ -94,8 +94,6 @@ public class CalculateGeneration {
         }
 
         if(handler.isConnected()){
-
-            boolean goOn=true;
             /*
                 stopGame restituisce true in tre casi:
 
@@ -112,11 +110,10 @@ public class CalculateGeneration {
             /*
                 Alla ripresa del gioco (se il device è ancora connesso deve riprendere dal punto in
                 cui si è fermato. questo per evitare che al riavvio del gioco il device mandi di nuovo
-                le celle, rendendo impossibile la sincronizzazione con gli altri device qualora si trovasse
-                una generazione più avanti dei vicini
+                le celle (a chi le ha già mandate)
             */
 
-            while(goOn){
+            while(!handler.stopGame()){
 
                 //send the cells
                 handler.sendCellsToOthers();
@@ -134,6 +131,12 @@ public class CalculateGeneration {
                 //indipendentemente dal motivo per cui sono uscito dal while, controllo se ho ricevuto
                 //le celle da tutti i miei vicini
                 if(handler.goOn()){
+                    //indipendentemente dal fatto che mi debba fermare o meno a causa di una pausa, se sono in questo
+                    // if allora ho tutto ciò che mi occorre per calcolare la generazione.
+                    // quindi resetto i flag di tutti i device a cui ho inviato le celle
+                    //prima di inviare nuovamente le celle.
+                    handler.resetCellSent();
+
                     //invoco il metodo dell'handler che setta le celle "fantasma" della griglia
                     handler.setCells();
                     //calcolo la generazione
@@ -163,24 +166,13 @@ public class CalculateGeneration {
                     }
                 }
 
-                if(handler.stopGame()){
-                    //se mi devo fermare, non resetto i flag di tutti i device connessi a cui ho
-                    //inviato le celle. così, in caso di restart, le invio solo a chi non le ho inviate
-                    //prima. quindi alle nuove code create (ad esempio un device si scollega e poi
-                    //si ricollega)
-                    goOn=false;
-                    //mostro il toast di pausa
-                    gridView.pause();
-                }else{
-                    //vado avanti quindi resetto i flag di tutti i device a cui ho inviato le celle
-                    //prima di inviare nuovamente le celle
-                    handler.resetCellSent();
-                }
-
                 //resetto le celle fantasma. in questo modo resetto le celle di device che si sono
                 //disconnessi nella generazione corrente
                 resetGhostCells();
             }
+
+            //mostro il toast di pausa
+            gridView.pause();
         }else{
             while(gridView.isStarted()){
                 //calculate the next generation of cells
