@@ -14,7 +14,6 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -33,14 +32,14 @@ public class GridView extends View {
     private int startY;
     private int numberOfTaps;
     private Paint whitePaint = new Paint();
-    private boolean[][] cellChecked;
     private String ipAddress;
     private MainActivity activity;
     private AtomicBoolean started=new AtomicBoolean(false);
     private Long lastTapTimeMs,touchDownMs;
     //First pair is timestamp and direction, second is x and y coordinates
     private Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> infoSwipe;
-    private ReentrantLock lockInfoSwipe,lockAction,lockHandler,lockGridView;
+    private ReentrantLock lockInfoSwipe,lockAction,lockHandler;
+    private Thread thread;
     private CalculateGeneration calculateGeneration;
 
     public GridView(final Context context) {
@@ -52,12 +51,11 @@ public class GridView extends View {
         numberOfTaps=0;
         lastTapTimeMs=0L;
         touchDownMs=0L;
-        calculateGeneration=null;
+        thread =null;
         SIZE=DESIRED_DP_VALUE * getResources().getDisplayMetrics().density;
         lockInfoSwipe=new ReentrantLock();
         lockAction=new ReentrantLock();
         lockHandler=new ReentrantLock();
-        lockGridView=new ReentrantLock();
     }
 
     /**
@@ -109,19 +107,25 @@ public class GridView extends View {
 
         if(started.compareAndSet(false,true)){
 
-            if(calculateGeneration!=null){
-                if(calculateGeneration.isAlive()){
+            if(thread!=null){
+                if(thread.isAlive()){
                     //before starting a new generation, waits the end of the previous one
                     try {
-                        calculateGeneration.join();
+                        thread.join();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
             }
 
-            calculateGeneration=new CalculateGeneration();
-            calculateGeneration.start();
+            thread =new Thread(){
+                @Override
+                public void run(){
+                    calculateGeneration.calculate();
+                }
+            };
+
+            thread.start();
 
             activity.runOnUiThread(new Runnable() {
                 public void run() {
@@ -175,6 +179,7 @@ public class GridView extends View {
             count++;
         }
 
+        boolean [][] cellChecked=calculateGeneration.getCells();
         //sets the alive cells
         for (int i = 0; i < row; i++) {
             for (int j = 0; j < column; j++) {
@@ -245,7 +250,8 @@ public class GridView extends View {
 
             lockHandler.lock();
 
-            handler=new Handler(this,activity,width,height,Utils.pixelsToInches(SIZE,getXDpi()));
+            calculateGeneration=new CalculateGeneration(row,column,this);
+            handler=new Handler(this,calculateGeneration,activity,width,height,Utils.pixelsToInches(SIZE,getXDpi()));
 
             lockHandler.unlock();
 
@@ -262,19 +268,8 @@ public class GridView extends View {
                 }
 
             }.execute();
-
-            //create the matrix of cells
-            cellChecked = new boolean[row+2][column+2];
         }
 
-    }
-
-    /**
-     *
-     * @return the matrix of cells
-     */
-    public boolean[][] getCellMatrix(){
-        return this.cellChecked;
     }
 
     /**
@@ -290,44 +285,14 @@ public class GridView extends View {
         return tmp;
     }
 
-    /**
-     * Sets the outer border cells, where 2 devices are in contact.
-     * The direction of the swipe is essential: you need to recognise what portion of screen
-     * corresponds to one specific neighbour.
-     * @param firstIndex
-     * @param lastIndex
-     * @param cells
-     * @param direction the direction of the CURRENT device swipe
-     */
-    public void setPairedCells(int firstIndex, int lastIndex, List<Boolean> cells, PinchInfo.Direction direction){
-        lockGridView.lock();
+    public CalculateGeneration getCalculateGeneration(){
+        lockHandler.lock();
+        CalculateGeneration tmp=calculateGeneration;
+        lockHandler.unlock();
 
-        switch(direction){
-            case RIGHT:
-                for(int i = firstIndex,j=0; i<=lastIndex; i++,j++){
-                    cellChecked[i][column+1] = cells.get(j);
-                };
-                break;
-            case LEFT:
-                for(int i = firstIndex,j=0; i<=lastIndex; i++,j++){
-                    cellChecked[i][0] = cells.get(j);
-                };
-                break;
-            case UP:
-                for(int i = firstIndex,j=0; i<=lastIndex; i++,j++){
-                    cellChecked[0][i] = cells.get(j);
-                };
-                break;
-            case DOWN:
-                for(int i = firstIndex,j=0; i<=lastIndex; i++,j++){
-                    cellChecked[row+1][i] = cells.get(j);
-                };
-                break;
-        }
-
-        lockGridView.unlock();
-
+        return tmp;
     }
+
 
     /**
      * Send the message of swipe to all device that are running the application
@@ -359,7 +324,7 @@ public class GridView extends View {
             column+=1;
             row+=1;
 
-            cellChecked[row][column] = !cellChecked[row][column];
+            calculateGeneration.setCell(row,column);
 
             //force the redraw of the grid
             invalidate();
@@ -431,290 +396,6 @@ public class GridView extends View {
                 start();
             }
 
-        }
-    }
-
-    /**
-     * Inner class that calculates the generations of the game
-     */
-    private class CalculateGeneration extends Thread {
-
-        private long count=0;
-
-        /**
-         * Count how many neighbors are alive
-         * @param i Row of the matrix
-         * @param j Column of the matrix
-         * @return the number of live neighbors
-         */
-        private int neighboursAlive(int i,int j){
-            int neighbours=0;
-
-            if(cellChecked[i-1][j-1]){
-                neighbours++;
-            }
-
-            if(cellChecked[i-1][j]){
-                neighbours++;
-            }
-
-            if(cellChecked[i-1][j+1]){
-                neighbours++;
-            }
-
-            if(cellChecked[i][j-1]){
-                neighbours++;
-            }
-
-            if(cellChecked[i][j+1]){
-                neighbours++;
-            }
-
-            if(cellChecked[i+1][j-1]){
-                neighbours++;
-            }
-
-            if(cellChecked[i+1][j]){
-                neighbours++;
-            }
-
-            if(cellChecked[i+1][j+1]){
-                neighbours++;
-            }
-
-            return neighbours;
-        }
-
-        /**
-         * Reset the state of the cells sent by the neighbors
-         */
-        private void resetGhostCells(){
-            for(int i=0;i<column+2;i++){
-                cellChecked[0][i]=false;
-                cellChecked[row+1][i]=false;
-            }
-
-            for(int i=0;i<row+2;i++){
-                cellChecked[i][0]=false;
-                cellChecked[i][column+1]=false;
-            }
-        }
-
-        /**
-         * Calculate the next generation of cells
-         */
-        private void calculateNextGen(){
-
-            lockGridView.lock();
-
-            boolean [][] tmp=new boolean[row+2][column+2];
-
-            for(int i=1;i<row+1;i++){
-                for(int j=1;j<column+1;j++){
-                    int neighbours=neighboursAlive(i,j);
-
-                    if(cellChecked[i][j]) {
-                        if (neighbours==2 || neighbours==3) {
-                            tmp[i][j] = true;
-                        }
-                    }else{
-                        if(neighbours==3){
-                            tmp[i][j]=true;
-                        }
-                    }
-                }
-            }
-
-            cellChecked=tmp;
-
-            lockGridView.unlock();
-        }
-
-        /**
-         * Send the cells to the neighbors and i wait to receive the cells from they're
-         */
-        private void sendAndWaitCells(){
-            //send the cells
-            handler.sendCellsToOthers();
-
-            //waits until receiving all the cells or the device is not connected with another one anymore
-            while(handler.isConnected() && !handler.goOn()){
-                delay(20);
-            }
-
-            handler.resetCellsReceived();
-        }
-
-        /**
-         * Sends a message that indicates that the application is ready to continue and waits to receive the same
-         * message from his neighbours
-         */
-        private void sendAndWaitOthers(){
-            //send the message
-            handler.readyToContinue();
-
-            //wait until receiving all the messages or receiving a "pause" command or the device is not connected with another one anymore
-            while(handler.isConnected() && !handler.readyToSendCells() && !handler.stopGame()){
-                delay(20);
-            }
-
-            //handler.resetReadyReceived();
-            //redraw of the grid
-            //postInvalidate();
-        }
-
-        /**
-         * Sends to the neighbours a message that tells to stop the game
-         */
-        private void stopGame(){
-            if(handler.isConnected()){
-
-                JSONObject message=new JSONObject();
-                try {
-                    message.put("type","pause");
-                    message.put(PinchInfo.ADDRESS,ipAddress);
-                    message.put("generation",count);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-                //send pause message
-                handler.sendCommand(message,null);
-
-                delay(500);
-
-                sendAndWaitCells();
-
-                //redraw of the grid
-                if(handler.isConnected()) {
-                    calculateNextGen();
-                    postInvalidate();
-                }
-            }
-
-            //resetGhostCells();
-            pause();
-        }
-
-        private void delay(long millis){
-            try {
-                Thread.sleep(millis);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void run() {
-            boolean goOn=true;
-
-            if(handler.isConnected()){
-                while(goOn){
-
-                    long initTime = System.currentTimeMillis();
-
-                    //resetto i ready. questo punto è ideale per farlo, in quanto, non ho ancora
-                    //inviato le celle ai miei avicini e di sicuro non riceverò dei ready, rischiando
-                    //di annullare quelli "buoni"
-                    handler.resetReadyReceived();
-                    //invio e aspetto la ricezione delle celle
-                    // (in questa fase ignoro se mi arriva un messaggio di pausa)
-                    // esco dal while solo se non ho più vicini
-                    sendAndWaitCells();
-
-                    if(handler.isConnected()/* && !handler.stopGame()*/){
-                        handler.clearGhostCells();
-                        //se ho ancora dei vicini
-                        //calculate the next generation
-                        calculateNextGen();
-
-                        //send to the neighbours the will to continue with the next generation and waits
-                        //to receive from all the neighbours the same message
-                        //invio il messagio di ready ai miei vicini e aspetto di riceverli tutti
-                        //esco dal while se non sono più connesso o se ricevo un messaggio di stop
-                        sendAndWaitOthers();
-
-                        if(handler.isConnected() && !handler.stopGame()){
-                            //se sono connesso e non ho ricevuto un messaggio di stop
-                            //ridisegno la griglia
-                            postInvalidate();
-                            //the device receives the messages from all the neighbours and it doesn't receive the command of stop
-                            count++;
-
-                            //check if the user has stopped the game
-                            //contorllo se su questo device è stato effettuato uno stop da parte dell'utente
-                            if(started.get()){
-                                delay(500);
-                            }else{
-                                goOn=false;
-                                //se mi devo fermare, prima, invio le celle ai miei vicini, attendo
-                                //di riceverli da tutti e una volta ricevuti ridisegno e mi fermo
-                                stopGame();
-                            }
-                        }else{
-                            //if the number of generation is not equal to the device's number of generations
-                            //that origin the pause, calculate one more generation. if the device is
-                            //disconnected or the generations are equal to the device's number of generations
-                            //stop the game
-                            //se non sono connesso mi fermo. se il numero di generazioni è uguale
-                            //vuol dire che sono sincronizzato con il device che ha emesso la pausa
-                            if(!handler.isConnected() || handler.getGeneration()==count){
-                                postInvalidate();
-                                goOn=false;
-                                //resetGhostCells();
-                                pause();
-                            }else if(handler.isConnected()){
-                                count++;
-                                //ho ricevuto il messaggio di pausa ma devo ancora completare la mia
-                                // generazione e iniziare la successiva per mettermi in pari.
-                                // se sono qui vuol dire che sono uscito dal ciclo per l'attesa dei ready
-                                // e non ho ancora ricevuto il ready da tutti i miei vicini
-
-                                //attendo di ricevere il ready da tutti
-                                while(handler.isConnected() && !handler.readyToSendCells()){
-                                    delay(20);
-                                }
-
-                                //ridisegno
-                                postInvalidate();
-
-                                //se sono connesso, aspetto mezzo secondo prima di iniziare la generazione
-                                //successiva
-                                if(handler.isConnected()) {
-                                    delay(500);
-                                }else{
-                                    //altrimenti, mi fermo
-                                    goOn=false;
-                                    pause();
-                                }
-                            }
-                        }
-                    }else{
-                        goOn=false;
-                        //resetGhostCells();
-                        pause();
-                    }
-
-                    long endTime = System.currentTimeMillis();
-                    System.out.println("Elapsed time from previous generation: " + (endTime-initTime));
-                }
-
-                resetGhostCells();
-            }else{
-                while(goOn){
-                    //calculate the next generation of cells
-                    calculateNextGen();
-                    //force redraw of the grid
-                    postInvalidate();
-
-                    //check if it is necessary to stop the game
-                    if(started.get()){
-                        delay(500);
-                    }else{
-                        goOn=false;
-                    }
-                }
-            }
         }
     }
 }

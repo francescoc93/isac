@@ -37,6 +37,7 @@ public class TestHandler {
     private static boolean flag=true;
     private static GridView gridView;
     private static FakeDevice device;
+    private static JSONObject messageStart,messagePause,messageClose;
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityRule = new ActivityTestRule<>(
@@ -48,6 +49,32 @@ public class TestHandler {
         if(flag){
             flag=false;
             device=new FakeDevice();
+
+            messageStart=new JSONObject();
+            try {
+                messageStart.put(PinchInfo.ADDRESS,"127.0.0.1");
+                messageStart.put("type","start");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            messagePause=new JSONObject();
+            try {
+                messagePause.put(PinchInfo.ADDRESS,"127.0.0.1");
+                messagePause.put("type","pause");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            messageClose=new JSONObject();
+            try {
+                messageClose.put(PinchInfo.ADDRESS,"127.0.0.1");
+                messageClose.put("type","close");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+
         }
     }
 
@@ -63,11 +90,7 @@ public class TestHandler {
 
         device.sendSwipe();
 
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(3000);
 
         assertTrue(gridView.getGameHandler().isConnected());
 
@@ -75,11 +98,7 @@ public class TestHandler {
 
         device.detachDevice();
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(1000);
 
         assertFalse(gridView.getGameHandler().isConnected());
     }
@@ -87,6 +106,8 @@ public class TestHandler {
 
     @Test
     public void testCommunicationBetweenDevice(){
+
+        JSONObject message;
 
         gridView=(GridView) ((ViewGroup) mActivityRule.getActivity()
                     .findViewById(android.R.id.content)).getChildAt(0);
@@ -96,39 +117,18 @@ public class TestHandler {
 
         device.sendSwipe();
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(1000);
 
         assertTrue(gridView.getGameHandler().isConnected());
         assertTrue(gridView.getGameHandler().stopGame());
 
         device.addQueue();
 
-        JSONObject message=new JSONObject();
+        delay(1000);
 
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","start");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        device.sendMessage(messageStart);
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        device.sendMessage(message);
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(500);
 
         assertTrue(gridView.isStarted());
         assertFalse(gridView.getGameHandler().stopGame());
@@ -155,145 +155,54 @@ public class TestHandler {
 
         device.sendMessage(message);
 
-        try {
-            Thread.sleep(4000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(200);
 
-        message=new JSONObject();
-
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","ready");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        device.sendMessage(message);
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        message=new JSONObject();
-
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","pause");
-            message.put("generation",1);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
 
         assertTrue(gridView.isStarted());
         //il device fake mette in pausa il gioco
-        device.sendMessage(message);
+        device.sendMessage(messagePause);
 
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(1000);
 
-        list.clear();
-        for(int i=0;i<11;i++){
-
-            if(i==5){
-                list.add(true);
-            }else{
-                list.add(false);
-            }
-        }
-
-        assertTrue(gridView.isStarted());
-
-        message=new JSONObject();
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","cells");
-            message.put("cellsList",list);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        device.sendMessage(message);
-
-        try {
-            Thread.sleep(4000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        assertFalse(gridView.isStarted());
         assertTrue(gridView.getGameHandler().stopGame());
+        assertFalse(gridView.isStarted());
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(1000);
 
         device.detachDevice();
 
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(5000);
+
+        assertFalse(gridView.getGameHandler().isConnected());
     }
-
-
-
 
 
     @Test
     public void testCommunicationBetweenDevice2(){
 
+        JSONObject message;
+
         gridView=(GridView) ((ViewGroup) mActivityRule.getActivity()
                 .findViewById(android.R.id.content)).getChildAt(0);
 
         setCell();
-
         doSwipe();
 
         device.sendSwipe();
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+
+        delay(1000);
 
         assertTrue(gridView.getGameHandler().isConnected());
         assertTrue(gridView.getGameHandler().stopGame());
 
         device.addQueue();
 
-        JSONObject message=new JSONObject();
+        delay(1000);
 
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","start");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        device.sendMessage(messageStart);
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        device.sendMessage(message);
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(500);
 
         assertTrue(gridView.isStarted());
         assertFalse(gridView.getGameHandler().stopGame());
@@ -320,45 +229,20 @@ public class TestHandler {
 
         device.sendMessage(message);
 
-        try {
-            Thread.sleep(4000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-
-        message=new JSONObject();
-
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","pause");
-            message.put("generation",1);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        device.sendMessage(message);
-
-        message=new JSONObject();
-
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","ready");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        device.sendMessage(message);
-
-        try {
-            Thread.sleep(1500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(200);
 
         assertTrue(gridView.isStarted());
+        //il device fake mette in pausa il gioco
+        device.sendMessage(messagePause);
+
+        delay(1000);
+
+        assertTrue(gridView.getGameHandler().stopGame());
+        assertFalse(gridView.isStarted());
+
 
         list.clear();
+
         for(int i=0;i<11;i++){
 
             if(i==5){
@@ -379,28 +263,27 @@ public class TestHandler {
 
         device.sendMessage(message);
 
-        try {
-            Thread.sleep(4000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(5000);
 
-        assertFalse(gridView.isStarted());
+        device.sendMessage(messageStart);
+
+        delay(500);
+
+        assertFalse(gridView.getGameHandler().stopGame());
+        assertTrue(gridView.isStarted());
+
+        device.sendMessage(messagePause);
+
+        delay(1000);
+
         assertTrue(gridView.getGameHandler().stopGame());
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        assertFalse(gridView.isStarted());
 
         device.detachDevice();
 
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(5000);
+
+        assertFalse(gridView.getGameHandler().isConnected());
     }
 
 
@@ -415,74 +298,38 @@ public class TestHandler {
 
         device.sendSwipe();
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(1000);
 
         assertTrue(gridView.getGameHandler().isConnected());
         assertTrue(gridView.getGameHandler().stopGame());
 
         device.addQueue();
 
-        JSONObject message=new JSONObject();
+        delay(1000);
 
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","start");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        device.sendMessage(messageStart);
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        device.sendMessage(message);
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(5000);
 
         assertFalse(gridView.getGameHandler().stopGame());
 
-        message=new JSONObject();
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","close");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        device.sendMessage(messageClose);
 
-        device.sendMessage(message);
-
-
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(3000);
 
         assertTrue(gridView.getGameHandler().stopGame());
         assertFalse(gridView.getGameHandler().isConnected());
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
+        delay(1000);
     }
+
 
 
     @Test
     public void testCloseCommunicationAfterSendCells(){
 
+        JSONObject message;
+
         gridView=(GridView) ((ViewGroup) mActivityRule.getActivity()
                 .findViewById(android.R.id.content)).getChildAt(0);
 
@@ -491,14 +338,9 @@ public class TestHandler {
 
         doSwipe();
 
-
         device.sendSwipe();
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(1000);
 
         assertTrue(gridView.getGameHandler().isConnected());
         assertTrue(gridView.getGameHandler().stopGame());
@@ -506,29 +348,11 @@ public class TestHandler {
 
         device.addQueue();
 
-        JSONObject message=new JSONObject();
+        delay(1000);
 
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","start");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        device.sendMessage(messageStart);
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-
-        device.sendMessage(message);
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(500);
 
         assertFalse(gridView.getGameHandler().stopGame());
 
@@ -554,195 +378,22 @@ public class TestHandler {
 
         device.sendMessage(message);
 
-        try {
-            Thread.sleep(4000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(4000);
 
-        message=new JSONObject();
+        device.sendMessage(messageClose);
 
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","close");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        device.sendMessage(message);
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
+        delay(1000);
 
         assertTrue(gridView.getGameHandler().stopGame());
         assertFalse(gridView.getGameHandler().isConnected());
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        delay(1000);
 
     }
 
-    @Test
-    public void testCommunicationBetweenDevice3(){
-
-        gridView=(GridView) ((ViewGroup) mActivityRule.getActivity()
-                .findViewById(android.R.id.content)).getChildAt(0);
-
-        setCell();
-
-        doSwipe();
-
-        device.sendSwipe();
-
+    private void delay(long millis){
         try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        assertTrue(gridView.getGameHandler().isConnected());
-        assertTrue(gridView.getGameHandler().stopGame());
-
-        device.addQueue();
-
-        JSONObject message=new JSONObject();
-
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","start");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        device.sendMessage(message);
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        assertTrue(gridView.isStarted());
-        assertFalse(gridView.getGameHandler().stopGame());
-
-        ArrayList<Boolean> list=new ArrayList<>();
-
-        for(int i=0;i<11;i++){
-
-            if(i>=4 && i<=6){
-                list.add(true);
-            }else{
-                list.add(false);
-            }
-        }
-
-        message=new JSONObject();
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","cells");
-            message.put("cellsList",list);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        device.sendMessage(message);
-
-        try {
-            Thread.sleep(4000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        message=new JSONObject();
-
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","ready");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        device.sendMessage(message);
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-
-        list.clear();
-        for(int i=0;i<11;i++){
-
-            if(i==5){
-                list.add(true);
-            }else{
-                list.add(false);
-            }
-        }
-
-        message=new JSONObject();
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","cells");
-            message.put("cellsList",list);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        device.sendMessage(message);
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        message=new JSONObject();
-
-        try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
-            message.put("type","pause");
-            message.put("generation",1);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        device.sendMessage(message);
-
-
-        try {
-            Thread.sleep(4000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        assertFalse(gridView.isStarted());
-        assertTrue(gridView.getGameHandler().stopGame());
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        device.detachDevice();
-
-        try {
-            Thread.sleep(5000);
+            Thread.sleep(millis);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -801,15 +452,7 @@ public class TestHandler {
         }
 
         public void detachDevice(){
-            JSONObject json=new JSONObject();
-            try {
-                json.put("type","close");
-                json.put(PinchInfo.ADDRESS,ipAddress);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            rabbitMQ.sendMessage(ipAddress+Utils.getIpAddress(),json);
+            rabbitMQ.sendMessage(ipAddress+Utils.getIpAddress(),messageClose);
             rabbitMQ.close(ipAddress+Utils.getIpAddress());
             rabbitMQ.close(Utils.getIpAddress()+ipAddress);
         }
@@ -824,11 +467,6 @@ public class TestHandler {
 
         @Override
         public void handleMessage(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, JSONObject json) {
-            try {
-                System.out.println("TEST HANDLER TYPE "+json.getString("type"));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
         }
     }
 }

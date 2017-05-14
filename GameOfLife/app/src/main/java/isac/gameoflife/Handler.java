@@ -20,6 +20,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Handler implements MessageListener {
 
     private GridView gridView;
+    private CalculateGeneration calculateGeneration;
     private MainActivity activity;
     private String ipAddress;
     private RabbitMQ rabbitMQ;
@@ -28,23 +29,24 @@ public class Handler implements MessageListener {
     private float cellSize;
     private float myWidth,myHeight;
     private boolean stop;
-    private long generation;
     private List<Pair<PinchInfo.Direction,Pair<Integer,Integer>>> clearCells;
 
     /**
      *
      * @param gridView
+     * @param calculateGeneration
      * @param activity
      * @param myWidth device's width in inches
      * @param myHeight device's height in inches
      * @param cellSize cell's size in inches
      */
-    public Handler(GridView gridView,final MainActivity activity, float myWidth,float myHeight,float cellSize){
+    public Handler(GridView gridView,CalculateGeneration calculateGeneration,final MainActivity activity, float myWidth,float myHeight,float cellSize){
 
         this.myHeight = myHeight;
         this.myWidth = myWidth;
         ipAddress=Utils.getIpAddress();
         this.gridView=gridView;
+        this.calculateGeneration=calculateGeneration;
         this.cellSize = cellSize;
         this.activity=activity;
         this.rabbitMQ=new RabbitMQ(Utils.getServerAddress(),"[user]","[user]");
@@ -54,7 +56,6 @@ public class Handler implements MessageListener {
         lockClear=new ReentrantLock();
         clearCells=new ArrayList<>();
         stop=true;
-        generation=0;
     }
 
     /**
@@ -97,7 +98,6 @@ public class Handler implements MessageListener {
                 case "start":handleStart(json);break;
                 case "pause":handlePause(json);break;
                 case "cells":handleCells(json);break;
-                case "ready":handleReady(json);break;
                 default:break;
             }
         } catch (JSONException e) {
@@ -116,8 +116,7 @@ public class Handler implements MessageListener {
         Set<String> set=connectedDevices.keySet();
 
         for (String s : set){
-            //check if someone didn't send the cells
-            if(!connectedDevices.get(s).isCellsReceived()){
+            if(connectedDevices.get(s).getNumberOfGenerations()==0){
                 lock.unlock();
                 return false;
             }
@@ -128,34 +127,23 @@ public class Handler implements MessageListener {
         return true;
     }
 
-
-    /**
-     * Resets the flag that checks who sent the cells
-     */
-    public void resetCellsReceived(){
-
+    public void setCells(){
         lock.lock();
 
-        for (String s : connectedDevices.keySet()){
-            connectedDevices.get(s).setCellsReceived(false);
+        //get the list of neighbours
+        Set<String> set=connectedDevices.keySet();
+
+        for (String s : set){
+            ConnectedDeviceInfo device=connectedDevices.get(s);
+
+            //set the cell's value
+            calculateGeneration.setPairedCells(device.getIndexFirstCell(), device.getIndexLastCell(),
+                    device.getNextGeneration(),device.getMyDirection());
         }
 
         lock.unlock();
     }
 
-    /**
-     * Resets the flag that checks who was ready to begin another generation
-     */
-    public void resetReadyReceived(){
-
-        lock.lock();
-
-        for (String s : connectedDevices.keySet()){
-            connectedDevices.get(s).setReadyReceived(false);
-        }
-
-        lock.unlock();
-    }
 
     /**
      * Send a command of pause/start to all neighbors
@@ -172,12 +160,14 @@ public class Handler implements MessageListener {
         if(ip==null) {
 
             try {
+                lockStop.lock();
                 //sets state of the game
                 switch(message.getString("type")){
-                    case "start":generation=0;stop=false;break;
+                    case "start":stop=false;break;
                     case "pause":stop=true;break;
                     default: break;
                 }
+                lockStop.unlock();
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -195,30 +185,6 @@ public class Handler implements MessageListener {
 
         lock.unlock();
 
-    }
-
-    /**
-     * Checks if all the neighbours are ready to begin another generation.
-     * @return true if they're ready. False otherwise
-     */
-    public boolean readyToSendCells(){
-
-        lock.lock();
-
-        //gets the list of neighbors
-        Set<String> set=connectedDevices.keySet();
-
-        //checks if someone isn't ready
-        for (String s : set){
-            if(!connectedDevices.get(s).isReadyReceived()){
-                lock.unlock();
-                return false;
-            }
-        }
-
-        lock.unlock();
-
-        return true;
     }
 
     /**
@@ -250,29 +216,6 @@ public class Handler implements MessageListener {
         lock.unlock();
     }
 
-    /**
-     * Sends to all neighbours the will to begin a new generation
-     */
-    public void readyToContinue(){
-
-        lock.lock();
-
-        Set<String> set=connectedDevices.keySet();
-
-        for (String s : set){
-            JSONObject obj = new JSONObject();
-            String queueSender = connectedDevices.get(s).getNameQueueSender();
-            try {
-                obj.put("type","ready");
-                obj.put(PinchInfo.ADDRESS,ipAddress);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            rabbitMQ.sendMessage(queueSender, obj);
-        }
-
-        lock.unlock();
-    }
 
     /**
      * Closes the channels with all the neighbours
@@ -321,7 +264,7 @@ public class Handler implements MessageListener {
                 list.add(false);
             }
 
-            gridView.setPairedCells(info.second.first,info.second.second,list,info.first);
+            calculateGeneration.setPairedCells(info.second.first,info.second.second,list,info.first);
         }
 
         lockClear.unlock();
@@ -355,17 +298,13 @@ public class Handler implements MessageListener {
     public boolean isConnected(){
         lock.lock();
 
-        boolean tmp=connectedDevices.size()==0?false:true;
+        boolean tmp=connectedDevices.size()!=0;
 
         lock.unlock();
 
         return tmp;
     }
 
-
-    public long getGeneration(){
-        return generation;
-    }
     /**
      * Checks if the message incoming is from itself
      * @param ipAddressDevice IP address
@@ -439,7 +378,7 @@ public class Handler implements MessageListener {
                         ConnectedDeviceInfo connectionInfo = new ConnectedDeviceInfo(this.cellSize,
                                 info.getDirection(), timeStampDirection.second,
                                 info.getXcoordinate(), info.getYcoordinate(), info.getScreenWidth(), info.getScreenHeight(), this.myWidth,
-                                this.myHeight, coordinate.first, coordinate.second, nameSender, nameReceiver, this.gridView,
+                                this.myHeight, coordinate.first, coordinate.second, nameSender, nameReceiver, this.calculateGeneration,
                                 info.getXDpi(), info.getYDpi(), gridView.getXDpi(), gridView.getYDpi());
 
                         lock.lock();
@@ -471,13 +410,10 @@ public class Handler implements MessageListener {
             if (connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))) {
                 deviceInfo = connectedDevices.remove(json.getString(PinchInfo.ADDRESS));
                 //removes the device from neighbours
-
-                if(!deviceInfo.isCellsReceived()){
-                    lockClear.lock();
-                    clearCells.add(new Pair<>(deviceInfo.getMyDirection(),
-                            new Pair<>(deviceInfo.getIndexFirstCell(),deviceInfo.getIndexLastCell())));
-                    lockClear.unlock();
-                }
+                lockClear.lock();
+                clearCells.add(new Pair<>(deviceInfo.getMyDirection(),
+                        new Pair<>(deviceInfo.getIndexFirstCell(),deviceInfo.getIndexLastCell())));
+                lockClear.unlock();
 
                 if(connectedDevices.size()==0){
                     //if there are no neighbors anymore, stops the game (if it is running)
@@ -518,7 +454,6 @@ public class Handler implements MessageListener {
 
             //checks if the device has already started the game
             if(stop) {
-                generation=0;
                 stop = false;
                 flag=true;
             }
@@ -560,7 +495,6 @@ public class Handler implements MessageListener {
 
             //checks if the device has already stopped the game
             if(!stop) {
-                generation=json.getLong("generation");
                 stop = true;
                 flag=true;
             }
@@ -574,8 +508,6 @@ public class Handler implements MessageListener {
                 try {
                     message.put("type","pause");
                     message.put(PinchInfo.ADDRESS,ipAddress);
-                    message.put("generation",json.getLong("generation"));
-                    //message.put("sender",json.getString("sender"));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -610,14 +542,7 @@ public class Handler implements MessageListener {
                     cellsToSet.add(Boolean.parseBoolean(s));
                 }
 
-                //gets the first and last indices of the cells to set
-                int firstIndex = device.getIndexFirstCell();
-                int lastIndex = device.getIndexLastCell();
-                //set the cell's value
-                gridView.setPairedCells(firstIndex, lastIndex, cellsToSet,device.getMyDirection());
-
-                //set the flag that indicate that device has sent the cells
-                device.setCellsReceived(true);
+                device.addGeneration(cellsToSet);
             }
 
             lock.unlock();
@@ -626,27 +551,4 @@ public class Handler implements MessageListener {
         }
     }
 
-    /**
-     * This method is invoked whenever a neighbour is read to begin the calculus of the next generation
-     * @param json incoming message
-     */
-    private void handleReady(JSONObject json){
-        try{
-            lock.lock();
-            //lockStop.lock();
-
-            if(connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))/*&&!stop*/){
-               // lockStop.unlock();
-                //sets the flag that indicates that the device is ready to continue
-                connectedDevices.get(json.getString(PinchInfo.ADDRESS)).setReadyReceived(true);
-            }/*else{
-                //If the device has received the message when the game was stopped, it is just ignored.
-                lockStop.unlock();
-            }*/
-
-            lock.unlock();
-        }catch(JSONException e){
-            e.printStackTrace();
-        }
-    }
 }

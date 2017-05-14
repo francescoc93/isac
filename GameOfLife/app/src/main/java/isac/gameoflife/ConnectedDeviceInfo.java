@@ -15,15 +15,15 @@ public class ConnectedDeviceInfo {
     private float cellSize;
     private int indexFirstCell, indexLastCell;
     private List<Boolean> cellsToSend;
-    private GridView gridView;
-    private boolean cellsReceived, readyReceived;
+    private CalculateGeneration calculateGeneration;
+    private List<List<Boolean>> generations;
 
     public ConnectedDeviceInfo(float cellSize, PinchInfo.Direction dir, PinchInfo.Direction myDir,
                                int xCoord, int yCoord, float width, float height, float myWidth, float myHeight,
-                               int myXCoord, int myYCoord, String nameQueueSender, String nameQueueReceiver,GridView gridView,
+                               int myXCoord, int myYCoord, String nameQueueSender, String nameQueueReceiver,CalculateGeneration calculateGeneration,
                                float xdpi,float ydpi,float myXdpi,float myYdpi){
 
-        this.gridView = gridView;
+        this.calculateGeneration = calculateGeneration;
         this.xCoord=Utils.pixelsToInches(xCoord,xdpi);
         this.yCoord=Utils.pixelsToInches(yCoord,ydpi);
         this.myYCoord = Utils.pixelsToInches(myYCoord,myYdpi);
@@ -39,10 +39,7 @@ public class ConnectedDeviceInfo {
         this.myHeight = myHeight;
         this.myDir = myDir;
         this.dir = dir;
-
-        cellsReceived=false;
-        readyReceived=false;
-
+        generations=new ArrayList<>();
     }
 
     public String getNameQueueSender() {
@@ -220,7 +217,7 @@ public class ConnectedDeviceInfo {
      */
     public List<Boolean> getCellsValues(){
 
-        boolean[][] matrix = this.gridView.getCellMatrix();
+        boolean[][] matrix = this.calculateGeneration.getCells();
         int rows = matrix.length-2;
         int columns = matrix[0].length-2;
 
@@ -256,36 +253,19 @@ public class ConnectedDeviceInfo {
         return cellsToSend;
     }
 
-
-    /**
-     *
-     * @return if the cells were received
-     */
-    public boolean isCellsReceived() {
-        return cellsReceived;
+    public void addGeneration(List<Boolean> generation){
+        generations.add(generation);
     }
 
-    /**
-     * Sets if the cells were received
-     * @param cellsReceived
-     */
-    public void setCellsReceived(boolean cellsReceived) {
-        this.cellsReceived = cellsReceived;
+    public List<Boolean> getNextGeneration(){
+        if(generations.size()!=0){
+            return generations.remove(0);
+        }
+
+        return null;
     }
 
-    /**
-     *
-     * @return if the device is ready to receive cells
-     */
-    public boolean isReadyReceived() {
-        return readyReceived;
-    }
-
-    /**
-     * Sets if the device is ready to receive cells
-     * @param readyReceived
-     */
-    public void setReadyReceived(boolean readyReceived) {
-        this.readyReceived = readyReceived;
+    public int getNumberOfGenerations(){
+        return generations.size();
     }
 }
