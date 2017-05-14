@@ -25,11 +25,10 @@ public class Handler implements MessageListener {
     private String ipAddress;
     private RabbitMQ rabbitMQ;
     private HashMap<String,ConnectedDeviceInfo> connectedDevices;
-    private ReentrantLock lock,lockStop,lockClear;
+    private ReentrantLock lock,lockStop;
     private float cellSize;
     private float myWidth,myHeight;
     private boolean stop;
-    private List<Pair<PinchInfo.Direction,Pair<Integer,Integer>>> clearCells;
 
     /**
      *
@@ -53,8 +52,6 @@ public class Handler implements MessageListener {
         connectedDevices=new HashMap<>();
         lock=new ReentrantLock();
         lockStop=new ReentrantLock();
-        lockClear=new ReentrantLock();
-        clearCells=new ArrayList<>();
         stop=true;
     }
 
@@ -278,22 +275,6 @@ public class Handler implements MessageListener {
         }
     }
 
-    public void clearGhostCells(){
-        lockClear.lock();
-
-        while(clearCells.size()!=0){
-            Pair<PinchInfo.Direction,Pair<Integer,Integer>> info=clearCells.remove(0);
-            List<Boolean> list=new ArrayList<>();
-            for(int i=info.second.first;i<=info.second.second;i++){
-                list.add(false);
-            }
-
-            calculateGeneration.setPairedCells(info.second.first,info.second.second,list,info.first);
-        }
-
-        lockClear.unlock();
-    }
-
     /**
      * Closes connection with RabbitMQ's server
      */
@@ -434,10 +415,6 @@ public class Handler implements MessageListener {
             if (connectedDevices.containsKey(json.getString(PinchInfo.ADDRESS))) {
                 deviceInfo = connectedDevices.remove(json.getString(PinchInfo.ADDRESS));
                 //removes the device from neighbours
-                lockClear.lock();
-                clearCells.add(new Pair<>(deviceInfo.getMyDirection(),
-                        new Pair<>(deviceInfo.getIndexFirstCell(),deviceInfo.getIndexLastCell())));
-                lockClear.unlock();
 
                 if(connectedDevices.size()==0){
                     //if there are no neighbors anymore, stops the game (if it is running)

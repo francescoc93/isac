@@ -136,9 +136,6 @@ public class CalculateGeneration {
                 if(handler.goOn()){
                     //invoco il metodo dell'handler che setta le celle "fantasma" della griglia
                     handler.setCells();
-                    //resetto le celle "fantasma" della griglia dei device che eventualmente si sono
-                    //disconnessi
-                    handler.clearGhostCells();
                     //calcolo la generazione
                     calculateNextGen();
                     //forzo il disegno della griglia sulla view
@@ -166,28 +163,24 @@ public class CalculateGeneration {
                     }
                 }
 
-
                 if(handler.stopGame()){
                     //se mi devo fermare, non resetto i flag di tutti i device connessi a cui ho
                     //inviato le celle. così, in caso di restart, le invio solo a chi non le ho inviate
                     //prima. quindi alle nuove code create (ad esempio un device si scollega e poi
                     //si ricollega)
                     goOn=false;
+                    //mostro il toast di pausa
+                    gridView.pause();
                 }else{
                     //vado avanti quindi resetto i flag di tutti i device a cui ho inviato le celle
                     //prima di inviare nuovamente le celle
                     handler.resetCellSent();
                 }
+
+                //resetto le celle fantasma. in questo modo resetto le celle di device che si sono
+                //disconnessi nella generazione corrente
+                resetGhostCells();
             }
-
-            //mostro il toast di pausa
-            gridView.pause();
-            //resetto la celle fantasma (nel caso in cui l'utente fa partire il gioco e non ha vicini)
-            //anche se starto il gioco e sono nella situazione in cui ho già inviato le celle e devo
-            //aspettare di ricevere le altre, posso resettare tutte le celle fantasma senza problemi
-            //perchè queste vengono settate con il metodo setCells della classe handler
-            resetGhostCells();
-
         }else{
             while(gridView.isStarted()){
                 //calculate the next generation of cells
