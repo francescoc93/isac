@@ -17,6 +17,7 @@ public class ConnectedDeviceInfo {
     private List<Boolean> cellsToSend;
     private CalculateGeneration calculateGeneration;
     private List<List<Boolean>> generations;
+    private boolean sent;
 
     public ConnectedDeviceInfo(float cellSize, PinchInfo.Direction dir, PinchInfo.Direction myDir,
                                int xCoord, int yCoord, float width, float height, float myWidth, float myHeight,
@@ -40,6 +41,7 @@ public class ConnectedDeviceInfo {
         this.myDir = myDir;
         this.dir = dir;
         generations=new ArrayList<>();
+        sent=false;
     }
 
     public String getNameQueueSender() {
@@ -267,5 +269,13 @@ public class ConnectedDeviceInfo {
 
     public int getNumberOfGenerations(){
         return generations.size();
+    }
+
+    public void cellsSent(boolean value){
+        sent=value;
+    }
+
+    public boolean cellsSent(){
+        return sent;
     }
 }

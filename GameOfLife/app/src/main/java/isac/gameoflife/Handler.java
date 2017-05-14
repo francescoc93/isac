@@ -127,6 +127,20 @@ public class Handler implements MessageListener {
         return true;
     }
 
+    public void resetCellSent(){
+        lock.lock();
+
+        //get the list of neighbours
+        Set<String> set=connectedDevices.keySet();
+
+        for (String s : set){
+            connectedDevices.get(s).cellsSent(false);
+        }
+
+        lock.unlock();
+
+    }
+
     public void setCells(){
         lock.lock();
 
@@ -200,17 +214,22 @@ public class Handler implements MessageListener {
         for (String s : set){
             JSONObject obj = new JSONObject();
             ConnectedDeviceInfo infoConn = connectedDevices.get(s);
-            //gets the name of queue to send the message to
-            String queueSender = infoConn.getNameQueueSender();
-            //creates the message and adds the list of cells to send
-            try {
-                obj.put("type","cells");
-                obj.put(PinchInfo.ADDRESS,ipAddress);
-                obj.put("cellsList",infoConn.getCellsValues());
-            } catch (JSONException e) {
-                e.printStackTrace();
+
+            if(!infoConn.cellsSent()) {
+
+                infoConn.cellsSent(true);
+                //gets the name of queue to send the message to
+                String queueSender = infoConn.getNameQueueSender();
+                //creates the message and adds the list of cells to send
+                try {
+                    obj.put("type", "cells");
+                    obj.put(PinchInfo.ADDRESS, ipAddress);
+                    obj.put("cellsList", infoConn.getCellsValues());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                rabbitMQ.sendMessage(queueSender, obj);
             }
-            rabbitMQ.sendMessage(queueSender, obj);
         }
 
         lock.unlock();
@@ -227,7 +246,6 @@ public class Handler implements MessageListener {
 
             if (connectedDevices.size() != 0) {
                 Collection<ConnectedDeviceInfo> devices = connectedDevices.values();
-
 
                 JSONObject message = new JSONObject();
 
@@ -249,6 +267,12 @@ public class Handler implements MessageListener {
                 //clear the list of neighbors
                 connectedDevices.clear();
             }
+
+            lockStop.lock();
+
+            stop=true;
+
+            lockStop.unlock();
 
             lock.unlock();
         }

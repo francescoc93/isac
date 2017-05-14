@@ -4,6 +4,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by Francesco on 14/05/2017.
@@ -15,7 +16,6 @@ public class CalculateGeneration {
     private int row,column;
     private GridView gridView;
     private Handler handler;
-    private boolean sent;
     private String ipAddress;
 
     /**
@@ -29,7 +29,6 @@ public class CalculateGeneration {
         this.row=row;
         this.column=column;
         this.gridView=gridView;
-        sent=false;
         handler=null;
         ipAddress=Utils.getIpAddress();
     }
@@ -86,7 +85,6 @@ public class CalculateGeneration {
         }
     }
 
-
     /**
      * Calculate the generations until receive a command of stop
      */
@@ -97,6 +95,7 @@ public class CalculateGeneration {
 
         if(handler.isConnected()){
 
+            boolean goOn=true;
             /*
                 stopGame restituisce true in tre casi:
 
@@ -117,15 +116,10 @@ public class CalculateGeneration {
                 una generazione più avanti dei vicini
             */
 
-            while(!handler.stopGame()){
-                //non ho inviato un messaggio quindi al primo avvio o alla ripresa non ho ancora iniziato
-                //la procedura per il calcolo della nuova generazione (ovvero, quando sono uscito dal
-                //while avevo già calcolato una generazione)
-                if(!sent){
-                    //send the cells
-                    handler.sendCellsToOthers();
-                    sent=true;
-                }
+            while(goOn){
+
+                //send the cells
+                handler.sendCellsToOthers();
 
                 //waits until receiving all the cells or the device is not connected with another one anymore
                 while(handler.isConnected() && !handler.goOn() && !handler.stopGame()){
@@ -140,11 +134,6 @@ public class CalculateGeneration {
                 //indipendentemente dal motivo per cui sono uscito dal while, controllo se ho ricevuto
                 //le celle da tutti i miei vicini
                 if(handler.goOn()){
-                    //se le ho ricevute, setto a false la variabile sent. così, all'eventuale ripresa
-                    //del gioco, invierò le celle. se invece non eseguo questo if. alla ripresa aspetterò
-                    //di ricevere le celle dai miei vicini senza inviare nulla
-                    sent=false;
-
                     //invoco il metodo dell'handler che setta le celle "fantasma" della griglia
                     handler.setCells();
                     //resetto le celle "fantasma" della griglia dei device che eventualmente si sono
@@ -175,7 +164,19 @@ public class CalculateGeneration {
                         //quindi esco dal while
                         handler.sendCommand(message,null);
                     }
+                }
 
+
+                if(handler.stopGame()){
+                    //se mi devo fermare, non resetto i flag di tutti i device connessi a cui ho
+                    //inviato le celle. così, in caso di restart, le invio solo a chi non le ho inviate
+                    //prima. quindi alle nuove code create (ad esempio un device si scollega e poi
+                    //si ricollega)
+                    goOn=false;
+                }else{
+                    //vado avanti quindi resetto i flag di tutti i device a cui ho inviato le celle
+                    //prima di inviare nuovamente le celle
+                    handler.resetCellSent();
                 }
             }
 
@@ -186,6 +187,7 @@ public class CalculateGeneration {
             //aspettare di ricevere le altre, posso resettare tutte le celle fantasma senza problemi
             //perchè queste vengono settate con il metodo setCells della classe handler
             resetGhostCells();
+
         }else{
             while(gridView.isStarted()){
                 //calculate the next generation of cells
@@ -194,8 +196,6 @@ public class CalculateGeneration {
                 gridView.postInvalidate();
                 delay(500);
             }
-
-            sent=false;
         }
     }
 
