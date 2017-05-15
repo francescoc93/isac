@@ -48,11 +48,10 @@ public class TestHandler {
     public void setup(){
         if(flag){
             flag=false;
-            device=new FakeDevice();
+            device=new FakeDevice("127.0.0.1");
 
             messageStart=new JSONObject();
             try {
-                messageStart.put(PinchInfo.ADDRESS,"127.0.0.1");
                 messageStart.put("type","start");
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -60,7 +59,6 @@ public class TestHandler {
 
             messagePause=new JSONObject();
             try {
-                messagePause.put(PinchInfo.ADDRESS,"127.0.0.1");
                 messagePause.put("type","pause");
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -68,7 +66,6 @@ public class TestHandler {
 
             messageClose=new JSONObject();
             try {
-                messageClose.put(PinchInfo.ADDRESS,"127.0.0.1");
                 messageClose.put("type","close");
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -78,7 +75,6 @@ public class TestHandler {
         }
     }
 
-
     @Test
     public void testPinchAndDetachment(){
         gridView=(GridView) ((ViewGroup) mActivityRule.getActivity()
@@ -86,9 +82,9 @@ public class TestHandler {
 
         assertFalse(gridView.getGameHandler().isConnected());
 
-        doSwipe();
+        doSwipe(GeneralLocation.CENTER,GeneralLocation.CENTER_RIGHT);
 
-        device.sendSwipe();
+        device.sendSwipe(PinchInfo.Direction.LEFT,0,400);
 
         delay(3000);
 
@@ -113,9 +109,9 @@ public class TestHandler {
                     .findViewById(android.R.id.content)).getChildAt(0);
 
         setCell();
-        doSwipe();
+        doSwipe(GeneralLocation.CENTER,GeneralLocation.CENTER_RIGHT);
 
-        device.sendSwipe();
+        device.sendSwipe(PinchInfo.Direction.LEFT,0,400);
 
         delay(1000);
 
@@ -146,7 +142,6 @@ public class TestHandler {
 
         message=new JSONObject();
         try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
             message.put("type","cells");
             message.put("cellsList",list);
         } catch (JSONException e) {
@@ -182,14 +177,20 @@ public class TestHandler {
 
         JSONObject message;
 
+        FakeDevice device2=new FakeDevice("192.168.43.34");
+
         gridView=(GridView) ((ViewGroup) mActivityRule.getActivity()
                 .findViewById(android.R.id.content)).getChildAt(0);
 
         setCell();
-        doSwipe();
 
-        device.sendSwipe();
+        doSwipe(GeneralLocation.CENTER,GeneralLocation.CENTER_RIGHT);
+        device.sendSwipe(PinchInfo.Direction.LEFT,0,400);
 
+        delay(3000);
+
+        doSwipe(GeneralLocation.CENTER,GeneralLocation.CENTER_LEFT);
+        device2.sendSwipe(PinchInfo.Direction.RIGHT,800,400);
 
         delay(1000);
 
@@ -197,9 +198,11 @@ public class TestHandler {
         assertTrue(gridView.getGameHandler().stopGame());
 
         device.addQueue();
+        device2.addQueue();
 
-        delay(1000);
+        delay(5000);
 
+        device2.sendMessage(messageStart);
         device.sendMessage(messageStart);
 
         delay(500);
@@ -220,7 +223,6 @@ public class TestHandler {
 
         message=new JSONObject();
         try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
             message.put("type","cells");
             message.put("cellsList",list);
         } catch (JSONException e) {
@@ -228,8 +230,9 @@ public class TestHandler {
         }
 
         device.sendMessage(message);
+        device2.sendMessage(message);
 
-        delay(200);
+        delay(500);
 
         assertTrue(gridView.isStarted());
         //il device fake mette in pausa il gioco
@@ -245,34 +248,36 @@ public class TestHandler {
 
         for(int i=0;i<11;i++){
 
-            if(i==5){
+            if(i<=2){
                 list.add(true);
             }else{
                 list.add(false);
             }
         }
 
-        message=new JSONObject();
+        JSONObject listMessage=new JSONObject();
         try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
             message.put("type","cells");
             message.put("cellsList",list);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
-        device.sendMessage(message);
+        device2.sendMessage(listMessage);
+        device2.sendMessage(messagePause);
 
         delay(5000);
 
         device.sendMessage(messageStart);
+        device2.sendMessage(messageStart);
 
-        delay(500);
+        delay(5000);
 
         assertFalse(gridView.getGameHandler().stopGame());
         assertTrue(gridView.isStarted());
 
         device.sendMessage(messagePause);
+        device2.sendMessage(messagePause);
 
         delay(1000);
 
@@ -280,6 +285,7 @@ public class TestHandler {
         assertFalse(gridView.isStarted());
 
         device.detachDevice();
+        device2.detachDevice();
 
         delay(5000);
 
@@ -294,9 +300,9 @@ public class TestHandler {
                 .findViewById(android.R.id.content)).getChildAt(0);
 
         setCell();
-        doSwipe();
+        doSwipe(GeneralLocation.CENTER,GeneralLocation.CENTER_RIGHT);
 
-        device.sendSwipe();
+        device.sendSwipe(PinchInfo.Direction.LEFT,0,400);
 
         delay(1000);
 
@@ -336,9 +342,9 @@ public class TestHandler {
 
         setCell();
 
-        doSwipe();
+        doSwipe(GeneralLocation.CENTER,GeneralLocation.CENTER_RIGHT);
 
-        device.sendSwipe();
+        device.sendSwipe(PinchInfo.Direction.LEFT,0,400);
 
         delay(1000);
 
@@ -369,7 +375,6 @@ public class TestHandler {
 
         message=new JSONObject();
         try {
-            message.put(PinchInfo.ADDRESS,"127.0.0.1");
             message.put("type","cells");
             message.put("cellsList",list);
         } catch (JSONException e) {
@@ -422,9 +427,9 @@ public class TestHandler {
         }, Press.FINGER));
     }
 
-    private void doSwipe(){
+    private void doSwipe(GeneralLocation from,GeneralLocation to){
         onView(withId(android.R.id.content)).perform(new GeneralSwipeAction(Swipe.FAST,
-                GeneralLocation.CENTER,GeneralLocation.CENTER_RIGHT, Press.FINGER));
+                from,to, Press.FINGER));
     }
 
 
@@ -433,16 +438,16 @@ public class TestHandler {
         private String ipAddress;
         private RabbitMQ rabbitMQ;
 
-        public FakeDevice(){
-            this.ipAddress="127.0.0.1";
+        public FakeDevice(String ipAddress){
+            this.ipAddress=ipAddress;
             rabbitMQ=new RabbitMQ(Utils.getServerAddress(),"[user]","[user]");
             rabbitMQ.connect();
             rabbitMQ.addSubscribeQueue("broadcast","fanout",this);
         }
 
-        public void sendSwipe(){
-            rabbitMQ.sendMessage("broadcast",new PinchInfo(ipAddress,PinchInfo.Direction.LEFT,0,400,
-                    System.currentTimeMillis(),800,1200,240,240).toJSON());
+        public void sendSwipe(PinchInfo.Direction direction,int x,int y){
+            rabbitMQ.sendMessage("broadcast",new PinchInfo(ipAddress,direction,x,y,
+                    System.currentTimeMillis(),5,7,240,240).toJSON());
         }
 
 
@@ -452,13 +457,20 @@ public class TestHandler {
         }
 
         public void detachDevice(){
-            rabbitMQ.sendMessage(ipAddress+Utils.getIpAddress(),messageClose);
+            sendMessage(messageClose);
             rabbitMQ.close(ipAddress+Utils.getIpAddress());
             rabbitMQ.close(Utils.getIpAddress()+ipAddress);
         }
 
         public void sendMessage(JSONObject message){
-            rabbitMQ.sendMessage(ipAddress+Utils.getIpAddress(),message);
+            JSONObject tmp=null;
+            try {
+                tmp=new JSONObject(message.toString());
+                tmp.put(PinchInfo.ADDRESS,ipAddress);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            rabbitMQ.sendMessage(ipAddress+Utils.getIpAddress(),tmp);
         }
 
         public void closeConnection(){
