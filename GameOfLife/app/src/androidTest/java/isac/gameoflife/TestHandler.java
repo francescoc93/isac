@@ -75,6 +75,7 @@ public class TestHandler {
         }
     }
 
+
     @Test
     public void testPinchAndDetachment(){
         gridView=(GridView) ((ViewGroup) mActivityRule.getActivity()

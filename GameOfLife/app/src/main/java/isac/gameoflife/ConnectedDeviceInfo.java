@@ -3,6 +3,7 @@ package isac.gameoflife;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class ConnectedDeviceInfo {
@@ -18,6 +19,7 @@ public class ConnectedDeviceInfo {
     private CalculateGeneration calculateGeneration;
     private List<List<Boolean>> generations;
     private boolean sent;
+    private ReentrantLock lock;
 
     public ConnectedDeviceInfo(float cellSize, PinchInfo.Direction dir, PinchInfo.Direction myDir,
                                int xCoord, int yCoord, float width, float height, float myWidth, float myHeight,
@@ -42,6 +44,7 @@ public class ConnectedDeviceInfo {
         this.dir = dir;
         generations=new ArrayList<>();
         sent=false;
+        lock=new ReentrantLock();
     }
 
     public String getNameQueueSender() {
@@ -259,7 +262,9 @@ public class ConnectedDeviceInfo {
      * Adds a new list representing the new generation received.
      * */
     public void addGeneration(List<Boolean> generation){
+        lock.lock();
         generations.add(generation);
+        lock.unlock();
     }
 
     /**
@@ -267,10 +272,16 @@ public class ConnectedDeviceInfo {
      * @return the first element of the list of generations.
      */
     public List<Boolean> getNextGeneration(){
+
+        lock.lock();
+
         if(generations.size()!=0){
-            return generations.remove(0);
+            List<Boolean> tmp=generations.remove(0);
+            lock.unlock();
+            return tmp;
         }
 
+        lock.unlock();
         return null;
     }
 
@@ -279,7 +290,12 @@ public class ConnectedDeviceInfo {
      * @return size of the list of generations.
      */
     public int getNumberOfGenerations(){
-        return generations.size();
+
+        lock.lock();
+        int tmp=generations.size();
+        lock.unlock();
+
+        return tmp;
     }
 
     /**

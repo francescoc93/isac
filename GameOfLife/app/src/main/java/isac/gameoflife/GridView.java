@@ -38,7 +38,7 @@ public class GridView extends View {
     private Long lastTapTimeMs,touchDownMs;
     //First pair is timestamp and direction, second is x and y coordinates
     private Pair<Pair<Long,PinchInfo.Direction>,Pair<Integer,Integer>> infoSwipe;
-    private ReentrantLock lockInfoSwipe,lockAction,lockHandler;
+    private ReentrantLock lockInfoSwipe,lockHandler;
     private Thread thread;
     private CalculateGeneration calculateGeneration;
 
@@ -54,7 +54,6 @@ public class GridView extends View {
         thread =null;
         SIZE=DESIRED_DP_VALUE * getResources().getDisplayMetrics().density;
         lockInfoSwipe=new ReentrantLock();
-        lockAction=new ReentrantLock();
         lockHandler=new ReentrantLock();
     }
 
@@ -103,8 +102,6 @@ public class GridView extends View {
      * Starts the game
      */
     public void start(){
-        lockAction.lock();
-
         if(started.compareAndSet(false,true)){
 
             if(thread!=null){
@@ -133,27 +130,19 @@ public class GridView extends View {
                 }
             });
         }
-
-        lockAction.unlock();
     }
 
     /**
      * Pauses the game
      */
     public void pause(){
-        lockAction.lock();
-
-        if(started.get()){
+        if(started.compareAndSet(true,false)){
             activity.runOnUiThread(new Runnable() {
                 public void run() {
                     Toast.makeText(activity, "Pause", Toast.LENGTH_SHORT).show();
                 }
             });
         }
-
-        started.compareAndSet(true,false);
-
-        lockAction.unlock();
     }
 
 
