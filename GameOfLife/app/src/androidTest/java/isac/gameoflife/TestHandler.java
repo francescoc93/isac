@@ -173,7 +173,7 @@ public class TestHandler {
 
 
     @Test
-    public void testCommunicationBetweenDevice2(){
+    public void testCommunicationBetweenDevice2(){ //simulo due device connessi col mio
 
         JSONObject message;
 
@@ -182,12 +182,12 @@ public class TestHandler {
         gridView=(GridView) ((ViewGroup) mActivityRule.getActivity()
                 .findViewById(android.R.id.content)).getChildAt(0);
 
-        setCell();
+        setCell();//disegno su quello fisico
 
         doSwipe(GeneralLocation.CENTER,GeneralLocation.CENTER_RIGHT);
         device.sendSwipe(PinchInfo.Direction.LEFT,0,400);
 
-        delay(3000);
+        delay(6000);
 
         doSwipe(GeneralLocation.CENTER,GeneralLocation.CENTER_LEFT);
         device2.sendSwipe(PinchInfo.Direction.RIGHT,800,400);
@@ -294,7 +294,7 @@ public class TestHandler {
 
 
     @Test
-    public void testCloseCommunication(){
+    public void testCloseCommunication(){ //si connettono, chiudo l'app
 
         gridView=(GridView) ((ViewGroup) mActivityRule.getActivity()
                 .findViewById(android.R.id.content)).getChildAt(0);
@@ -340,7 +340,7 @@ public class TestHandler {
                 .findViewById(android.R.id.content)).getChildAt(0);
 
 
-        setCell();
+        setCell();//setto le celle sullo schermo
 
         doSwipe(GeneralLocation.CENTER,GeneralLocation.CENTER_RIGHT);
 
@@ -364,6 +364,7 @@ public class TestHandler {
 
         ArrayList<Boolean> list=new ArrayList<>();
 
+        //simulo l'invio delle celle
         for(int i=0;i<11;i++){
 
             if(i>=4 && i<=6){

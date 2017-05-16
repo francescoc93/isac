@@ -68,6 +68,7 @@ public class Handler implements MessageListener {
      */
     public void bindToBroadcastQueue(){
         if(rabbitMQ.isConnected()){
+            System.out.println("Sono connesso al server");
             rabbitMQ.addSubscribeQueue("broadcast", "fanout",this);
         }
     }
@@ -113,7 +114,7 @@ public class Handler implements MessageListener {
         Set<String> set=connectedDevices.keySet();
 
         for (String s : set){
-            if(connectedDevices.get(s).getNumberOfGenerations()==0){
+            if(connectedDevices.get(s).getNumberOfGenerations()==0){ //quante generazioni ho sulla mia lista per quel device?
                 lock.unlock();
                 return false;
             }
@@ -305,6 +306,7 @@ public class Handler implements MessageListener {
 
         boolean tmp=connectedDevices.size()!=0;
 
+
         lock.unlock();
 
         return tmp;
@@ -360,7 +362,7 @@ public class Handler implements MessageListener {
                     System.out.println("Elapsed time from swipe: "+(System.currentTimeMillis()-timeStampDirection.first));
 
                     //checks how much time has elapsed between the two swipes
-                    if (Math.abs(info.getTimestamp()-timeStampDirection.first)<=2000) {
+                    if (Math.abs(info.getTimestamp()-timeStampDirection.first)<=5000) {
 
                         activity.runOnUiThread(new Runnable() {
                             public void run() {

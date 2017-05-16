@@ -135,10 +135,10 @@ public class CalculateGeneration {
                     // if allora ho tutto ciò che mi occorre per calcolare la generazione.
                     // quindi resetto i flag di tutti i device a cui ho inviato le celle
                     //prima di inviare nuovamente le celle.
-                    handler.resetCellSent();
+                    handler.resetCellSent(); //rimetto tutti i flag a false
 
                     //invoco il metodo dell'handler che setta le celle "fantasma" della griglia
-                    handler.setCells();
+                    handler.setCells(); //le ho ricevute
                     //calcolo la generazione
                     calculateNextGen();
                     //forzo il disegno della griglia sulla view

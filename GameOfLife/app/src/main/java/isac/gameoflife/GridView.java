@@ -213,8 +213,7 @@ public class GridView extends View {
 
 
                 /*if the duration of the pressure on the screen is greater than TIME_DOUBLE_TAP
-                it may be a double tap (start/pause the game), otherwise the user has just set the state of
-                one cell
+                it may be a swipe or a setting of a cell, otherwise the user has started/stopped the game
                 */
                 if ((System.currentTimeMillis() - touchDownMs) > TIME_DOUBLE_TAP) {
                     numberOfTaps = 0;
@@ -227,7 +226,7 @@ public class GridView extends View {
                     }
                 }
 
-                //evaluate if the user has just performed a swipe
+
                 evaluateAction();
 
                 return true;
