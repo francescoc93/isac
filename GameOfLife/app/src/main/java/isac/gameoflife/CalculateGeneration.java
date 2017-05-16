@@ -4,11 +4,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Created by Francesco on 14/05/2017.
- */
 
 public class CalculateGeneration {
 
@@ -34,7 +30,7 @@ public class CalculateGeneration {
     }
 
     /**
-     * Set state of the cell
+     * Set the state of the cell (dead or alive)
      * @param row
      * @param column
      */
@@ -86,7 +82,7 @@ public class CalculateGeneration {
     }
 
     /**
-     * Calculate the generations until receive a command of stop
+     * Calculates the generations until receiving a stop command. Here resides the logic of the application.
      */
     public void calculate(){
         if(handler==null){
@@ -95,62 +91,48 @@ public class CalculateGeneration {
 
         if(handler.isConnected()){
             /*
-                stopGame restituisce true in tre casi:
+                stopGame can return true in three different cases:
 
-                - il device non ha più vicini (o si è disconnesso lui dagli altri o mano a mano tutti i
-                  device si sono disconnessi da lui)
+                1) the device is not connected to anyone anymore
+                2) the device has received the stop command from a neighbour
+                3) the user has double tapped to stop the computation
 
-                - ha ricevuto il messaggio di stop da qualche vicino
-
-                - l'utente ha effettuato lo stop sul device e quando viene inviato il messaggio di stop ai vicini
-                  viene settata a true la variabile restituita da questo metodo
-
-            */
-
-            /*
-                Alla ripresa del gioco (se il device è ancora connesso deve riprendere dal punto in
-                cui si è fermato. questo per evitare che al riavvio del gioco il device mandi di nuovo
-                le celle (a chi le ha già mandate)
+                When the game starts again, if the device is still connected to someone, it has to start again from the point it has stopped,
+                this to avoid that when the game restarts, the device would send again the cells to the ones it has already sent them to.
             */
 
             while(!handler.stopGame()){
 
-                //send the cells
+                //send the cells to the other devices
                 handler.sendCellsToOthers();
 
-                //waits until receiving all the cells or the device is not connected with another one anymore
+                //waits until receiving all the cells or the device is not connected with another one anymore, or the game was stopped
                 while(handler.isConnected() && !handler.goOn() && !handler.stopGame()){
                     delay(20);
                 }
 
-                //posso uscire dal while per 3 motivi:
-                // 1) ho ricevuto le celle da tutti i vicini
-                // 2) non sono più connesso con nessuno (mi sono disconnesso io da loro o gli altri da me
-                // 3) ho ricevuto un comando di stop da qualche vicino
-
-                //indipendentemente dal motivo per cui sono uscito dal while, controllo se ho ricevuto
-                //le celle da tutti i miei vicini
                 if(handler.goOn()){
-                    //indipendentemente dal fatto che mi debba fermare o meno a causa di una pausa, se sono in questo
-                    // if allora ho tutto ciò che mi occorre per calcolare la generazione.
-                    // quindi resetto i flag di tutti i device a cui ho inviato le celle
-                    //prima di inviare nuovamente le celle.
-                    handler.resetCellSent(); //rimetto tutti i flag a false
+                    /*If the device entered this condition, it means that I have all the cells for calculating the next generation;
+                    if this condition holds, then it is necessary to reset all the flags about the devices whom the device has sent the cells to
+                    to false, before sending the cells again.
+                    This is necessary because this way the device won't send the same cells multiple times.
+                    */
 
-                    //invoco il metodo dell'handler che setta le celle "fantasma" della griglia
-                    handler.setCells(); //le ho ricevute
-                    //calcolo la generazione
+                    handler.resetCellSent(); //All flags to false.
+
+                    //sets the received cells
+                    handler.setCells();
+
                     calculateNextGen();
-                    //forzo il disegno della griglia sulla view
+
                     gridView.postInvalidate();
 
-                    //controllo se sul mio device è stata effetuata la pausa
+                    //If the pause was not performed, the device continues with the computation.
                     if(gridView.isStarted()){
-                        //se non è stata effettuata, aspetto mezzo secondo prima di iniziare la generazione
-                        //successiva
+
                         delay(500);
                     }else{
-                        //altrimenti invio il messaggio di pausa
+                        //The pause was performed, so the device forwards the pause message to the neighbours.
                         JSONObject message=new JSONObject();
                         try {
                             message.put("type","pause");
@@ -159,25 +141,20 @@ public class CalculateGeneration {
                             e.printStackTrace();
                         }
 
-                        //send pause message
-                        //quando invoco questo metodo, la variabile restituita da stopGame viene settata a true
-                        //quindi esco dal while
+                        //sends pause message
+                        //the variable returned by stopgame is set to true, so the device exits from while.
                         handler.sendCommand(message,null);
                     }
                 }
 
-                //resetto le celle fantasma. in questo modo resetto le celle di device che si sono
-                //disconnessi nella generazione corrente
+                //reset of ghost cells.
                 resetGhostCells();
             }
 
-            //mostro il toast di pausa
             gridView.pause();
-        }else{
+        }else{ //case when the device is not connected to anyone else.
             while(gridView.isStarted()){
-                //calculate the next generation of cells
                 calculateNextGen();
-                //force redraw of the grid
                 gridView.postInvalidate();
                 delay(500);
             }
@@ -185,7 +162,7 @@ public class CalculateGeneration {
     }
 
     /**
-     * Count how many neighbors are alive
+     * Counts how many neighbors are alive (game of life logic)
      * @param i Row of the matrix
      * @param j Column of the matrix
      * @return the number of live neighbors

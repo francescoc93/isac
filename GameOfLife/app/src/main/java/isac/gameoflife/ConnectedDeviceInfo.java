@@ -255,10 +255,17 @@ public class ConnectedDeviceInfo {
         return cellsToSend;
     }
 
+    /**
+     * Adds a new list representing the new generation received.
+     * */
     public void addGeneration(List<Boolean> generation){
         generations.add(generation);
     }
 
+    /**
+     *
+     * @return the first element of the list of generations.
+     */
     public List<Boolean> getNextGeneration(){
         if(generations.size()!=0){
             return generations.remove(0);
@@ -267,14 +274,26 @@ public class ConnectedDeviceInfo {
         return null;
     }
 
+    /**
+     * This method is used to check whether the device has at least one generation saved from its neighbour.
+     * @return size of the list of generations.
+     */
     public int getNumberOfGenerations(){
         return generations.size();
     }
 
+    /**
+     *
+     * @param value true if the correspondent cells has been sent; false otherwise.
+     */
     public void cellsSent(boolean value){
         sent=value;
     }
 
+    /**
+     *
+     * @return true if the cells has been sent to that device, false otherwise.
+     */
     public boolean cellsSent(){
         return sent;
     }

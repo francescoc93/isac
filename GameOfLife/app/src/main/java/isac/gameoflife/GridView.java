@@ -380,7 +380,6 @@ public class GridView extends View {
                 pause();
             }else{
                 //begin a new game
-                //if the device is connected with someone else
                 if(handler.isConnected()){
                     //send the message of start
                     JSONObject message=new JSONObject();

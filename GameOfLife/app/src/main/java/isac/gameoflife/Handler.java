@@ -114,7 +114,7 @@ public class Handler implements MessageListener {
         Set<String> set=connectedDevices.keySet();
 
         for (String s : set){
-            if(connectedDevices.get(s).getNumberOfGenerations()==0){ //quante generazioni ho sulla mia lista per quel device?
+            if(connectedDevices.get(s).getNumberOfGenerations()==0){ //checks if the device has 0 or more generations of that device
                 lock.unlock();
                 return false;
             }
