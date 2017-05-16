@@ -258,8 +258,8 @@ public class TestHandler {
 
         JSONObject listMessage=new JSONObject();
         try {
-            message.put("type","cells");
-            message.put("cellsList",list);
+            listMessage.put("type","cells");
+            listMessage.put("cellsList",list);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -397,6 +397,7 @@ public class TestHandler {
         delay(1000);
 
     }
+
 
     private void delay(long millis){
         try {
