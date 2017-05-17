@@ -296,6 +296,7 @@ public class GridView extends View {
 
         lockInfoSwipe.unlock();
 
+        //the type of the message is set by the class "PinchInfo"
         handler.sendBroadcastMessage(new PinchInfo(ipAddress, direction,x,y,timeStamp, width, height,getXDpi(),getYDpi()).toJSON());
     }
 

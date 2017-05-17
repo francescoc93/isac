@@ -68,7 +68,6 @@ public class Handler implements MessageListener {
      */
     public void bindToBroadcastQueue(){
         if(rabbitMQ.isConnected()){
-            System.out.println("Sono connesso al server");
             rabbitMQ.addSubscribeQueue("broadcast", "fanout",this);
         }
     }

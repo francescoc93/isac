@@ -112,10 +112,9 @@ public class CalculateGeneration {
                 }
 
                 if(handler.goOn()){
-                    /*If the device entered this condition, it means that I have all the cells for calculating the next generation;
+                    /*If the device entered this condition, it means that it has all the cells for calculating the next generation;
                     if this condition holds, then it is necessary to reset all the flags about the devices whom the device has sent the cells to
                     to false, before sending the cells again.
-                    This is necessary because this way the device won't send the same cells multiple times.
                     */
 
                     handler.resetCellSent(); //All flags to false.

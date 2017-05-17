@@ -84,10 +84,10 @@ public class TestGridView {
         GridView gridView=(GridView) ((ViewGroup) mActivityRule.getActivity()
                 .findViewById(android.R.id.content)).getChildAt(0);
 
-        //setto le celle
+        //sets the cells on screen
         setCell();
 
-        //double tap, avvio il gioco
+        //double tap to start the game
         onView(withId(android.R.id.content)).perform(new GeneralClickAction(Tap.DOUBLE, new CoordinatesProvider() {
             @Override
             public float[] calculateCoordinates(View view) {
