@@ -19,7 +19,6 @@ public class ConnectedDeviceInfo {
     private CalculateGeneration calculateGeneration;
     private List<List<Boolean>> generations;
     private boolean sent;
-    private ReentrantLock lock;
 
     public ConnectedDeviceInfo(float cellSize, PinchInfo.Direction dir, PinchInfo.Direction myDir,
                                int xCoord, int yCoord, float width, float height, float myWidth, float myHeight,
@@ -44,7 +43,6 @@ public class ConnectedDeviceInfo {
         this.dir = dir;
         generations=new ArrayList<>();
         sent=false;
-        lock=new ReentrantLock();
     }
 
     public String getNameQueueSender() {
@@ -262,9 +260,7 @@ public class ConnectedDeviceInfo {
      * Adds a new list representing the new generation received.
      * */
     public void addGeneration(List<Boolean> generation){
-        lock.lock();
         generations.add(generation);
-        lock.unlock();
     }
 
     /**
@@ -272,16 +268,10 @@ public class ConnectedDeviceInfo {
      * @return the first element of the list of generations.
      */
     public List<Boolean> getNextGeneration(){
-
-        lock.lock();
-
         if(generations.size()!=0){
-            List<Boolean> tmp=generations.remove(0);
-            lock.unlock();
-            return tmp;
+            return generations.remove(0);
         }
 
-        lock.unlock();
         return null;
     }
 
@@ -290,12 +280,7 @@ public class ConnectedDeviceInfo {
      * @return size of the list of generations.
      */
     public int getNumberOfGenerations(){
-
-        lock.lock();
-        int tmp=generations.size();
-        lock.unlock();
-
-        return tmp;
+        return generations.size();
     }
 
     /**

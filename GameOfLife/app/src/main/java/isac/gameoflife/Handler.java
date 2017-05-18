@@ -390,9 +390,9 @@ public class Handler implements MessageListener {
                         lock.lock();
                         //add the device to neighbour's map
                         connectedDevices.put(ipAddressDevice, connectionInfo);
-                        lock.unlock();
                         //calculates how many and which cells sends/receives from/to that device
                         connectionInfo.calculateInfo();
+                        lock.unlock();
                     }
                 } else {
                     lock.unlock();
