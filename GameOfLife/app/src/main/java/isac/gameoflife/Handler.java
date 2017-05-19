@@ -344,7 +344,6 @@ public class Handler implements MessageListener {
             //gets the infos of my last swipe
             Pair<Pair<Long, PinchInfo.Direction>, Pair<Integer, Integer>> infoSwipe = gridView.getInfoSwipe();
 
-
             //if the device has performed a swipe and the message has arrived from another one
             if (infoSwipe != null && messageFromOther(info.getAddress())) {
 
@@ -361,7 +360,7 @@ public class Handler implements MessageListener {
                     System.out.println("Elapsed time from swipe: "+(System.currentTimeMillis()-timeStampDirection.first));
 
                     //checks how much time has elapsed between the two swipes
-                    if (Math.abs(info.getTimestamp()-timeStampDirection.first)<=5000) {
+                    if (Math.abs(info.getTimestamp()-timeStampDirection.first)<=1000) {
 
                         activity.runOnUiThread(new Runnable() {
                             public void run() {

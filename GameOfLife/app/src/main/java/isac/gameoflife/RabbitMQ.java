@@ -182,7 +182,7 @@ public class RabbitMQ{
      */
     public void sendMessage(String name,JSONObject message){
         try {
-            message.put("timestamp",System.currentTimeMillis());
+            message.put("timestampMessage",System.currentTimeMillis());
 
             lock.lock();
             if (queue.containsKey(name)) {
@@ -304,7 +304,7 @@ public class RabbitMQ{
                     JSONObject message=new JSONObject(new String(body,"UTF-8"));
 
                     //check if the message was sent before channel creation
-                    if(message.getLong("timestamp")>=millis) {
+                    if(message.getLong("timestampMessage")>=millis) {
                         listener.handleMessage(consumerTag, envelope, properties,message);
                     }
                 } catch (JSONException e) {
