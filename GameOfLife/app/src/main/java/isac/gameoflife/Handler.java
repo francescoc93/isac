@@ -135,7 +135,6 @@ public class Handler implements MessageListener {
         }
 
         lock.unlock();
-
     }
 
     public void setCells(){
@@ -195,7 +194,6 @@ public class Handler implements MessageListener {
         }
 
         lock.unlock();
-
     }
 
     /**

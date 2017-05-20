@@ -132,10 +132,10 @@ public class RabbitMQ{
                 timeStampExchange.put(name,System.currentTimeMillis());
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                lock.unlock();
+                return true;
             }
-
-            lock.unlock();
-            return true;
         }else if(exchange.containsKey(name)){
             lock.unlock();
             return true;
@@ -162,12 +162,12 @@ public class RabbitMQ{
                 String queueName = tmp.queueDeclare().getQueue();
                 tmp.queueBind(queueName, name, "");
                 addListener(listener, tmp, queueName,name);
-                lock.unlock();
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally{
+                lock.unlock();
+                return true;
             }
-
-            return true;
         }
 
         return false;
@@ -190,9 +190,11 @@ public class RabbitMQ{
             } else if (exchange.containsKey(name)) {
                 exchange.get(name).basicPublish(name, "", null, message.toString().getBytes());
             }
-            lock.unlock();
+
         }catch (IOException | JSONException e){
             e.printStackTrace();
+        }finally{
+            lock.unlock();
         }
     }
 
@@ -222,9 +224,9 @@ public class RabbitMQ{
             connected.set(false);
         }catch(IOException e){
             e.printStackTrace();
+        }finally {
+            lock.unlock();
         }
-
-        lock.unlock();
     }
 
     /**
@@ -246,9 +248,9 @@ public class RabbitMQ{
             }
         }catch(IOException | TimeoutException e){
             e.printStackTrace();
+        }finally {
+            lock.unlock();
         }
-
-        lock.unlock();
     }
 
     /**
