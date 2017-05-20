@@ -82,10 +82,12 @@ public class RabbitMQ{
                 timeStampQueue.put(name,System.currentTimeMillis());
             } catch (IOException e) {
                 e.printStackTrace();
+            }finally{
+                lock.unlock();
+                return true;
             }
 
-            lock.unlock();
-            return true;
+
         }else if(queue.containsKey(name)){
             lock.unlock();
             return true;
