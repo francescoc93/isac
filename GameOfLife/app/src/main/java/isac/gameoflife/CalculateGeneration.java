@@ -169,36 +169,12 @@ public class CalculateGeneration {
     private int neighboursAlive(int i,int j){
         int neighbours=0;
 
-        if(cells[i-1][j-1]){
-            neighbours++;
-        }
-
-        if(cells[i-1][j]){
-            neighbours++;
-        }
-
-        if(cells[i-1][j+1]){
-            neighbours++;
-        }
-
-        if(cells[i][j-1]){
-            neighbours++;
-        }
-
-        if(cells[i][j+1]){
-            neighbours++;
-        }
-
-        if(cells[i+1][j-1]){
-            neighbours++;
-        }
-
-        if(cells[i+1][j]){
-            neighbours++;
-        }
-
-        if(cells[i+1][j+1]){
-            neighbours++;
+        for(int row_index=i-1;row_index<=i+1;row_index++){
+            for(int column_index=j-1;column_index<=j+1;column_index++){
+                if(cells[row_index][column_index]){
+                    neighbours++;
+                }
+            }
         }
 
         return neighbours;
