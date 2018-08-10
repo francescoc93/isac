@@ -1,3 +1,0 @@
-- calcolare pinch (guardare appunti mari)
-- start/pausa/reset broadcast
-- accelerometro disconnessione coppia device
